@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>N.T.I.C Academy - 管理者ダッシュボード</title>
+<style>
+:root{
+  --navy:#0F2E52; --blue:#1E4D8C; --blue-light:#EAF1FB;
+  --yellow:#F2C230; --green:#12795A; --green-bg:#E8F6F0;
+  --red:#C0392B; --red-bg:#FCEDEC; --amber:#B8720A; --amber-bg:#FDF3E2;
+  --bg:#F4F6FA; --border:#E4E9F0; --text-main:#1B2433; --text-sub:#6B7789;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 2px 10px rgba(15,46,82,.06), 0 1px 2px rgba(15,46,82,.04);
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text-main);letter-spacing:.01em;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;width:100%;}
+header{background:linear-gradient(135deg,var(--navy),#123a68);color:#fff;padding:16px 18px;
+  box-shadow:0 2px 12px rgba(15,46,82,.25);}
+header h1{font-size:14px;margin:0;font-weight:700;letter-spacing:.01em;display:flex;align-items:center;gap:8px;
+  line-height:1.5;flex-wrap:wrap;}
+header h1 .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--yellow);display:inline-block;flex:0 0 auto;}
+main{max-width:1000px;margin:0 auto;padding:20px 14px 60px;width:100%;box-sizing:border-box;}
+.card{background:#fff;border-radius:var(--radius);padding:20px 16px;margin-bottom:18px;
+  box-shadow:var(--shadow);border:1px solid var(--border);max-width:100%;overflow-x:hidden;}
+.card-title{font-weight:700;font-size:15px;color:var(--navy);margin-bottom:14px;
+  border-left:4px solid var(--yellow);padding-left:10px;letter-spacing:.01em;}
+input{padding:11px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;
+  width:100%;max-width:100%;box-sizing:border-box;margin-bottom:10px;background:#fff;transition:border-color .15s;}
+input:focus{outline:none;border-color:var(--blue);}
+select{padding:11px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;
+  background:#fff;max-width:100%;box-sizing:border-box;}
+button.primary{background:var(--blue);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 20px;
+  font-size:14px;font-weight:700;cursor:pointer;transition:background .15s,transform .1s;}
+button.primary:hover{background:var(--navy);}
+button.primary:active{transform:scale(.98);}
+button.secondary{background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:var(--radius-sm);
+  padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;}
+button.ghost{background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:13px;
+  font-weight:600;padding:4px 0;display:inline-flex;align-items:center;gap:4px;}
+button.ghost:hover{text-decoration:underline;}
+.errormsg{color:var(--red);font-size:13px;margin-bottom:10px;line-height:1.6;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px;}
+.table-scroll table{min-width:640px;}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--border);}
+th{color:var(--text-sub);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+  background:#fafbfd;position:sticky;top:0;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge.high{background:var(--green-bg);color:var(--green);}
+.badge.mid{background:var(--amber-bg);color:var(--amber);}
+.badge.low{background:var(--red-bg);color:var(--red);}
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.filters input{flex:1;min-width:160px;margin-bottom:0;}
+.loading{text-align:center;color:var(--text-sub);padding:36px 20px;font-size:13px;}
+.stale{color:var(--amber);}
+tr.clickable{cursor:pointer;transition:background .12s;}
+tr.clickable:hover{background:var(--blue-light);}
+.katefbar{margin:14px 0;}
+.katefbarrow{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;color:var(--text-main);}
+.katefbarrow span:last-child{font-weight:700;color:var(--blue);}
+.katefbartrack{height:7px;background:#EEF1F6;border-radius:5px;overflow:hidden;}
+.katefbar-fill{height:100%;background:var(--green);border-radius:5px;transition:width .5s ease;}
+.katefbar-fill.low{background:var(--red);}
+.katefbar-fill.mid{background:var(--amber);}
+.examrow{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.6;}
+.examrow:last-child{border-bottom:none;}
+.icon{width:14px;height:14px;flex:0 0 auto;vertical-align:middle;}
+.icon-warn{color:var(--amber);}
+.stat-block{background:linear-gradient(135deg,#fbfcfe,#f4f7fb);border-radius:var(--radius-sm);
+  padding:14px;text-align:center;flex:1;border:1px solid var(--border);}
+.stat-block .num{font-size:22px;font-weight:800;color:var(--blue);letter-spacing:-.01em;}
+.stat-block .lbl{font-size:11px;color:var(--text-sub);margin-top:2px;font-weight:600;}
+.radar-svg polygon.radar-data{
+  animation:radarGrow .6s cubic-bezier(.2,.8,.3,1) both;
+  transform-origin:150px 145px;
+}
+.radar-svg circle.radar-dot{animation:radarFadeIn .5s ease .3s both;}
+.radar-svg text{animation:radarFadeIn .6s ease .2s both;}
+@keyframes radarGrow{
+  0%{ transform:scale(0); opacity:0; }
+  100%{ transform:scale(1); opacity:1; }
+}
+@keyframes radarFadeIn{
+  0%{ opacity:0; }
+  100%{ opacity:1; }
+}
+</style>
+</head>
+<body>
+<header><h1><span class="logo-dot"></span>N.T.I.C Academy　JLPT N4 学習状況ダッシュボード（管理者用）</h1></header>
+<main id="app"></main>
+
+<script>
+// Supabase接続設定
+// publishable key はブラウザに埋め込んで問題ない設計のキー(RLSで保護されている)
+const SUPABASE_URL = "https://ajnuzcbnomlzapnxtehv.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnV6Y2Jub21semFwbnh0ZWh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NzY3NjEsImV4cCI6MjEwMjI1Mjc2MX0.5zO8Tcw5aGOwoQKSLGHAmjqKPlzXtxLFyuABBmib8vs"; // legacy anon key(JWT)
+
+const QID_CATEGORY_MAP = {"Q1":{"cat":"kanji","subj":"moji"},"Q2":{"cat":"kanji","subj":"moji"},"Q3":{"cat":"kanji","subj":"moji"},"Q4":{"cat":"hyoki","subj":"moji"},"Q5":{"cat":"hyoki","subj":"moji"},"Q6":{"cat":"hyoki","subj":"moji"},"Q7":{"cat":"bunmyaku","subj":"moji"},"Q8":{"cat":"bunmyaku","subj":"moji"},"Q9":{"cat":"bunmyaku","subj":"moji"},"Q10":{"cat":"ruigi","subj":"moji"},"Q11":{"cat":"ruigi","subj":"moji"},"Q12":{"cat":"ruigi","subj":"moji"},"Q13":{"cat":"youho","subj":"moji"},"Q14":{"cat":"youho","subj":"moji"},"Q15":{"cat":"youho","subj":"moji"},"Q16":{"cat":"kanji","subj":"moji"},"Q17":{"cat":"kanji","subj":"moji"},"Q18":{"cat":"kanji","subj":"moji"},"Q19":{"cat":"kanji","subj":"moji"},"Q20":{"cat":"kanji","subj":"moji"},"Q21":{"cat":"hyoki","subj":"moji"},"Q22":{"cat":"hyoki","subj":"moji"},"Q23":{"cat":"hyoki","subj":"moji"},"Q24":{"cat":"hyoki","subj":"moji"},"Q25":{"cat":"hyoki","subj":"moji"},"Q26":{"cat":"bunmyaku","subj":"moji"},"Q27":{"cat":"bunmyaku","subj":"moji"},"Q28":{"cat":"bunmyaku","subj":"moji"},"Q29":{"cat":"bunmyaku","subj":"moji"},"Q30":{"cat":"bunmyaku","subj":"moji"},"Q31":{"cat":"ruigi","subj":"moji"},"Q32":{"cat":"ruigi","subj":"moji"},"Q33":{"cat":"ruigi","subj":"moji"},"Q34":{"cat":"ruigi","subj":"moji"},"Q35":{"cat":"youho","subj":"moji"},"Q36":{"cat":"youho","subj":"moji"},"Q37":{"cat":"youho","subj":"moji"},"Q38":{"cat":"youho","subj":"moji"},"Q39":{"cat":"kanji","subj":"moji"},"Q40":{"cat":"kanji","subj":"moji"},"Q41":{"cat":"kanji","subj":"moji"},"Q42":{"cat":"kanji","subj":"moji"},"Q43":{"cat":"hyoki","subj":"moji"},"Q44":{"cat":"hyoki","subj":"moji"},"Q45":{"cat":"hyoki","subj":"moji"},"Q46":{"cat":"hyoki","subj":"moji"},"Q47":{"cat":"bunmyaku","subj":"moji"},"Q48":{"cat":"bunmyaku","subj":"moji"},"Q49":{"cat":"bunmyaku","subj":"moji"},"Q50":{"cat":"bunmyaku","subj":"moji"},"Q51":{"cat":"ruigi","subj":"moji"},"Q52":{"cat":"ruigi","subj":"moji"},"Q53":{"cat":"ruigi","subj":"moji"},"Q54":{"cat":"youho","subj":"moji"},"Q55":{"cat":"youho","subj":"moji"},"Q56":{"cat":"youho","subj":"moji"},"Q57":{"cat":"kanji","subj":"moji"},"Q58":{"cat":"kanji","subj":"moji"},"Q59":{"cat":"kanji","subj":"moji"},"Q60":{"cat":"kanji","subj":"moji"},"Q61":{"cat":"kanji","subj":"moji"},"Q62":{"cat":"kanji","subj":"moji"},"Q63":{"cat":"kanji","subj":"moji"},"Q64":{"cat":"kanji","subj":"moji"},"Q65":{"cat":"hyoki","subj":"moji"},"Q66":{"cat":"hyoki","subj":"moji"},"Q67":{"cat":"hyoki","subj":"moji"},"Q68":{"cat":"bunmyaku","subj":"moji"},"Q69":{"cat":"bunmyaku","subj":"moji"},"Q70":{"cat":"bunmyaku","subj":"moji"},"Q71":{"cat":"ruigi","subj":"moji"},"Q72":{"cat":"ruigi","subj":"moji"},"Q73":{"cat":"bunpo1","subj":"bunpo"},"Q74":{"cat":"bunpo1","subj":"bunpo"},"Q75":{"cat":"bunpo1","subj":"bunpo"},"Q76":{"cat":"bunpo2","subj":"bunpo"},"Q77":{"cat":"bunpo2","subj":"bunpo"},"Q78":{"cat":"bunpo2","subj":"bunpo"},"Q79":{"cat":"bunsho","subj":"bunpo"},"Q80":{"cat":"bunsho","subj":"bunpo"},"Q81":{"cat":"bunsho","subj":"bunpo"},"Q82":{"cat":"bunpo1","subj":"bunpo"},"Q83":{"cat":"bunpo1","subj":"bunpo"},"Q84":{"cat":"bunpo1","subj":"bunpo"},"Q85":{"cat":"bunpo1","subj":"bunpo"},"Q86":{"cat":"bunpo1","subj":"bunpo"},"Q87":{"cat":"bunpo2","subj":"bunpo"},"Q88":{"cat":"bunpo2","subj":"bunpo"},"Q89":{"cat":"bunpo2","subj":"bunpo"},"Q90":{"cat":"bunpo2","subj":"bunpo"},"Q91":{"cat":"bunsho","subj":"bunpo"},"Q92":{"cat":"bunsho","subj":"bunpo"},"Q93":{"cat":"bunsho","subj":"bunpo"},"Q94":{"cat":"bunsho","subj":"bunpo"},"Q95":{"cat":"bunpo1","subj":"bunpo"},"Q96":{"cat":"bunpo1","subj":"bunpo"},"Q97":{"cat":"bunpo1","subj":"bunpo"},"Q98":{"cat":"bunpo1","subj":"bunpo"},"Q99":{"cat":"bunpo2","subj":"bunpo"},"Q100":{"cat":"bunpo2","subj":"bunpo"},"Q101":{"cat":"bunpo2","subj":"bunpo"},"Q102":{"cat":"bunsho","subj":"bunpo"},"Q103":{"cat":"bunsho","subj":"bunpo"},"Q104":{"cat":"bunsho","subj":"bunpo"},"Q105":{"cat":"bunpo1","subj":"bunpo"},"Q106":{"cat":"bunpo1","subj":"bunpo"},"Q107":{"cat":"bunpo1","subj":"bunpo"},"Q108":{"cat":"bunpo1","subj":"bunpo"},"Q109":{"cat":"bunpo1","subj":"bunpo"},"Q110":{"cat":"bunpo1","subj":"bunpo"},"Q111":{"cat":"bunpo1","subj":"bunpo"},"Q112":{"cat":"bunpo1","subj":"bunpo"},"Q113":{"cat":"bunpo2","subj":"bunpo"},"Q114":{"cat":"bunpo2","subj":"bunpo"},"Q115":{"cat":"tanbun","subj":"dokkai"},"Q116":{"cat":"tanbun","subj":"dokkai"},"Q117":{"cat":"tanbun","subj":"dokkai"},"Q118":{"cat":"chubun","subj":"dokkai"},"Q119":{"cat":"chubun","subj":"dokkai"},"Q120":{"cat":"chubun","subj":"dokkai"},"Q121":{"cat":"kensaku","subj":"dokkai"},"Q122":{"cat":"kensaku","subj":"dokkai"},"Q123":{"cat":"kensaku","subj":"dokkai"},"Q124":{"cat":"tanbun","subj":"dokkai"},"Q125":{"cat":"tanbun","subj":"dokkai"},"Q126":{"cat":"tanbun","subj":"dokkai"},"Q127":{"cat":"tanbun","subj":"dokkai"},"Q128":{"cat":"chubun","subj":"dokkai"},"Q129":{"cat":"chubun","subj":"dokkai"},"Q130":{"cat":"chubun","subj":"dokkai"},"Q131":{"cat":"kensaku","subj":"dokkai"},"Q132":{"cat":"kensaku","subj":"dokkai"},"Q133":{"cat":"kensaku","subj":"dokkai"},"Q134":{"cat":"tanbun","subj":"dokkai"},"Q135":{"cat":"tanbun","subj":"dokkai"},"Q136":{"cat":"tanbun","subj":"dokkai"},"Q137":{"cat":"chubun","subj":"dokkai"},"Q138":{"cat":"chubun","subj":"dokkai"},"Q139":{"cat":"kensaku","subj":"dokkai"},"Q140":{"cat":"kensaku","subj":"dokkai"},"Q141":{"cat":"tanbun","subj":"dokkai"},"Q142":{"cat":"tanbun","subj":"dokkai"},"Q143":{"cat":"kadai","subj":"choukai"},"Q144":{"cat":"kadai","subj":"choukai"},"Q145":{"cat":"kadai","subj":"choukai"},"Q146":{"cat":"point","subj":"choukai"},"Q147":{"cat":"point","subj":"choukai"},"Q148":{"cat":"point","subj":"choukai"},"Q149":{"cat":"hatsuwa","subj":"choukai"},"Q150":{"cat":"hatsuwa","subj":"choukai"},"Q151":{"cat":"hatsuwa","subj":"choukai"},"Q152":{"cat":"sokuji","subj":"choukai"},"Q153":{"cat":"sokuji","subj":"choukai"},"Q154":{"cat":"sokuji","subj":"choukai"},"Q155":{"cat":"kadai","subj":"choukai"},"Q156":{"cat":"kadai","subj":"choukai"},"Q157":{"cat":"kadai","subj":"choukai"},"Q158":{"cat":"point","subj":"choukai"},"Q159":{"cat":"point","subj":"choukai"},"Q160":{"cat":"point","subj":"choukai"},"Q161":{"cat":"hatsuwa","subj":"choukai"},"Q162":{"cat":"hatsuwa","subj":"choukai"},"Q163":{"cat":"hatsuwa","subj":"choukai"},"Q164":{"cat":"sokuji","subj":"choukai"},"Q165":{"cat":"sokuji","subj":"choukai"},"Q166":{"cat":"sokuji","subj":"choukai"},"Q167":{"cat":"kadai","subj":"choukai"},"Q168":{"cat":"kadai","subj":"choukai"},"Q169":{"cat":"kadai","subj":"choukai"},"Q170":{"cat":"kadai","subj":"choukai"},"Q171":{"cat":"kadai","subj":"choukai"},"Q172":{"cat":"kadai","subj":"choukai"},"Q173":{"cat":"point","subj":"choukai"},"Q174":{"cat":"point","subj":"choukai"},"Q175":{"cat":"point","subj":"choukai"},"Q176":{"cat":"point","subj":"choukai"},"Q177":{"cat":"point","subj":"choukai"},"Q178":{"cat":"point","subj":"choukai"},"Q179":{"cat":"hatsuwa","subj":"choukai"},"Q180":{"cat":"hatsuwa","subj":"choukai"},"Q181":{"cat":"hatsuwa","subj":"choukai"},"Q182":{"cat":"hatsuwa","subj":"choukai"},"Q183":{"cat":"sokuji","subj":"choukai"},"Q184":{"cat":"sokuji","subj":"choukai"},"Q185":{"cat":"sokuji","subj":"choukai"},"Q186":{"cat":"sokuji","subj":"choukai"},"Q187":{"cat":"sokuji","subj":"choukai"},"Q188":{"cat":"sokuji","subj":"choukai"},"Q189":{"cat":"sokuji","subj":"choukai"},"Q190":{"cat":"sokuji","subj":"choukai"},"Q191":{"cat":"sokuji","subj":"choukai"}};
+
+</script>
+<script>
+(function(){
+"use strict";
+
+let session = null; // {access_token, email}
+
+function el(html){ const d=document.createElement("div"); d.innerHTML=html; return d.firstElementChild; }
+
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+  if(!session) app.appendChild(renderLogin());
+  else app.appendChild(renderDashboard());
+}
+
+function renderLogin(){
+  const wrap = document.createElement("div");
+  const card = el('<div class="card" style="max-width:380px;margin:40px auto;"></div>');
+  const h = document.createElement("div");
+  h.style.fontWeight="700"; h.style.fontSize="16px"; h.style.marginBottom="14px";
+  h.textContent = "管理者ログイン";
+  card.appendChild(h);
+
+  const err = document.createElement("div");
+  err.className = "errormsg"; err.style.display = "none";
+  card.appendChild(err);
+
+  const email = document.createElement("input");
+  email.type = "email"; email.placeholder = "メールアドレス";
+  card.appendChild(email);
+
+  const pw = document.createElement("input");
+  pw.type = "password"; pw.placeholder = "パスワード";
+  card.appendChild(pw);
+
+  const btn = document.createElement("button");
+  btn.className = "primary"; btn.style.width="100%"; btn.textContent = "ログイン";
+  btn.onclick = async ()=>{
+    btn.disabled = true; btn.textContent = "ログイン中...";
+    err.style.display = "none";
+    try{
+      const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
+        method: "POST",
+        headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.value, password: pw.value })
+      });
+      const data = await res.json();
+      if(!res.ok || !data.access_token){
+        err.textContent = "ログインに失敗しました。メールアドレス・パスワードを確認してください。";
+        err.style.display = "block";
+        btn.disabled = false; btn.textContent = "ログイン";
+        return;
+      }
+      session = { access_token: data.access_token, email: email.value };
+      render();
+    }catch(e){
+      err.textContent = "通信エラーが発生しました。ネットワーク接続を確認してください。";
+      err.style.display = "block";
+      btn.disabled = false; btn.textContent = "ログイン";
+    }
+  };
+  card.appendChild(btn);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function decodeJwt(token){
+  try{
+    const payload = token.split(".")[1];
+    const json = decodeURIComponent(atob(payload.replace(/-/g,"+").replace(/_/g,"/"))
+      .split("").map(c=>"%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join(""));
+    return JSON.parse(json);
+  }catch(e){ return {}; }
+}
+
+function sessionScope(){
+  if(!session) return { isAdmin:false, companyId:null };
+  const payload = decodeJwt(session.access_token);
+  const meta = (payload.app_metadata) || {};
+  return { isAdmin: meta.role === "ntic_admin", companyId: meta.company_id || null };
+}
+
+function authHeaders(){
+  return {
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + session.access_token,
+    "Content-Type": "application/json"
+  };
+}
+
+async function fetchAll(table, params){
+  const url = SUPABASE_URL + "/rest/v1/" + table + "?" + (params||"select=*");
+  const res = await fetch(url, { headers: authHeaders() });
+  if(!res.ok){
+    if(res.status === 401){ session = null; render(); }
+    throw new Error("fetch failed: " + table);
+  }
+  return res.json();
+}
+
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], companyFilter: "", showFinished: false, selectedLearner: null };
+
+const CAT_LABEL = {
+  kanji: "漢字読み", hyoki: "表記", bunmyaku: "文脈規定", ruigi: "言い換え類義", youho: "用法",
+  bunpo1: "文の文法1", bunpo2: "文の文法2", bunsho: "文章の文法",
+  tanbun: "内容理解(短文)", chubun: "内容理解(中文)", kensaku: "情報検索",
+  kadai: "課題理解", point: "ポイント理解", hatsuwa: "発話表現", sokuji: "即時応答"
+};
+const SUBJECT_LABEL = { moji: "文字・語彙", bunpo: "文法", dokkai: "読解", choukai: "聴解" };
+
+function relTime(iso){
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff/60000);
+  if(min < 1) return "たった今";
+  if(min < 60) return min+"分前";
+  const hr = Math.floor(min/60);
+  if(hr < 24) return hr+"時間前";
+  const day = Math.floor(hr/24);
+  return day+"日前";
+}
+
+function buildLearnerSummary(){
+  const map = {};
+  const companyNames = {};
+  dashState.companies.forEach(c=>{ companyNames[c.company_id] = c.company_name; });
+  const rosterMap = {};
+  dashState.roster.forEach(r=>{ rosterMap[r.company_id + "::" + r.learner_id] = r; });
+
+  dashState.progress.forEach(p=>{
+    const key = p.company_id + "::" + p.learner_id;
+    if(!map[key]) map[key] = { company_id:p.company_id, learner_id:p.learner_id, n:0, c:0, questionsStudied:0 };
+    map[key].n += p.n_count;
+    map[key].c += p.c_count;
+    map[key].questionsStudied += 1;
+  });
+  dashState.exams.forEach(e=>{
+    const key = e.company_id + "::" + e.learner_id;
+    if(!map[key]) map[key] = { company_id:e.company_id, learner_id:e.learner_id, n:0, c:0, questionsStudied:0 };
+    if(!map[key].lastExam || new Date(e.taken_at) > new Date(map[key].lastExam.taken_at)){
+      map[key].lastExam = e;
+    }
+  });
+  dashState.activity.forEach(a=>{
+    const key = a.company_id + "::" + a.learner_id;
+    if(!map[key]) map[key] = { company_id:a.company_id, learner_id:a.learner_id, n:0, c:0, questionsStudied:0 };
+    map[key].lastSeen = a.last_seen_at;
+  });
+
+  Object.keys(map).forEach(key=>{
+    const l = map[key];
+    l.companyName = companyNames[l.company_id] || null;
+    const r = rosterMap[key];
+    if(r){
+      l.trainingEndDate = r.training_end_date;
+      l.learnerName = r.learner_name || null;
+      l.inRoster = true;
+      l.isFinished = r.training_end_date ? (new Date(r.training_end_date) < new Date()) : false;
+    } else {
+      l.trainingEndDate = null;
+      l.learnerName = null;
+      l.inRoster = false;
+      l.isFinished = false;
+    }
+  });
+
+  return Object.values(map).sort((a,b)=>{
+    const at = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+    const bt = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+    return bt - at;
+  });
+}
+
+async function loadDashboardData(){
+  dashState.loading = true; dashState.error = null;
+  render();
+  try{
+    const [progress, exams, activity, companies, roster] = await Promise.all([
+      fetchAll("progress"),
+      fetchAll("exam_log", "select=*&order=taken_at.desc&limit=500"),
+      fetchAll("learner_activity"),
+      fetchAll("companies").catch(()=>[]),
+      fetchAll("roster").catch(()=>[])
+    ]);
+    dashState.progress = progress;
+    dashState.exams = exams;
+    dashState.activity = activity;
+    dashState.companies = companies;
+    dashState.roster = roster;
+    dashState.loading = false;
+  }catch(e){
+    dashState.loading = false;
+    dashState.error = "データの取得に失敗しました。時間をおいて再読み込みしてください。";
+  }
+  render();
+}
+
+function renderDashboard(){
+  const wrap = document.createElement("div");
+  const scope = sessionScope();
+
+  const topbar = el('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"></div>');
+  const who = document.createElement("div");
+  who.style.fontSize = "13px"; who.style.color = "#556";
+  let whoText = "ログイン中: " + session.email;
+  if(scope.isAdmin) whoText += "（NTIC管理者・全社閲覧）";
+  else if(scope.companyId) whoText += "（企業: " + scope.companyId + " の閲覧権限）";
+  else whoText += "（閲覧権限が設定されていません。管理者にご連絡ください）";
+  who.textContent = whoText;
+  topbar.appendChild(who);
+  const logoutBtn = document.createElement("button");
+  logoutBtn.className = "ghost"; logoutBtn.textContent = "ログアウト";
+  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], companyFilter:"", showFinished:false, selectedLearner:null }; render(); };
+  topbar.appendChild(logoutBtn);
+  wrap.appendChild(topbar);
+
+  if(!scope.isAdmin && !scope.companyId){
+    const warnCard = el('<div class="card errormsg"></div>');
+    warnCard.textContent = "このアカウントには閲覧できるデータが設定されていません。NTIC管理者に企業IDの割り当てを依頼してください。";
+    wrap.appendChild(warnCard);
+    return wrap;
+  }
+
+  const card = el('<div class="card"></div>');
+
+  if(dashState.loading){
+    card.appendChild(el('<div class="loading">読み込み中...</div>'));
+    wrap.appendChild(card);
+    if(!dashState._fetchTriggered){
+      dashState._fetchTriggered = true;
+      loadDashboardData();
+    }
+    return wrap;
+  }
+  if(dashState.error){
+    const errBox = el('<div class="errormsg"></div>');
+    errBox.textContent = dashState.error;
+    card.appendChild(errBox);
+    const retryBtn = document.createElement("button");
+    retryBtn.className = "primary"; retryBtn.textContent = "再読み込み";
+    retryBtn.onclick = ()=>{ dashState._fetchTriggered = false; loadDashboardData(); };
+    card.appendChild(retryBtn);
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  if(dashState.selectedLearner){
+    wrap.appendChild(renderLearnerKarte());
+    return wrap;
+  }
+
+  const filters = el('<div class="filters"></div>');
+  if(scope.isAdmin){
+    const companySelect = document.createElement("select");
+    companySelect.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;flex:1;min-width:160px;background:#fff;";
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = "すべての企業";
+    companySelect.appendChild(allOpt);
+    const sortedCompanies = dashState.companies.slice().sort((a,b)=> a.company_name.localeCompare(b.company_name,"ja"));
+    sortedCompanies.forEach(c=>{
+      const opt = document.createElement("option");
+      opt.value = c.company_id;
+      opt.textContent = c.company_name + "（" + c.company_id + "）";
+      if(dashState.companyFilter === c.company_id) opt.selected = true;
+      companySelect.appendChild(opt);
+    });
+    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; renderTableOnly(); };
+    filters.appendChild(companySelect);
+  }
+  const finishedTog = document.createElement("label");
+  finishedTog.style.cssText = "display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap;color:#556;";
+  const finishedCb = document.createElement("input");
+  finishedCb.type = "checkbox"; finishedCb.checked = dashState.showFinished;
+  finishedCb.onchange = ()=>{ dashState.showFinished = finishedCb.checked; renderTableOnly(); };
+  finishedTog.appendChild(finishedCb);
+  finishedTog.appendChild(document.createTextNode("実習終了済みも表示"));
+  filters.appendChild(finishedTog);
+  const refreshBtn = document.createElement("button");
+  refreshBtn.className = "primary"; refreshBtn.textContent = "更新";
+  refreshBtn.onclick = ()=>{ dashState._fetchTriggered = false; loadDashboardData(); };
+  filters.appendChild(refreshBtn);
+  card.appendChild(filters);
+
+  const tableWrap = document.createElement("div");
+  tableWrap.id = "tableWrap";
+  tableWrap.className = "table-scroll";
+  card.appendChild(tableWrap);
+  wrap.appendChild(card);
+
+  setTimeout(renderTableOnly, 0);
+  return wrap;
+}
+
+// ---- SVGレーダーチャート(外部ライブラリ不使用) ----
+function svgRadar(statsObj, labelMap){
+  const keys = Object.keys(statsObj);
+  const n = keys.length;
+  if(n < 3) return ""; // レーダーチャートは3軸以上でないと意味がない
+  const cx = 150, cy = 145, R = 95;
+  const angleFor = (i)=> (Math.PI*2*i/n) - Math.PI/2;
+
+  const gridLevels = [0.25, 0.5, 0.75, 1];
+  let svg = '<svg class="radar-svg" viewBox="0 0 300 300" width="100%" style="max-width:320px;display:block;margin:0 auto;">';
+
+  gridLevels.forEach(level=>{
+    const gp = keys.map((k,i)=>{
+      const a = angleFor(i);
+      const r = R*level;
+      return (cx+r*Math.cos(a)).toFixed(1)+","+(cy+r*Math.sin(a)).toFixed(1);
+    }).join(" ");
+    svg += '<polygon points="'+gp+'" fill="none" stroke="#e2e8f0" stroke-width="1"/>';
+  });
+
+  keys.forEach((k,i)=>{
+    const a = angleFor(i);
+    const x = cx+R*Math.cos(a), y = cy+R*Math.sin(a);
+    svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#e2e8f0" stroke-width="1"/>';
+  });
+
+  const points = keys.map((k,i)=>{
+    const a = angleFor(i);
+    const r = R * (Math.max(0,Math.min(100,statsObj[k]))/100);
+    return [cx+r*Math.cos(a), cy+r*Math.sin(a)];
+  });
+  const dp = points.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  svg += '<polygon class="radar-data" points="'+dp+'" fill="rgba(30,77,140,0.25)" stroke="#1E4D8C" stroke-width="2"/>';
+  points.forEach(p=>{ svg += '<circle class="radar-dot" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3.5" fill="#1E4D8C"/>'; });
+
+  keys.forEach((k,i)=>{
+    const a = angleFor(i);
+    const lx = cx + (R+35)*Math.cos(a), ly = cy + (R+35)*Math.sin(a);
+    const label = (labelMap && labelMap[k]) ? labelMap[k] : k;
+    svg += '<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" font-size="12" fill="#334" text-anchor="middle" dominant-baseline="middle">'+escapeHtml(label)+'</text>';
+    svg += '<text x="'+lx.toFixed(1)+'" y="'+(ly+14).toFixed(1)+'" font-size="12" font-weight="700" fill="#1E4D8C" text-anchor="middle" dominant-baseline="middle">'+statsObj[k]+'%</text>';
+  });
+
+  svg += '</svg>';
+  return svg;
+}
+
+function renderLearnerKarte(){
+  const wrap = document.createElement("div");
+  const sel = dashState.selectedLearner;
+  const key = sel.company_id + "::" + sel.learner_id;
+
+  const backBtn = document.createElement("button");
+  backBtn.className = "ghost"; backBtn.textContent = "← 一覧に戻る";
+  backBtn.style.marginBottom = "12px";
+  backBtn.onclick = ()=>{ dashState.selectedLearner = null; render(); };
+  wrap.appendChild(backBtn);
+
+  const learners = buildLearnerSummary();
+  const l = learners.find(x=>(x.company_id+"::"+x.learner_id) === key);
+  if(!l){
+    const notFound = el('<div class="card errormsg"></div>');
+    notFound.textContent = "この学習者のデータが見つかりませんでした。";
+    wrap.appendChild(notFound);
+    return wrap;
+  }
+
+  // ヘッダーカード
+  const headCard = el('<div class="card"></div>');
+  const nameEl = document.createElement("div");
+  nameEl.style.cssText = "font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-.01em;";
+  nameEl.textContent = l.learnerName || l.learner_id;
+  headCard.appendChild(nameEl);
+  const subEl = document.createElement("div");
+  subEl.style.cssText = "font-size:13px;color:var(--text-sub);margin-top:6px;font-weight:600;";
+  subEl.textContent = (l.companyName || l.company_id) + " ／ 実習生ID: " + l.learner_id +
+    (l.trainingEndDate ? " ／ 実習終了予定: " + l.trainingEndDate + (l.isFinished ? "（終了済み）" : "") : "");
+  headCard.appendChild(subEl);
+
+  const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
+  const stats = el('<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;"></div>');
+  const statBox = (num, lbl)=>{
+    const s = el('<div class="stat-block"></div>');
+    s.innerHTML = "<div class='num'>"+num+"</div><div class='lbl'>"+lbl+"</div>";
+    return s;
+  };
+  stats.appendChild(statBox(l.questionsStudied + "/" + Object.keys(QID_CATEGORY_MAP).length, "学習済み問題数"));
+  stats.appendChild(statBox(rate + "%", "通算正答率"));
+  stats.appendChild(statBox(l.lastSeen ? relTime(l.lastSeen) : "-", "最終学習"));
+  headCard.appendChild(stats);
+  wrap.appendChild(headCard);
+
+  // 分野別正答率カード
+  const catCard = el('<div class="card"></div>');
+  const catTitle = document.createElement("div");
+  catTitle.className = "card-title";
+  catTitle.textContent = "分野別正答率";
+  catCard.appendChild(catTitle);
+
+  const myProgress = dashState.progress.filter(p=>p.company_id===sel.company_id && p.learner_id===sel.learner_id);
+  const catStats = {}; // cat -> {n,c}
+  const subjStats = {}; // subj -> {n,c}  (レーダーチャート用の科目レベル集計)
+  myProgress.forEach(p=>{
+    const meta = QID_CATEGORY_MAP[p.question_id];
+    const cat = meta ? meta.cat : "不明";
+    const subj = meta ? meta.subj : "不明";
+    if(!catStats[cat]) catStats[cat] = { n:0, c:0 };
+    catStats[cat].n += p.n_count;
+    catStats[cat].c += p.c_count;
+    if(!subjStats[subj]) subjStats[subj] = { n:0, c:0 };
+    subjStats[subj].n += p.n_count;
+    subjStats[subj].c += p.c_count;
+  });
+
+  // レーダーチャート(4科目: 文字語彙/文法/読解/聴解)。1問も解いていない科目は0%として表示する
+  const subjOrder = ["moji","bunpo","dokkai","choukai"];
+  const hasAnyData = Object.keys(subjStats).length > 0;
+  if(hasAnyData){
+    const radarData = {};
+    subjOrder.forEach(s=>{
+      const st = subjStats[s];
+      radarData[s] = st && st.n > 0 ? Math.round(st.c/st.n*100) : 0;
+    });
+    const radarWrap = document.createElement("div");
+    radarWrap.innerHTML = svgRadar(radarData, SUBJECT_LABEL);
+    catCard.appendChild(radarWrap);
+    const radarCaption = document.createElement("div");
+    radarCaption.style.cssText = "text-align:center;font-size:12px;color:#889;margin-top:-6px;margin-bottom:14px;";
+    radarCaption.textContent = "科目別の正答率（一目で得意・苦手が分かります）";
+    catCard.appendChild(radarCaption);
+  }
+
+  const detailTitle = document.createElement("div");
+  detailTitle.style.cssText = "font-weight:700;margin:14px 0 8px;font-size:13px;color:#556;";
+  detailTitle.textContent = "分野別の内訳";
+  catCard.appendChild(detailTitle);
+
+  const catKeys = Object.keys(catStats);
+  if(catKeys.length === 0){
+    catCard.appendChild(el('<div class="loading">まだ学習記録がありません。</div>'));
+  } else {
+    catKeys.forEach(cat=>{
+      const cs = catStats[cat];
+      const cRate = cs.n > 0 ? Math.round(cs.c / cs.n * 100) : 0;
+      const row = el('<div class="katefbar"></div>');
+      const rowTop = el('<div class="katefbarrow"></div>');
+      const lbl = document.createElement("span");
+      lbl.textContent = (CAT_LABEL[cat] || cat) + "（" + cs.n + "問回答）";
+      const val = document.createElement("span");
+      val.textContent = cRate + "%";
+      rowTop.appendChild(lbl); rowTop.appendChild(val);
+      const track = el('<div class="katefbartrack"></div>');
+      const fill = document.createElement("div");
+      fill.className = "katefbar-fill" + (cRate < 40 ? " low" : cRate < 70 ? " mid" : "");
+      fill.style.width = cRate + "%";
+      track.appendChild(fill);
+      row.appendChild(rowTop); row.appendChild(track);
+      catCard.appendChild(row);
+    });
+  }
+  wrap.appendChild(catCard);
+
+  // 模試履歴カード
+  const examCard = el('<div class="card"></div>');
+  const examTitle = document.createElement("div");
+  examTitle.className = "card-title";
+  examTitle.textContent = "模試履歴";
+  examCard.appendChild(examTitle);
+
+  const myExams = dashState.exams
+    .filter(e=>e.company_id===sel.company_id && e.learner_id===sel.learner_id)
+    .sort((a,b)=> new Date(b.taken_at) - new Date(a.taken_at));
+
+  if(myExams.length === 0){
+    examCard.appendChild(el('<div class="loading">模試の受験履歴はまだありません。</div>'));
+  } else {
+    myExams.forEach(e=>{
+      const row = el('<div class="examrow"></div>');
+      const eg = e.exam_group === "moji" ? "文字語彙" : e.exam_group === "choukai" ? "聴解" : "文法・読解";
+      const d = new Date(e.taken_at);
+      const dateStr = d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+      row.innerHTML = "<b>"+eg+"</b>　"+e.correct+"/"+e.total+"（"+e.pct+"%）　<span style='color:#889;'>"+dateStr+"</span>";
+      examCard.appendChild(row);
+    });
+  }
+  wrap.appendChild(examCard);
+
+  return wrap;
+}
+
+function renderTableOnly(){
+  const tableWrap = document.getElementById("tableWrap");
+  if(!tableWrap) return;
+  let learners = buildLearnerSummary();
+  if(dashState.companyFilter.trim()){
+    const f = dashState.companyFilter.trim().toLowerCase();
+    learners = learners.filter(l=>l.company_id.toLowerCase().includes(f) || (l.companyName||"").toLowerCase().includes(f));
+  }
+  if(!dashState.showFinished){
+    learners = learners.filter(l=>!l.isFinished);
+  }
+
+  if(learners.length === 0){
+    tableWrap.innerHTML = '<div class="loading">該当する学習記録がまだありません。</div>';
+    return;
+  }
+
+  const table = document.createElement("table");
+  table.innerHTML = "<thead><tr>"+
+    "<th>企業</th><th>氏名</th><th>実習生ID</th><th>実習終了予定</th><th>学習済み問題数</th><th>通算正答率</th>"+
+    "<th>最新模試</th><th>最終学習</th>"+
+    "</tr></thead>";
+  const tbody = document.createElement("tbody");
+  learners.forEach(l=>{
+    const tr = document.createElement("tr");
+    if(l.isFinished) tr.style.opacity = "0.5";
+    const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
+    const badgeClass = rate >= 70 ? "high" : rate >= 40 ? "mid" : "low";
+    let examCell = "-";
+    if(l.lastExam){
+      const eg = l.lastExam.exam_group === "moji" ? "文字語彙" : l.lastExam.exam_group === "choukai" ? "聴解" : "文法・読解";
+      examCell = eg + " " + l.lastExam.correct + "/" + l.lastExam.total + " (" + l.lastExam.pct + "%)";
+    }
+    let lastSeenCell = "-";
+    let staleClass = "";
+    if(l.lastSeen){
+      lastSeenCell = relTime(l.lastSeen);
+      const days = (Date.now() - new Date(l.lastSeen).getTime()) / 86400000;
+      if(days > 7) staleClass = "stale";
+    }
+    let companyCell = l.companyName ? l.companyName : l.company_id;
+    if(!l.companyName) companyCell += " <span class='badge mid' title='企業マスターに未登録'>未登録</span>";
+    let endCell = l.trainingEndDate ? l.trainingEndDate : "-";
+    if(l.isFinished) endCell += " <span class='badge low'>終了済み</span>";
+    else if(!l.inRoster) endCell = "<span class='badge mid' title='ロースターに実習生IDが見つかりません'>未登録</span>";
+    let learnerCell = escapeHtml(l.learner_id);
+    const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
+    if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
+    let nameCell = l.learnerName ? escapeHtml(l.learnerName) : "-";
+
+    tr.innerHTML =
+      "<td>"+companyCell+"</td>"+
+      "<td>"+nameCell+"</td>"+
+      "<td>"+learnerCell+"</td>"+
+      "<td>"+endCell+"</td>"+
+      "<td>"+l.questionsStudied+"</td>"+
+      "<td><span class='badge "+badgeClass+"'>"+rate+"%</span></td>"+
+      "<td>"+escapeHtml(examCell)+"</td>"+
+      "<td class='"+staleClass+"'>"+escapeHtml(lastSeenCell)+"</td>";
+    tr.className = "clickable";
+    tr.title = "クリックで詳細(個人カルテ)を見る";
+    tr.onclick = ()=>{
+      dashState.selectedLearner = { company_id: l.company_id, learner_id: l.learner_id };
+      render();
+    };
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  tableWrap.innerHTML = "";
+  tableWrap.appendChild(table);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+render();
+})();
+</script>
+</body>
+</html>
