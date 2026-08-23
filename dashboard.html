@@ -211,6 +211,57 @@ async function deleteLearnerData(companyId, learnerId){
   ]);
 }
 
+// ---- NTLPアカウント発行(NTIC管理者のみ。DB関数側でもntic_adminチェックを行っている) ----
+// 母国語・在籍フラグは、現時点ではdashboard側にDekisugi CSV由来のデータが無いため、
+// 安全なデフォルト値(母国語:空→関数側で日本語にフォールバック, 在籍フラグ:0=在籍)を使う。
+// 将来Dekisugi CSVのインポート機能ができたら、実データを渡すよう改修が必要。
+async function issueAccount(learner){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/create_student_account", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      p_dekisugi_student_code: learner.learner_id,
+      p_name: learner.learnerName || learner.learner_id,
+      p_dekisugi_company_id: learner.dekisugiCompanyId,
+      p_native_language_raw: "",
+      p_zairyu_flag: 0
+    })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    const msg = (data && (data.message || data.error_description)) || "アカウント発行に失敗しました。";
+    throw new Error(msg);
+  }
+  // RPCはtable関数なので配列で返る
+  return Array.isArray(data) ? data[0] : data;
+}
+
+// ---- 発行結果の一度限りの表示モーダル(初期パスワードはここでしか見られない) ----
+function showIssueResultModal(loginId, initialPassword){
+  const bg = document.createElement("div");
+  bg.className = "modal-bg";
+  const box = document.createElement("div");
+  box.className = "modal-box";
+  const title = document.createElement("div");
+  title.style.cssText = "font-weight:700;font-size:15px;margin-bottom:12px;";
+  title.textContent = "アカウントを発行しました";
+  box.appendChild(title);
+  const desc = document.createElement("p");
+  desc.textContent = "この情報は今だけ表示されます。実習生本人に控えてもらうか、紙等で案内してください。";
+  box.appendChild(desc);
+  const infoBox = document.createElement("div");
+  infoBox.style.cssText = "background:var(--blue-light);border-radius:6px;padding:14px;margin-bottom:16px;font-size:14px;line-height:2;";
+  infoBox.innerHTML = "ログインID：<b>"+escapeHtml(loginId)+"</b><br>初期パスワード：<b>"+escapeHtml(initialPassword)+"</b>";
+  box.appendChild(infoBox);
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "primary"; closeBtn.style.width = "100%";
+  closeBtn.textContent = "閉じる";
+  closeBtn.onclick = ()=>{ document.body.removeChild(bg); };
+  box.appendChild(closeBtn);
+  bg.appendChild(box);
+  document.body.appendChild(bg);
+}
+
 function authHeaders(){
   return {
     "apikey": SUPABASE_KEY,
@@ -229,7 +280,7 @@ async function fetchAll(table, params){
   return res.json();
 }
 
-let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], dailySummary: [], companyFilter: "", showFinished: false, selectedLearner: null };
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], companyFilter: "", showFinished: false, selectedLearner: null };
 
 const CAT_LABEL = {
   kanji: "漢字読み", hyoki: "表記", bunmyaku: "文脈規定", ruigi: "言い換え類義", youho: "用法",
@@ -253,9 +304,23 @@ function relTime(iso){
 function buildLearnerSummary(){
   const map = {};
   const companyNames = {};
-  dashState.companies.forEach(c=>{ companyNames[c.company_id] = c.company_name; });
+  const companyDekisugiMap = {}; // company_id -> dekisugi_company_id
+  dashState.companies.forEach(c=>{
+    companyNames[c.company_id] = c.company_name;
+    companyDekisugiMap[c.company_id] = c.dekisugi_company_id || null;
+  });
   const rosterMap = {};
   dashState.roster.forEach(r=>{ rosterMap[r.company_id + "::" + r.learner_id] = r; });
+  // NTLP登録状況の名寄せキー: roster.learner_id = students.dekisugi_student_code
+  const studentsByCode = {};
+  dashState.students.forEach(s=>{ studentsByCode[s.dekisugi_student_code] = s; });
+
+  // ---- roster(組合の実習生管理台帳)を起点に、全員分のエントリを先に作る ----
+  // これにより、まだ一度もNTLPを使っていない(学習データが0件の)実習生も一覧に表示される。
+  dashState.roster.forEach(r=>{
+    const key = r.company_id + "::" + r.learner_id;
+    map[key] = { company_id:r.company_id, learner_id:r.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{} };
+  });
 
   dashState.progress.forEach(p=>{
     const key = p.company_id + "::" + p.learner_id;
@@ -297,6 +362,7 @@ function buildLearnerSummary(){
   Object.keys(map).forEach(key=>{
     const l = map[key];
     l.companyName = companyNames[l.company_id] || null;
+    l.companyMapped = Object.prototype.hasOwnProperty.call(companyNames, l.company_id);
     const r = rosterMap[key];
     if(r){
       l.trainingEndDate = r.training_end_date;
@@ -309,6 +375,16 @@ function buildLearnerSummary(){
       l.inRoster = false;
       l.isFinished = false;
     }
+
+    // NTLP登録状況: roster.learner_id = students.dekisugi_student_code で名寄せ
+    const student = studentsByCode[l.learner_id];
+    l.ntlpRegistered = !!student;
+    l.studentStatus = student ? student.status : null;
+
+    // アカウント発行可否: 未登録 かつ 企業マスタに存在 かつ Dekisugi企業IDのマッピング済み
+    const dekisugiCompanyId = companyDekisugiMap[l.company_id];
+    l.dekisugiCompanyId = dekisugiCompanyId || null;
+    l.canIssueAccount = !l.ntlpRegistered && l.companyMapped && !!dekisugiCompanyId;
 
     // 要フォロー判定: 3日以上未学習 / 進捗20%未満 / 正答率40%未満 / 正答率は高いが翻訳依存度も高い、のいずれか
     const rate = l.n > 0 ? Math.round(l.c/l.n*100) : 0;
@@ -353,12 +429,13 @@ async function loadDashboardData(){
   dashState.loading = true; dashState.error = null;
   render();
   try{
-    const [progress, exams, activity, companies, roster, dailySummary] = await Promise.all([
+    const [progress, exams, activity, companies, roster, students, dailySummary] = await Promise.all([
       fetchAll("progress"),
       fetchAll("exam_log", "select=*&order=taken_at.desc&limit=500"),
       fetchAll("learner_activity"),
       fetchAll("companies").catch(()=>[]),
       fetchAll("roster").catch(()=>[]),
+      fetchAll("students").catch(()=>[]),
       fetchAll("daily_summary", "select=*&order=summary_date.desc&limit=2000").catch(()=>[])
     ]);
     dashState.progress = progress;
@@ -366,6 +443,7 @@ async function loadDashboardData(){
     dashState.activity = activity;
     dashState.companies = companies;
     dashState.roster = roster;
+    dashState.students = students;
     dashState.dailySummary = dailySummary;
     dashState.loading = false;
   }catch(e){
@@ -382,12 +460,39 @@ function renderOverallSummary(){
   // 企業担当者はRLSで自社データしか取得できていないので、そのまま全件が対象になる
 
   const totalLearners = learners.length;
+  const ntlpRegistered = learners.filter(l=>l.ntlpRegistered);
+  const ntlpUnregistered = learners.filter(l=>!l.ntlpRegistered);
+  const canIssue = learners.filter(l=>l.canIssueAccount);
+  const companyMappingMissing = learners.filter(l=>!l.ntlpRegistered && l.companyMapped && !l.dekisugiCompanyId);
   const studying = learners.filter(l=>l.questionsStudied > 0 && !l.isFinished);
   const thisWeek = learners.filter(l=>l.lastSeen && (Date.now()-new Date(l.lastSeen).getTime()) <= 7*86400000);
   const followUps = learners.filter(l=>l.needsFollowUp);
   const withRate = learners.filter(l=>l.n > 0);
   const avgRate = withRate.length ? Math.round(withRate.reduce((s,l)=>s+l.rate,0)/withRate.length) : 0;
   const avgProgress = learners.length ? Math.round(learners.reduce((s,l)=>s+l.progressPct,0)/learners.length) : 0;
+
+  const block = (num, lbl, alert)=>{
+    const b = el('<div class="stat-block'+(alert?' alert':'')+'"></div>');
+    b.innerHTML = "<div class='num'>"+num+"</div><div class='lbl'>"+lbl+"</div>";
+    return b;
+  };
+
+  // ---- NTLPアカウント登録状況カード(組合管理者のみ表示。企業担当者には出さない) ----
+  if(scope.isAdmin){
+    const regCard = el('<div class="card"></div>');
+    const regTitle = document.createElement("div");
+    regTitle.className = "card-title";
+    regTitle.textContent = "NTLPアカウント登録状況";
+    regCard.appendChild(regTitle);
+    const regGrid = el('<div class="summary-cardgrid"></div>');
+    regGrid.appendChild(block(totalLearners+"人", "全実習生"));
+    regGrid.appendChild(block(ntlpRegistered.length+"人", "NTLP登録済"));
+    regGrid.appendChild(block(ntlpUnregistered.length+"人", "NTLP未登録"));
+    regGrid.appendChild(block(canIssue.length+"人", "アカウント発行可能"));
+    regGrid.appendChild(block(companyMappingMissing.length+"人", "企業マッピング未設定", companyMappingMissing.length>0));
+    regCard.appendChild(regGrid);
+    wrap.appendChild(regCard);
+  }
 
   // ---- 全体サマリーカード ----
   const summaryCard = el('<div class="card"></div>');
@@ -396,11 +501,6 @@ function renderOverallSummary(){
   summaryTitle.textContent = "全体サマリー";
   summaryCard.appendChild(summaryTitle);
   const grid = el('<div class="summary-cardgrid"></div>');
-  const block = (num, lbl, alert)=>{
-    const b = el('<div class="stat-block'+(alert?' alert':'')+'"></div>');
-    b.innerHTML = "<div class='num'>"+num+"</div><div class='lbl'>"+lbl+"</div>";
-    return b;
-  };
   grid.appendChild(block(totalLearners+"人", "登録学習者数"));
   grid.appendChild(block(studying.length+"人", "学習中"));
   grid.appendChild(block(thisWeek.length+"人", "今週学習した人数"));
@@ -484,7 +584,7 @@ function renderDashboard(){
   topbar.appendChild(who);
   const logoutBtn = document.createElement("button");
   logoutBtn.className = "ghost"; logoutBtn.textContent = "ログアウト";
-  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], dailySummary:[], companyFilter:"", showFinished:false, selectedLearner:null }; render(); };
+  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], companyFilter:"", showFinished:false, selectedLearner:null }; render(); };
   topbar.appendChild(logoutBtn);
   wrap.appendChild(topbar);
 
@@ -870,11 +970,12 @@ function renderTableOnly(){
 
   const table = document.createElement("table");
   table.innerHTML = "<thead><tr>"+
-    "<th>企業</th><th>氏名</th><th>実習生ID</th><th>実習終了予定</th><th>学習済み問題数</th><th>通算正答率</th>"+
+    "<th>企業</th><th>氏名</th><th>実習生ID</th><th>NTLP状態</th><th>実習終了予定</th><th>学習済み問題数</th><th>通算正答率</th>"+
     "<th>文字語彙</th><th>文法</th><th>読解</th><th>聴解</th>"+
     "<th>最新模試</th><th>最終学習</th><th>状態</th>"+
     "</tr></thead>";
   const tbody = document.createElement("tbody");
+  const scopeForTable = sessionScope();
   learners.forEach(l=>{
     const tr = document.createElement("tr");
     if(l.isFinished) tr.style.opacity = "0.5";
@@ -902,6 +1003,18 @@ function renderTableOnly(){
     if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
     let nameCell = l.learnerName ? escapeHtml(l.learnerName) : "-";
 
+    // ---- NTLP登録状態セル(ご要望の新規列) ----
+    let ntlpCell;
+    if(l.ntlpRegistered){
+      ntlpCell = "<span class='badge high'>登録済</span>";
+    } else if(scopeForTable.isAdmin && l.canIssueAccount){
+      ntlpCell = "<span class='badge mid' style='margin-right:6px;'>未登録</span>";
+    } else if(!l.companyMapped || !l.dekisugiCompanyId){
+      ntlpCell = "<span class='badge mid' title='企業マッピング未設定のため発行できません'>未登録</span>";
+    } else {
+      ntlpCell = "<span class='badge mid'>未登録</span>";
+    }
+
     const subjCell = (subj)=>{
       const st = l.subjStats && l.subjStats[subj];
       if(!st || st.n === 0) return "-";
@@ -917,10 +1030,41 @@ function renderTableOnly(){
     else if(rate >= 70) statusCell = "<span class='badge high'>順調</span>";
     else statusCell = "<span class='badge mid'>要確認</span>";
 
+    const ntlpTd = document.createElement("td");
+    ntlpTd.innerHTML = ntlpCell;
+    // 発行可能な人だけ、ボタンをDOM要素として追加(クリックイベントをinnerHTML文字列に混ぜないため)
+    if(scopeForTable.isAdmin && l.canIssueAccount){
+      const issueBtn = document.createElement("button");
+      issueBtn.className = "secondary";
+      issueBtn.style.cssText = "padding:4px 10px;font-size:11.5px;";
+      issueBtn.textContent = "アカウント発行";
+      issueBtn.onclick = (ev)=>{
+        ev.stopPropagation(); // 行クリック(カルテ表示)に伝播させない
+        ask("実習生ID「"+l.learner_id+"」（"+(l.learnerName||"")+"）のNTLPアカウントを発行します。よろしいですか？", async ()=>{
+          issueBtn.disabled = true; issueBtn.textContent = "発行中...";
+          try{
+            const result = await issueAccount(l);
+            dashState._fetchTriggered = false;
+            await loadDashboardData();
+            showIssueResultModal(result.login_id, result.initial_password);
+          }catch(e){
+            issueBtn.disabled = false; issueBtn.textContent = "アカウント発行";
+            const errBox = document.createElement("div");
+            errBox.className = "errormsg";
+            errBox.style.marginTop = "4px";
+            errBox.textContent = e.message || "発行に失敗しました。";
+            ntlpTd.appendChild(errBox);
+          }
+        });
+      };
+      ntlpTd.appendChild(issueBtn);
+    }
+
     tr.innerHTML =
       "<td>"+companyCell+"</td>"+
       "<td>"+nameCell+"</td>"+
       "<td>"+learnerCell+"</td>"+
+      "<td></td>"+ // NTLP状態セルは後でDOM要素として挿入(ボタンのため)
       "<td>"+endCell+"</td>"+
       "<td>"+l.questionsStudied+"</td>"+
       "<td><span class='badge "+badgeClass+"'>"+rate+"%</span></td>"+
@@ -931,6 +1075,8 @@ function renderTableOnly(){
       "<td>"+escapeHtml(examCell)+"</td>"+
       "<td class='"+staleClass+"'>"+escapeHtml(lastSeenCell)+"</td>"+
       "<td>"+statusCell+"</td>";
+    // 空のNTLP状態<td>を、ボタン入りの本物と差し替える
+    tr.children[3].replaceWith(ntlpTd);
     tr.className = "clickable";
     tr.title = "クリックで詳細(個人カルテ)を見る";
     tr.onclick = ()=>{
