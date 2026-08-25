@@ -2763,6 +2763,39 @@ function currentPhase(){
 // ---- レンダリング ----
 function el(html){ const d=document.createElement("div"); d.innerHTML=html; return d.firstElementChild; }
 
+// スワイプで問題を送る/戻すための検出ヘルパー。
+// 横方向にしっかり動いた場合だけ反応させ(縦スクロールや誤タップと区別)、
+// 模試モードの問題番号バー(.gridnum、横スクロールが元々ある)の上から始まった操作は
+// 既存の横スクロールを優先して、スワイプ判定の対象から外す。
+function attachSwipeNav(targetEl, onSwipeLeft, onSwipeRight){
+  const SWIPE_MIN_DIST = 60;
+  const SWIPE_MAX_TIME = 600;
+  let startX = null, startY = null, startTime = null, startOnGridnum = false;
+
+  targetEl.addEventListener("touchstart", (ev)=>{
+    if(ev.touches.length !== 1) return;
+    startOnGridnum = !!ev.target.closest(".gridnum");
+    if(startOnGridnum) return;
+    startX = ev.touches[0].clientX;
+    startY = ev.touches[0].clientY;
+    startTime = Date.now();
+  }, { passive: true });
+
+  targetEl.addEventListener("touchend", (ev)=>{
+    if(startOnGridnum || startX === null) { startX = null; return; }
+    const endX = ev.changedTouches[0].clientX;
+    const endY = ev.changedTouches[0].clientY;
+    const dx = endX - startX, dy = endY - startY;
+    const elapsed = Date.now() - startTime;
+    startX = null;
+    if(elapsed > SWIPE_MAX_TIME) return;
+    if(Math.abs(dx) < SWIPE_MIN_DIST) return;
+    if(Math.abs(dx) < Math.abs(dy) * 1.5) return; // 横方向より縦の動きが大きければスクロールとみなす
+    if(dx < 0) onSwipeLeft();
+    else onSwipeRight();
+  }, { passive: true });
+}
+
 function renderHeader(){
   {
     const fullTitle = tr(T.appName); // 例: "N.T.I.C Academy JLPTナビ"
@@ -3871,6 +3904,13 @@ function renderQuestion(){
     nav.appendChild(doneBtn);
   }
   wrap.appendChild(nav);
+
+  // スワイプで問題送り: 左スワイプで次へ、右スワイプで前へ(それぞれボタンがある時だけ反応)。
+  // 最後の問題での左スワイプは「提出/終了」を誤操作させないよう、あえて何もしない。
+  attachSwipeNav(wrap,
+    ()=>{ if(ST.idx < ST.queue.length - 1){ ST.idx += 1; render(); } },
+    ()=>{ if(ST.idx > 0){ ST.idx -= 1; render(); } }
+  );
 
   return wrap;
 }
