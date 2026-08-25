@@ -30,6 +30,7 @@ header h1 .appTitleTop{display:block;font-size:11px;font-weight:700;color:var(--
 header h1 .appTitleMain{display:block;font-size:17px;font-weight:800;color:var(--green);
   letter-spacing:.01em;margin-top:1px;}
 main{max-width:900px;margin:0 auto;padding:28px 20px 60px;width:100%;box-sizing:border-box;}
+footer{text-align:center;font-size:11px;color:var(--text-sub);padding:18px 20px 28px;}
 .card{background:#fff;border-radius:var(--radius);padding:22px 0;margin-bottom:0;
   border:none;border-bottom:1px solid var(--border);max-width:100%;overflow-x:hidden;}
 .card:first-of-type{padding-top:2px;}
@@ -84,19 +85,17 @@ button.danger{background:#fff;color:var(--red);border:1px solid var(--red);borde
 button.danger:hover{background:#faf3f0;}
 .icon{width:13px;height:13px;flex:0 0 auto;vertical-align:middle;}
 .icon-warn{color:var(--red);}
-.stat-block{background:transparent;border-radius:0;
-  padding:0;text-align:left;border:none;display:flex;flex-direction:column;}
-.stat-block .num{font-size:26px;font-weight:300;color:var(--text-main);letter-spacing:-.02em;line-height:1.2;}
-.stat-block .lbl{font-size:11px;color:var(--text-sub);margin-top:5px;font-weight:400;}
+.stat-block{background:#fff;border:1px solid var(--border);border-radius:8px;
+  padding:14px 12px;text-align:left;display:flex;flex-direction:column;}
+.stat-block .num{font-size:24px;font-weight:600;color:var(--text-main);letter-spacing:-.02em;line-height:1.2;
+  font-variant-numeric:tabular-nums;}
+.stat-block .lbl{font-size:11px;color:var(--text-sub);margin-top:6px;font-weight:400;}
 .stat-block .stat-sub{font-size:10.5px;color:var(--text-sub);margin-top:2px;font-weight:500;}
 .stat-block.alert .num{color:var(--red);}
-.summary-cardgrid{display:grid;gap:22px 16px;margin-bottom:0;align-items:start;}
-.summary-cardgrid + .summary-cardgrid{margin-top:20px;}
-.summary-cardgrid.cols-3{grid-template-columns:repeat(3,1fr);}
-.summary-cardgrid.cols-4{grid-template-columns:repeat(4,1fr);}
+.summary-cardgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:0;align-items:stretch;}
+.summary-cardgrid + .summary-cardgrid{margin-top:12px;}
 @media (max-width: 520px){
-  .summary-cardgrid.cols-3{grid-template-columns:repeat(2,1fr);}
-  .summary-cardgrid.cols-4{grid-template-columns:repeat(2,1fr);}
+  .summary-cardgrid{grid-template-columns:repeat(2,1fr);}
   /* スマホでは指でタップしやすいよう、ページャーのボタンを大きくする(目安44px角) */
   .pagination-page{width:40px;height:40px;font-size:14px;}
   .pagination-nav{padding:10px 12px;font-size:14px;}
@@ -138,8 +137,9 @@ button.danger:hover{background:#faf3f0;}
 </style>
 </head>
 <body>
-<header><div class="headerTop"><img src="data:image/png;base64,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" alt="N.T.I.C" class="orgLogo"><h1><span class="appTitleTop">N.T.I.C Academy</span><span class="appTitleMain">管理者ダッシュボード</span></h1></div></header>
+<header><div class="headerTop"><img id="orgLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHkAAAB6CAYAAACbbvznAAAKWklEQVR4nO2d7bWruBWGn2Tlf9RBmAqGVBClgsutYJwOzlQwngp8OvBJBfatwJ4KzK3ATgXmVpD8kAkC6wssPo6tZy2WMaAtoZe90QfY8DpkwBtwAP4LnIA1IOcqUCIOBbABzihhbcsV2AEr1MWQWDAZylt3uEX1LSfUxSEnLHvCgUQJcuIxYV3LDnXxZFOcUAIEKqzuUGF2LGFtyxl1URWjnuULkqMaSWN669DlgPLyfJQzf2IEylu3zOOtj3j5FuXlImqNPAk57S7OMywnVATKI9XRp0Ogrvgt/i7OMyzX27mumNjL/zRlZqjWaQH8g9RwKYEj8O32ORpTiFzQiJpNkN9npKIt+CWm8TFEzlB91y+3TzFCHs9OiRL7D2D/qLFYIksaUfNINhMNexrBL30TDxVZ0A7DYqCdRH8uNKIfUaHeSR+Rc5SgX0jeuiSONPfy0nSAS2RBOwxn0YqVGIsLbdEr00E5zzcg8crLVhdX8hoDEq+wHHDMmAmaEajrAgqblvBlR3skTdDM1ElQY6sF9+Qsd+bn1ZcrbmH1YyWaiHrCjDa6gesCTvIVlyvNDJdJF1s6CfZG1gn7DIok7NmptMwjbLDI+nLGPk+aEee5qrQ0db2h7VyCcGG7xwhuBusNW8IaXjvsLbiC15k+HFNYvS596Q+078/6PkCF5HrDWstgRZiXn7A/2ZiT+t2uenvDLuw1MH1mqPdgkWuy2/ZzQMGv2CfGBZ/zkZ4xhM06dVME1sv5pkU3fZc7kVfahoMjoXjgpHKDvZzX6KLteFzYjaUOTWSd9IAKsyEiw2ONq7qwhaVgK56ni7bDHM0KwoS93o7LDXXlQ2p2Ts6NFt48hRtSEZkhn4LP1UWrRVnxuLCFoT76IDWbh3pj1snMRffYECF9J1dfXBvMV27GMrtoLlEKwtseO9TFEQup2T7oO0JFhn730JqCcM/UK0908hbM20U7E1fY7vnFYKXlYxXZl/GG8EoxkaM8M/RiOWDvKvS1NVTYDeYoUxAu7OlWVmGpl1isadfd/9G9QnqM5IRXkI9DD1t6hZvKKIjXRYslrL6YyjwGay3Prb5Dr+yQwugXRUyRC8Ir8Io77OX0e9ux9rTMYSv0vJci8lrfoVd2EWBoS9iJ+eiKrCPpV7En7BMqGeax37GFnUNk/RzXQTssFISdmA+XyDo5/Sr8jLs7InlM2BPtBs5SRC46ZV/rO9e2HQ6u+E/MR6jIOjn9Xzrf8bjHmrx+CSLn2G9xa/3AtbZjE2hc9/4pRdbJ6N+63t7S5viFPeP+hYG5RM5u5fKVf6UnetN2HAIzWnkymEJknYwwwevzk5b9Z8LHiqcUWdDvYYG7PCX3lRCS6ZJE1smwj5L5RO7DFCJLhncLJcCfDUazwMwrLE/sL4AL8A58BX6ftSTDWaOiyoEHR8dqkSttW9Yj/b+HZpzw8huR3lqpRS4Hpt/HKIRGFtneq3MBc7iG8Mq+EPeF6dB8E2Fc4HGRIb43JyKji3wcaCPdlxdODE8uCXgROjEfMUSGFLJDkBPnV9Urush/PGDw2wNpE+NQ1is2T/5bT4PHoSXpsGP4U4oJC7HCdUWckC1Qozsn/JMDiUBitK5rYofsjGYKcBPZ9kth8+R8gK3j8GJ4yUe0/Qjl3AVwUNUrNpHFAKMX5jtpwTwXQjVDnqF8r1dihmuYb2Akp7mPb0k/INfiL459Of098zi0IJHIUA231e37caZyLAqXyGKAvRIVtrMBacdAzl2AJdC9J5cBaVae/fshBUlEp6pXuiJX2npuSfzFY/yRkbNEPMp6xda6Bnu4vuB+AH/PsludL8eQcP0D9RPILvZDCpMYh67IP7T1nx3pCo/dFLIXxJBwXaFaz7kj7X5IYRLjMCRc18cUjmMqktBzc6xXXK1r6THia2WnOeaF4ArXPnLcgx4fD9hORKQr8iUgTamtF7EKkhgPn8jSkKbS1n1dqcQCeCRcQ5rtWSpH/YtJ5EuAkUpbl4OLkojFEUfPyCeytKTTDfpa2QmFa3BpKBfgn7elsh30aLiG1PgKRUS0VaFeyf2JJjRb7fs8+a8BGQpSyJ6SD5S468723JbAJPJ/AhKWne8pZI9PiQrL/8I/y9eaOxgarn90vhcD7ST8VChh/87Ax5lMIlfaugi0k7Hcx2Y/M++o0PzhOS5z7TQ941Vq67klXWXYJln2c8ifjZ8If8E/c+0cGq5Lw7ZfBtpKmLnEMuQL1xAesnOW85Tmq3PUv5hELjvf8x7GZa+iJGKRu3bGDNeQulJzIVw7bSJXHgOVYRu83oRFNXcBQrCJXGrreU+bckhBPinf/YeMikC91vubtq2k02iziaw/uvML/nllnRSyp0HS/DxzzTtq0OSiH2gT+R01hHZBtZgPqLcFhXZMaUlbhJYyMQiB8t4DTW+mQun1qymBq+F1RF0V77fvK9SroauAQuSeYxLDkNx775H2bNQdvtZ1hbo6aq8WKI8+4G5gpYGRuAjuvRcabSpX4tAu1JG2V0vc3loE2k34KWh+JKempK2Hkz795Ap15XzF33XISKNfjyJQP3m1ox01P1DeW4YaGjIYskfdA/ae44oBthOKAuW9hbatQjlYyHxyi6EjXnWGLq9O9+X+v5ovMHvvERWe90MK8egzXnvsXp3Tb/Rrz/P8xkeJEmXdI80b994L6kKpG76DiPEgX4Xy6F+59+qih53vqJP5StwfSp+a31ECl4HHZ6hW84a2U1zof6EYiSFyzTv3j6gMCdl7VHQwXTRLpsQtijBse0P1e2Vn+55+F4qTmCJD8xxwLZDEfBIhvKPE/ix8wy1Krq1nmL23QjWsQnowwcQWuead5krMaYZFs552qnhFWgxrzBd+iaqzj9gZjiUyNPeUuoW5ovln1FflhJoxEp3t7xgmFmIxpsg1axqvFqiTNLUiX4G8873CMbEQiylEhiYU1V6dofqCcqL8l8gez8RCLKYSuWbNiGFpgWSW7aHDw1GYWmSwD67/zPM8OiRQDc1zZ3tJj4mFWMwhMtxPYUIzXruao0CREDR/pLnq7Hun58TCMyFQ/UX9L2H1LkbI3/1Kwv9uNuZf6647ds8Ge1des5FppOD+P4K39Bf5bLAzhci2vERPm9GZK1yb2HM/2bEaYOdC2EtiY1NPLFQzl2OxFLS90RfyJPeeWm8/MY4n5wbbdSTJe9h5aQT3f1e/sRwrMYtcszbs19P0FVm31729iEAbCY0Vba823eckbpEx7NfThIqc3dKbGlcr/6kkXGS0K/dKe7RMMr7IBeYG3Yn0PFtU3mhX9Nttu2Q8kQVNK7+7rAeeR8JDRturdygvG0Nkibnve+a1x90nY007fMcWeW3ZvyM1riYl574bc8YsQqjImcFmfSG9xT+FRChr7gUpOseEimxrXOWjlT4RTM69B+qhNVTk7rKZoOyJHgjuJzvqMNtXZFM0SCwIiblVHCrygdS4+hQI7r06ROS3aYuZiIHE3MWStMVNjatPjqCZ7DCJvCWF56ehQIkNjYcXM5UlMQEZLzKx8D/WPjoWp25uxAAAAABJRU5ErkJggg==" alt="N.T.I.C" class="orgLogo"><h1><span class="appTitleTop">N.T.I.C Academy</span><span class="appTitleMain">管理者ダッシュボード</span></h1></div></header>
 <main id="app"></main>
+<footer>© 日本トータル情報事業協同組合</footer>
 
 <script>
 // Supabase接続設定
@@ -163,6 +163,15 @@ function render(){
   app.innerHTML = "";
   if(!session) app.appendChild(renderLogin());
   else app.appendChild(renderDashboard());
+
+  // ロゴタップでダッシュボードの「トップ」に戻る。このアプリには個人カルテ画面しか
+  // 深い階層が無いので、カルテを開いている時だけ意味を持つ(それ以外は押しても無反応)。
+  const logoEl = document.getElementById("orgLogo");
+  if(logoEl){
+    const canGoHome = !!session && !!dashState.selectedLearner;
+    logoEl.style.cursor = canGoHome ? "pointer" : "default";
+    logoEl.onclick = canGoHome ? ()=> closeKarte() : null;
+  }
 }
 
 // ---- 個人カルテの開閉をブラウザ履歴に積む ----
@@ -931,8 +940,19 @@ async function loadDashboardData(){
   render();
 }
 
+// 3桁ごとにカンマを入れる(表示専用。計算には使わない)
+function fmtNum(n){ return Number(n).toLocaleString("ja-JP"); }
+
 function renderOverallSummary(){
   const wrap = document.createElement("div");
+  wrap.id = "summaryWrap";
+  buildSummaryContent(wrap);
+  return wrap;
+}
+
+// summaryWrapの中身を組み立てる。初回描画(renderOverallSummary)と、
+// 企業フィルタ変更時の部分再描画(renderSummaryOnly)の両方から呼べるよう分離している。
+function buildSummaryContent(wrap){
   const scope = sessionScope();
   // 企業フィルタは表(テーブル)側だけの絞り込みなのでここでは適用しないが、
   // 実習終了済みの実習生は、この全体サマリーからも一律で除外する(現在学習中の実習生のみを扱う運用のため)。
@@ -967,15 +987,13 @@ function renderOverallSummary(){
     regTitle.className = "card-title";
     regTitle.textContent = "NTLPアカウント登録状況";
     regCard.appendChild(regTitle);
-    const regGrid1 = el('<div class="summary-cardgrid cols-3"></div>');
-    regGrid1.appendChild(block(totalLearners+"人", "対象実習生"));
-    regGrid1.appendChild(block(ntlpRegistered.length+"人", "NTLP登録済", {sub: pct(ntlpRegistered.length, totalLearners)}));
-    regGrid1.appendChild(block(ntlpUnregistered.length+"人", "NTLP未登録", {sub: pct(ntlpUnregistered.length, totalLearners)}));
-    regCard.appendChild(regGrid1);
-    const regGrid2 = el('<div class="summary-cardgrid cols-3"></div>');
-    regGrid2.appendChild(block(canIssue.length+"人", "アカウント発行可能"));
-    regGrid2.appendChild(block(companyMappingMissing.length+"人", "企業マッピング未設定", {alert: companyMappingMissing.length>0}));
-    regCard.appendChild(regGrid2);
+    const regGrid = el('<div class="summary-cardgrid"></div>');
+    regGrid.appendChild(block(fmtNum(totalLearners)+"人", "対象実習生"));
+    regGrid.appendChild(block(fmtNum(ntlpRegistered.length)+"人", "NTLP登録済", {sub: pct(ntlpRegistered.length, totalLearners)}));
+    regGrid.appendChild(block(fmtNum(ntlpUnregistered.length)+"人", "NTLP未登録", {sub: pct(ntlpUnregistered.length, totalLearners)}));
+    regGrid.appendChild(block(fmtNum(canIssue.length)+"人", "アカウント発行可能"));
+    regGrid.appendChild(block(fmtNum(companyMappingMissing.length)+"人", "企業マッピング未設定", {alert: companyMappingMissing.length>0}));
+    regCard.appendChild(regGrid);
     wrap.appendChild(regCard);
   }
 
@@ -986,17 +1004,15 @@ function renderOverallSummary(){
   summaryTitle.className = "card-title";
   summaryTitle.textContent = "全体サマリー";
   summaryCard.appendChild(summaryTitle);
-  const gridA = el('<div class="summary-cardgrid cols-3"></div>');
-  gridA.appendChild(block(totalLearners+"人", "対象学習者"));
-  gridA.appendChild(block(studying.length+"人", "学習中"));
-  gridA.appendChild(block(thisWeek.length+"人", "今週学習した人数"));
-  summaryCard.appendChild(gridA);
-  const gridB = el('<div class="summary-cardgrid cols-4"></div>');
-  gridB.appendChild(block(notStudied.length+"人", "未学習"));
-  gridB.appendChild(block(followUps.length+"人", "要フォロー", {alert: followUps.length>0}));
-  gridB.appendChild(block(avgRate+"%", "平均正答率"));
-  gridB.appendChild(block(avgProgress+"%", "平均進捗"));
-  summaryCard.appendChild(gridB);
+  const summaryGrid = el('<div class="summary-cardgrid"></div>');
+  summaryGrid.appendChild(block(fmtNum(totalLearners)+"人", "対象学習者"));
+  summaryGrid.appendChild(block(fmtNum(studying.length)+"人", "学習中"));
+  summaryGrid.appendChild(block(fmtNum(thisWeek.length)+"人", "今週学習した人数"));
+  summaryGrid.appendChild(block(fmtNum(notStudied.length)+"人", "未学習"));
+  summaryGrid.appendChild(block(fmtNum(followUps.length)+"人", "要フォロー", {alert: followUps.length>0}));
+  summaryGrid.appendChild(block(avgRate+"%", "平均正答率"));
+  summaryGrid.appendChild(block(avgProgress+"%", "平均進捗"));
+  summaryCard.appendChild(summaryGrid);
   wrap.appendChild(summaryCard);
 
   // ---- 企業・事業所カード ----
@@ -1009,13 +1025,45 @@ function renderOverallSummary(){
   companyWpTitle.className = "card-title";
   companyWpTitle.textContent = "企業・事業所";
   companyWpCard.appendChild(companyWpTitle);
-  const companyWpGrid = el('<div class="summary-cardgrid cols-4"></div>');
-  companyWpGrid.appendChild(block(dashState.companies.length+"社", "企業数"));
-  companyWpGrid.appendChild(block(dashState.workplaces.length+"事業所", "事業所数"));
-  companyWpGrid.appendChild(block(withWorkplace.length+"人", "勤務先設定済"));
-  companyWpGrid.appendChild(block(withoutWorkplace.length+"人", "勤務先未設定", {alert: withoutWorkplace.length>0}));
+  const companyWpGrid = el('<div class="summary-cardgrid"></div>');
+  companyWpGrid.appendChild(block(fmtNum(dashState.companies.length)+"社", "企業数"));
+  companyWpGrid.appendChild(block(fmtNum(dashState.workplaces.length)+"事業所", "事業所数"));
+  companyWpGrid.appendChild(block(fmtNum(withWorkplace.length)+"人", "勤務先設定済"));
+  companyWpGrid.appendChild(block(fmtNum(withoutWorkplace.length)+"人", "勤務先未設定", {alert: withoutWorkplace.length>0}));
   companyWpCard.appendChild(companyWpGrid);
   wrap.appendChild(companyWpCard);
+
+  // ---- 選択中の企業のサマリーカード(ntic_adminが企業フィルタで1社に絞っている時だけ表示) ----
+  // company_ownerはRLSで元々自社データしか見えていないため、上の「全体サマリー」がそのまま
+  // 自社サマリーとして機能している。ここはntic_adminが組合全体の中から1社を選んだ時の専用表示。
+  if(scope.isAdmin && dashState.companyFilter.trim()){
+    const companyId = dashState.companyFilter.trim();
+    const companyLearners = learners.filter(l=>l.company_id === companyId);
+    if(companyLearners.length > 0){
+      const companyName = companyLearners[0].companyName || companyId;
+      const cRegistered = companyLearners.filter(l=>l.ntlpRegistered).length;
+      const cStudying = companyLearners.filter(l=>l.questionsStudied > 0).length;
+      const cFollowUps = companyLearners.filter(l=>l.needsFollowUp).length;
+      const cWithRate = companyLearners.filter(l=>l.n > 0);
+      const cAvgRate = cWithRate.length ? Math.round(cWithRate.reduce((s,l)=>s+l.rate,0)/cWithRate.length) : 0;
+      const cAvgProgress = Math.round(companyLearners.reduce((s,l)=>s+l.progressPct,0)/companyLearners.length);
+
+      const companyCard = el('<div class="card"></div>');
+      const companyCardTitle = document.createElement("div");
+      companyCardTitle.className = "card-title";
+      companyCardTitle.textContent = "選択中の企業のサマリー：" + companyName;
+      companyCard.appendChild(companyCardTitle);
+      const companyGrid = el('<div class="summary-cardgrid"></div>');
+      companyGrid.appendChild(block(fmtNum(companyLearners.length)+"人", "対象学習者"));
+      companyGrid.appendChild(block(fmtNum(cRegistered)+"人", "NTLP登録済", {sub: pct(cRegistered, companyLearners.length)}));
+      companyGrid.appendChild(block(fmtNum(cStudying)+"人", "学習中"));
+      companyGrid.appendChild(block(fmtNum(cFollowUps)+"人", "要フォロー", {alert: cFollowUps>0}));
+      companyGrid.appendChild(block(cAvgRate+"%", "平均正答率"));
+      companyGrid.appendChild(block(cAvgProgress+"%", "平均進捗"));
+      companyCard.appendChild(companyGrid);
+      wrap.appendChild(companyCard);
+    }
+  }
 
   // ---- 要フォロー学習者 ----
   if(followUps.length > 0){
@@ -1074,6 +1122,14 @@ function renderOverallSummary(){
   wrap.appendChild(trendCard);
 
   return wrap;
+}
+
+// 企業フィルタ変更時に、サマリーカード部分だけを再構築する(全体再描画によるチラつきを避けるため)。
+function renderSummaryOnly(){
+  const summaryWrap = document.getElementById("summaryWrap");
+  if(!summaryWrap) return;
+  summaryWrap.innerHTML = "";
+  buildSummaryContent(summaryWrap);
 }
 
 // 事業所フィルタの選択肢を組み立てる(企業フィルタに応じて絞り込む)。
@@ -1197,7 +1253,7 @@ function renderDashboard(){
       if(dashState.companyFilter === c.company_id) opt.selected = true;
       companySelect.appendChild(opt);
     });
-    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; dashState.companyPage = 0; refreshWorkplaceFilterOptions(); renderTableOnly(); renderBulkBar(); };
+    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; dashState.companyPage = 0; refreshWorkplaceFilterOptions(); renderSummaryOnly(); renderTableOnly(); renderBulkBar(); };
     filters.appendChild(companySelect);
   }
   // 事業所フィルタ(Phase 3.5): ntic_admin・company_ownerのみ表示。
