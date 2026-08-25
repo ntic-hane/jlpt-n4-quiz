@@ -91,6 +91,21 @@ button.danger:hover{background:#faf3f0;}
 .subj-trend-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
 .subj-trend-track{height:1px;background:var(--border);}
 .subj-trend-fill{height:100%;background:var(--navy);}
+.tree-company-header{display:flex;align-items:center;gap:10px;padding:12px 4px;cursor:pointer;
+  font-weight:600;font-size:14px;border-bottom:1px solid var(--border);user-select:none;}
+.tree-company-header:hover{background:var(--blue-light);}
+.tree-workplace-header{display:flex;align-items:center;gap:10px;padding:10px 4px 10px 26px;cursor:pointer;
+  font-weight:500;font-size:13px;color:var(--text-main);border-bottom:1px solid var(--border);
+  background:#fafafb;user-select:none;}
+.tree-workplace-header:hover{background:var(--blue-light);}
+.tree-toggle{color:var(--text-sub);font-size:11px;width:12px;flex:0 0 auto;}
+.tree-company-name{flex:1;}
+.tree-workplace-name{flex:1;}
+.tree-count{color:var(--text-sub);font-size:12px;font-weight:400;}
+.tree-workplace-body{padding-left:26px;margin-bottom:4px;}
+.tree-pager{display:flex;align-items:center;gap:12px;padding:10px 4px;font-size:12.5px;}
+.tree-pager button:disabled{opacity:.35;cursor:default;text-decoration:none;}
+.tree-pager-label{color:var(--text-sub);}
 </style>
 </head>
 <body>
@@ -566,7 +581,7 @@ async function fetchAllPaged(table, params){
   return all;
 }
 
-let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null,
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc",
   bulkSelected: {}, // key(company_id::learner_id) -> true の形で選択状態を保持
   bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null // 一括発行の進捗・結果
 };
@@ -890,6 +905,35 @@ function renderOverallSummary(){
   return wrap;
 }
 
+// 事業所フィルタの選択肢を組み立てる(企業フィルタに応じて絞り込む)。
+// companySelect変更時にこれだけを呼んで再構築できるよう、renderDashboard()から切り出す。
+function populateWorkplaceFilterOptions(selectEl){
+  selectEl.innerHTML = "";
+  const allWpOpt = document.createElement("option");
+  allWpOpt.value = ""; allWpOpt.textContent = "すべての事業所";
+  selectEl.appendChild(allWpOpt);
+  // 現在の企業フィルタに応じて、選択肢となる事業所を絞る(ntic_adminが企業未選択なら全事業所)
+  let wpCandidates = dashState.workplaces;
+  if(dashState.companyFilter.trim()){
+    wpCandidates = wpCandidates.filter(w=>w.company_id === dashState.companyFilter.trim());
+  }
+  const sortedWorkplaces = wpCandidates.slice().sort((a,b)=> a.workplace_name.localeCompare(b.workplace_name,"ja"));
+  sortedWorkplaces.forEach(w=>{
+    const opt = document.createElement("option");
+    opt.value = w.id;
+    // 同じ企業内で、事業所名が同じでもdekisugi_workplace_idの有無で別枠になっているケースがあるため
+    // (例: 現場作業員向けの法人代表扱いと、実際に特定の事業所IDを持つ本社勤務が両方存在する)、
+    // IDが無い方には注記を付けて区別できるようにする。
+    opt.textContent = w.workplace_name + (w.dekisugi_workplace_id ? "" : "（事業所未特定・法人代表扱い）");
+    if(dashState.workplaceFilter === w.id) opt.selected = true;
+    selectEl.appendChild(opt);
+  });
+}
+function refreshWorkplaceFilterOptions(){
+  const selectEl = document.getElementById("workplaceFilterSelect");
+  if(selectEl) populateWorkplaceFilterOptions(selectEl);
+}
+
 function renderDashboard(){
   const wrap = document.createElement("div");
   const scope = sessionScope();
@@ -908,7 +952,7 @@ function renderDashboard(){
   topbar.appendChild(who);
   const logoutBtn = document.createElement("button");
   logoutBtn.className = "ghost"; logoutBtn.textContent = "ログアウト";
-  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
+  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, expandedCompanies:{}, expandedWorkplaces:{}, studentPageByWorkplace:{}, sortColumn:null, sortDirection:"asc", bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
   topbar.appendChild(logoutBtn);
   wrap.appendChild(topbar);
 
@@ -982,33 +1026,16 @@ function renderDashboard(){
       if(dashState.companyFilter === c.company_id) opt.selected = true;
       companySelect.appendChild(opt);
     });
-    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; renderTableOnly(); renderBulkBar(); };
+    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; refreshWorkplaceFilterOptions(); renderTableOnly(); renderBulkBar(); };
     filters.appendChild(companySelect);
   }
   // 事業所フィルタ(Phase 3.5): ntic_admin・company_ownerのみ表示。
   // workplace_managerはRLSで最初から担当事業所だけが返ってくるため、選ぶ意味が無く非表示にする。
   if(scope.isAdmin || scope.role === "company_owner"){
     const workplaceSelect = document.createElement("select");
+    workplaceSelect.id = "workplaceFilterSelect";
     workplaceSelect.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;flex:1;min-width:160px;background:#fff;";
-    const allWpOpt = document.createElement("option");
-    allWpOpt.value = ""; allWpOpt.textContent = "すべての事業所";
-    workplaceSelect.appendChild(allWpOpt);
-    // 現在の企業フィルタに応じて、選択肢となる事業所を絞る(ntic_adminが企業未選択なら全事業所)
-    let wpCandidates = dashState.workplaces;
-    if(dashState.companyFilter.trim()){
-      wpCandidates = wpCandidates.filter(w=>w.company_id === dashState.companyFilter.trim());
-    }
-    const sortedWorkplaces = wpCandidates.slice().sort((a,b)=> a.workplace_name.localeCompare(b.workplace_name,"ja"));
-    sortedWorkplaces.forEach(w=>{
-      const opt = document.createElement("option");
-      opt.value = w.id;
-      // 同じ企業内で、事業所名が同じでもdekisugi_workplace_idの有無で別枠になっているケースがあるため
-      // (例: 現場作業員向けの法人代表扱いと、実際に特定の事業所IDを持つ本社勤務が両方存在する)、
-      // IDが無い方には注記を付けて区別できるようにする。
-      opt.textContent = w.workplace_name + (w.dekisugi_workplace_id ? "" : "（事業所未特定・法人代表扱い）");
-      if(dashState.workplaceFilter === w.id) opt.selected = true;
-      workplaceSelect.appendChild(opt);
-    });
+    populateWorkplaceFilterOptions(workplaceSelect);
     workplaceSelect.onchange = ()=>{ dashState.workplaceFilter = workplaceSelect.value; renderTableOnly(); renderBulkBar(); };
     filters.appendChild(workplaceSelect);
   }
@@ -1337,6 +1364,241 @@ function getFilteredLearners(){
 
 function bulkKey(l){ return l.company_id + "::" + l.learner_id; }
 
+// 期生・号の並び替え用キー(数値昇順、未設定は末尾)
+function kiseiSortKey(l){
+  if(!l.kisei) return 9999;
+  const m = l.kisei.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 9999;
+}
+function goSortKey(l){
+  if(!l.go) return 9;
+  const m = l.go.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 9;
+}
+
+// 企業名と重複する接頭辞(例:「アサヒグローバルホーム株式会社　○○店」の企業名部分)は省いて店舗名だけ表示する。
+// 完全一致(店舗名が無く企業名そのものの場合)は省くと空になるため、元の名前のまま表示する。
+function stripCompanyPrefix(name, companyName){
+  if(!companyName || !name.startsWith(companyName)) return name;
+  const rest = name.slice(companyName.length).replace(/^[\s　]+/, "");
+  return rest || name;
+}
+
+// 1人分の実習生行(<tr>)を組み立てる。企業・勤務先は階層見出し側で表現するため、ここでは含めない。
+function buildLearnerRow(l, scopeForTable){
+  const tr = document.createElement("tr");
+  const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
+  const badgeClass = rate >= 70 ? "high" : rate >= 40 ? "mid" : "low";
+  let examCell = "-";
+  if(l.lastExam){
+    const eg = l.lastExam.exam_group === "moji" ? "文字語彙" : l.lastExam.exam_group === "choukai" ? "聴解" : "文法・読解";
+    examCell = eg + " " + l.lastExam.correct + "/" + l.lastExam.total + " (" + l.lastExam.pct + "%)";
+  }
+  let lastSeenCell = "-";
+  let staleClass = "";
+  if(l.lastSeen){
+    lastSeenCell = relTime(l.lastSeen);
+    const days = (Date.now() - new Date(l.lastSeen).getTime()) / 86400000;
+    if(days > 7) staleClass = "stale";
+  }
+  let periodCell;
+  if(l.kisei && l.go) periodCell = escapeHtml(l.kisei + "・" + l.go);
+  else if(l.kisei) periodCell = escapeHtml(l.kisei);
+  else if(l.go) periodCell = escapeHtml(l.go);
+  else periodCell = "-";
+  let learnerCell = escapeHtml(l.learner_id);
+  const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
+  if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
+  let nameCell = l.learnerName ? escapeHtml(l.learnerName) : "-";
+
+  let ntlpCell;
+  if(l.ntlpRegistered){
+    ntlpCell = "<span class='badge high'>登録済</span>";
+  } else if(scopeForTable.isAdmin && l.canIssueAccount){
+    ntlpCell = "<span class='badge mid' style='margin-right:6px;'>未登録</span>";
+  } else if(!l.companyMapped || !l.dekisugiCompanyId){
+    ntlpCell = "<span class='badge mid' title='企業マッピング未設定のため発行できません'>未登録</span>";
+  } else {
+    ntlpCell = "<span class='badge mid'>未登録</span>";
+  }
+
+  const subjCell = (subj)=>{
+    const st = l.subjStats && l.subjStats[subj];
+    if(!st || st.n === 0) return "-";
+    const r = Math.round(st.c/st.n*100);
+    const cls = r >= 70 ? "high" : r >= 40 ? "mid" : "low";
+    return "<span class='badge "+cls+"'>"+r+"%</span>";
+  };
+
+  let statusCell;
+  if(l.isFinished) statusCell = "<span class='badge mid'>終了済み</span>";
+  else if(l.questionsStudied === 0) statusCell = "<span class='badge mid'>未着手</span>";
+  else if(l.needsFollowUp) statusCell = "<span class='badge low' title='"+escapeHtml(l.followUpReasons.join(' / '))+"'>要フォロー</span>";
+  else if(rate >= 70) statusCell = "<span class='badge high'>順調</span>";
+  else statusCell = "<span class='badge mid'>要確認</span>";
+
+  const ntlpTd = document.createElement("td");
+  ntlpTd.innerHTML = ntlpCell;
+  if(scopeForTable.isAdmin && l.canIssueAccount){
+    const issueBtn = document.createElement("button");
+    issueBtn.className = "secondary";
+    issueBtn.style.cssText = "padding:4px 10px;font-size:11.5px;";
+    issueBtn.textContent = "アカウント発行";
+    issueBtn.onclick = (ev)=>{
+      ev.stopPropagation();
+      ask("実習生ID「"+l.learner_id+"」（"+(l.learnerName||"")+"）のNTLPアカウントを発行します。よろしいですか？", async ()=>{
+        issueBtn.disabled = true; issueBtn.textContent = "発行中...";
+        try{
+          const result = await issueAccount(l);
+          dashState._fetchTriggered = false;
+          await loadDashboardData();
+          showIssueResultModal(result.login_id, result.initial_password);
+        }catch(e){
+          issueBtn.disabled = false; issueBtn.textContent = "アカウント発行";
+          const errBox = document.createElement("div");
+          errBox.className = "errormsg";
+          errBox.style.marginTop = "4px";
+          errBox.textContent = e.message || "発行に失敗しました。";
+          ntlpTd.appendChild(errBox);
+        }
+      }, null, "はい、発行する");
+    };
+    ntlpTd.appendChild(issueBtn);
+  }
+
+  let checkboxTd = null;
+  if(scopeForTable.isAdmin){
+    checkboxTd = document.createElement("td");
+    if(l.canIssueAccount){
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!dashState.bulkSelected[bulkKey(l)];
+      cb.onclick = (ev)=>{ ev.stopPropagation(); };
+      cb.onchange = ()=>{
+        if(cb.checked) dashState.bulkSelected[bulkKey(l)] = true;
+        else delete dashState.bulkSelected[bulkKey(l)];
+        renderBulkBar();
+      };
+      checkboxTd.appendChild(cb);
+    }
+  }
+
+  tr.innerHTML =
+    (checkboxTd ? "<td></td>" : "")+
+    "<td>"+nameCell+"</td>"+
+    "<td>"+learnerCell+"</td>"+
+    "<td></td>"+ // NTLP状態セルは後でDOM要素として挿入(ボタンのため)
+    "<td>"+periodCell+"</td>"+
+    "<td>"+l.questionsStudied+"</td>"+
+    "<td><span class='badge "+badgeClass+"'>"+rate+"%</span></td>"+
+    "<td>"+subjCell("moji")+"</td>"+
+    "<td>"+subjCell("bunpo")+"</td>"+
+    "<td>"+subjCell("dokkai")+"</td>"+
+    "<td>"+subjCell("choukai")+"</td>"+
+    "<td>"+escapeHtml(examCell)+"</td>"+
+    "<td class='"+staleClass+"'>"+escapeHtml(lastSeenCell)+"</td>"+
+    "<td>"+statusCell+"</td>";
+  const ntlpTdIndex = checkboxTd ? 3 : 2;
+  tr.children[ntlpTdIndex].replaceWith(ntlpTd);
+  if(checkboxTd) tr.children[0].replaceWith(checkboxTd);
+  tr.className = "clickable";
+  tr.title = "クリックで詳細(個人カルテ)を見る";
+  tr.onclick = ()=>{
+    dashState.selectedLearner = { company_id: l.company_id, learner_id: l.learner_id };
+    render();
+  };
+  return tr;
+}
+
+function toggleCompanyExpand(companyId){
+  dashState.expandedCompanies[companyId] = !dashState.expandedCompanies[companyId];
+  renderTableOnly();
+}
+function toggleWorkplaceExpand(key){
+  dashState.expandedWorkplaces[key] = !dashState.expandedWorkplaces[key];
+  renderTableOnly();
+}
+
+const STUDENTS_PER_PAGE = 5;
+
+// クリックで並び替えできる列の定義。値取得関数(getValue)を統一して比較する。
+const SORT_GETTERS = {
+  name: l => l.learnerName || "",
+  learnerId: l => l.learner_id || "",
+  period: l => kiseiSortKey(l)*10 + goSortKey(l),
+  questions: l => l.questionsStudied || 0,
+  rate: l => l.n > 0 ? l.c / l.n : -1,
+  lastSeen: l => l.lastSeen ? new Date(l.lastSeen).getTime() : -1,
+};
+const HEADER_DEFS = [
+  { label: "氏名", key: "name" },
+  { label: "実習生ID", key: "learnerId" },
+  { label: "NTLP状態", key: null },
+  { label: "期生・号", key: "period" },
+  { label: "学習済み問題数", key: "questions" },
+  { label: "通算正答率", key: "rate" },
+  { label: "文字語彙", key: null },
+  { label: "文法", key: null },
+  { label: "読解", key: null },
+  { label: "聴解", key: null },
+  { label: "最新模試", key: null },
+  { label: "最終学習", key: "lastSeen" },
+  { label: "状態", key: null },
+];
+
+// 選択中の並び替え列があればそれで、無ければデフォルト(期生・号順)で並び替える。
+function sortLearnersForDisplay(learners){
+  const col = dashState.sortColumn;
+  if(col && SORT_GETTERS[col]){
+    const dir = dashState.sortDirection === "desc" ? -1 : 1;
+    const getValue = SORT_GETTERS[col];
+    return learners.slice().sort((a,b)=>{
+      const va = getValue(a), vb = getValue(b);
+      if(va < vb) return -1*dir;
+      if(va > vb) return 1*dir;
+      return 0;
+    });
+  }
+  return learners.slice().sort((a,b)=>{
+    const ka = kiseiSortKey(a), kb = kiseiSortKey(b);
+    if(ka !== kb) return ka - kb;
+    const ga = goSortKey(a), gb = goSortKey(b);
+    if(ga !== gb) return ga - gb;
+    return (a.learnerName||"").localeCompare(b.learnerName||"", "ja");
+  });
+}
+
+// 並び替え可能な列見出しを構築する(クリックで昇順⇄降順、別の列をクリックするとその列の昇順から)。
+function buildSortableThead(checkboxHeader){
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  if(checkboxHeader) headRow.appendChild(document.createElement("th"));
+  HEADER_DEFS.forEach(h=>{
+    const th = document.createElement("th");
+    if(h.key){
+      th.style.cursor = "pointer";
+      th.title = "クリックで並び替え";
+      let arrow = "";
+      if(dashState.sortColumn === h.key) arrow = dashState.sortDirection === "desc" ? " ▼" : " ▲";
+      th.textContent = h.label + arrow;
+      th.onclick = ()=>{
+        if(dashState.sortColumn === h.key){
+          dashState.sortDirection = dashState.sortDirection === "asc" ? "desc" : "asc";
+        } else {
+          dashState.sortColumn = h.key;
+          dashState.sortDirection = "asc";
+        }
+        renderTableOnly();
+      };
+    } else {
+      th.textContent = h.label;
+    }
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  return thead;
+}
+
 function renderTableOnly(){
   const tableWrap = document.getElementById("tableWrap");
   if(!tableWrap) return;
@@ -1347,167 +1609,124 @@ function renderTableOnly(){
     return;
   }
 
-  const table = document.createElement("table");
-  const checkboxHeader = sessionScope().isAdmin ? "<th></th>" : "";
-  table.innerHTML = "<thead><tr>"+
-    checkboxHeader+
-    "<th>企業</th><th>氏名</th><th>実習生ID</th><th>勤務先</th><th>NTLP状態</th><th>期生・号</th><th>学習済み問題数</th><th>通算正答率</th>"+
-    "<th>文字語彙</th><th>文法</th><th>読解</th><th>聴解</th>"+
-    "<th>最新模試</th><th>最終学習</th><th>状態</th>"+
-    "</tr></thead>";
-  const tbody = document.createElement("tbody");
   const scopeForTable = sessionScope();
+
+  // ---- 企業 → 勤務先 → 実習生、の階層にグルーピングする ----
+  const companyGroups = {}; // company_id -> { companyName, learners:[], workplaceMap:{ key -> {label, learners:[]} } }
   learners.forEach(l=>{
-    const tr = document.createElement("tr");
-    if(l.isFinished) tr.style.opacity = "0.5";
-    const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
-    const badgeClass = rate >= 70 ? "high" : rate >= 40 ? "mid" : "low";
-    let examCell = "-";
-    if(l.lastExam){
-      const eg = l.lastExam.exam_group === "moji" ? "文字語彙" : l.lastExam.exam_group === "choukai" ? "聴解" : "文法・読解";
-      examCell = eg + " " + l.lastExam.correct + "/" + l.lastExam.total + " (" + l.lastExam.pct + "%)";
+    if(!companyGroups[l.company_id]){
+      companyGroups[l.company_id] = { companyName: l.companyName || l.company_id, workplaceMap: {} };
     }
-    let lastSeenCell = "-";
-    let staleClass = "";
-    if(l.lastSeen){
-      lastSeenCell = relTime(l.lastSeen);
-      const days = (Date.now() - new Date(l.lastSeen).getTime()) / 86400000;
-      if(days > 7) staleClass = "stale";
+    const g = companyGroups[l.company_id];
+    const w = (l.workplaces && l.workplaces[0]) ? l.workplaces[0] : null;
+    const key = w ? w.id : "__unset__";
+    if(!g.workplaceMap[key]){
+      g.workplaceMap[key] = { label: w ? stripCompanyPrefix(w.workplace_name, g.companyName) : "未設定", learners: [] };
     }
-    let companyCell = l.companyName ? l.companyName : l.company_id;
-    if(!l.companyName) companyCell += " <span class='badge mid' title='企業マスターに未登録'>未登録</span>";
-    let periodCell;
-    if(l.kisei && l.go) periodCell = escapeHtml(l.kisei + "・" + l.go);
-    else if(l.kisei) periodCell = escapeHtml(l.kisei);
-    else if(l.go) periodCell = escapeHtml(l.go);
-    else periodCell = "-";
-    let learnerCell = escapeHtml(l.learner_id);
-    const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
-    if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
-    let nameCell = l.learnerName ? escapeHtml(l.learnerName) : "-";
-
-    // ---- NTLP登録状態セル(ご要望の新規列) ----
-    let ntlpCell;
-    if(l.ntlpRegistered){
-      ntlpCell = "<span class='badge high'>登録済</span>";
-    } else if(scopeForTable.isAdmin && l.canIssueAccount){
-      ntlpCell = "<span class='badge mid' style='margin-right:6px;'>未登録</span>";
-    } else if(!l.companyMapped || !l.dekisugiCompanyId){
-      ntlpCell = "<span class='badge mid' title='企業マッピング未設定のため発行できません'>未登録</span>";
-    } else {
-      ntlpCell = "<span class='badge mid'>未登録</span>";
-    }
-
-    const subjCell = (subj)=>{
-      const st = l.subjStats && l.subjStats[subj];
-      if(!st || st.n === 0) return "-";
-      const r = Math.round(st.c/st.n*100);
-      const cls = r >= 70 ? "high" : r >= 40 ? "mid" : "low";
-      return "<span class='badge "+cls+"'>"+r+"%</span>";
-    };
-
-    let statusCell;
-    if(l.isFinished) statusCell = "<span class='badge mid'>終了済み</span>";
-    else if(l.questionsStudied === 0) statusCell = "<span class='badge mid'>未着手</span>";
-    else if(l.needsFollowUp) statusCell = "<span class='badge low' title='"+escapeHtml(l.followUpReasons.join(' / '))+"'>要フォロー</span>";
-    else if(rate >= 70) statusCell = "<span class='badge high'>順調</span>";
-    else statusCell = "<span class='badge mid'>要確認</span>";
-
-    const ntlpTd = document.createElement("td");
-    ntlpTd.innerHTML = ntlpCell;
-    // 発行可能な人だけ、ボタンをDOM要素として追加(クリックイベントをinnerHTML文字列に混ぜないため)
-    if(scopeForTable.isAdmin && l.canIssueAccount){
-      const issueBtn = document.createElement("button");
-      issueBtn.className = "secondary";
-      issueBtn.style.cssText = "padding:4px 10px;font-size:11.5px;";
-      issueBtn.textContent = "アカウント発行";
-      issueBtn.onclick = (ev)=>{
-        ev.stopPropagation(); // 行クリック(カルテ表示)に伝播させない
-        ask("実習生ID「"+l.learner_id+"」（"+(l.learnerName||"")+"）のNTLPアカウントを発行します。よろしいですか？", async ()=>{
-          issueBtn.disabled = true; issueBtn.textContent = "発行中...";
-          try{
-            const result = await issueAccount(l);
-            dashState._fetchTriggered = false;
-            await loadDashboardData();
-            showIssueResultModal(result.login_id, result.initial_password);
-          }catch(e){
-            issueBtn.disabled = false; issueBtn.textContent = "アカウント発行";
-            const errBox = document.createElement("div");
-            errBox.className = "errormsg";
-            errBox.style.marginTop = "4px";
-            errBox.textContent = e.message || "発行に失敗しました。";
-            ntlpTd.appendChild(errBox);
-          }
-        }, null, "はい、発行する");
-      };
-      ntlpTd.appendChild(issueBtn);
-    }
-
-    // ---- 一括発行用チェックボックス(発行可能な行のみ、管理者にのみ表示) ----
-    let checkboxTd = null;
-    if(scopeForTable.isAdmin){
-      checkboxTd = document.createElement("td");
-      if(l.canIssueAccount){
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = !!dashState.bulkSelected[bulkKey(l)];
-        cb.onclick = (ev)=>{ ev.stopPropagation(); }; // 行クリック(カルテ表示)に伝播させない
-        cb.onchange = ()=>{
-          if(cb.checked) dashState.bulkSelected[bulkKey(l)] = true;
-          else delete dashState.bulkSelected[bulkKey(l)];
-          renderBulkBar();
-        };
-        checkboxTd.appendChild(cb);
-      }
-    }
-
-    // 勤務先セル(Phase 3.5)。複数事業所の場合は全て「／」区切りで表示。未設定は「未設定」。
-    // 企業名と重複する接頭辞(例:「アサヒグローバルホーム株式会社　○○店」の企業名部分)は省いて店舗名だけ表示する。
-    // 完全一致(店舗名が無く企業名そのものの場合)は省くと空になるため、元の名前のまま表示する。
-    const stripCompanyPrefix = (name, companyName)=>{
-      if(!companyName || !name.startsWith(companyName)) return name;
-      const rest = name.slice(companyName.length).replace(/^[\s　]+/, "");
-      return rest || name;
-    };
-    let workplaceCell;
-    if(l.workplaces && l.workplaces.length > 0){
-      workplaceCell = escapeHtml(l.workplaces.map(w=>stripCompanyPrefix(w.workplace_name, l.companyName)).join(" ／ "));
-    } else {
-      workplaceCell = "<span class='badge mid'>未設定</span>";
-    }
-
-    tr.innerHTML =
-      (checkboxTd ? "<td></td>" : "")+
-      "<td>"+companyCell+"</td>"+
-      "<td>"+nameCell+"</td>"+
-      "<td>"+learnerCell+"</td>"+
-      "<td>"+workplaceCell+"</td>"+
-      "<td></td>"+ // NTLP状態セルは後でDOM要素として挿入(ボタンのため)
-      "<td>"+periodCell+"</td>"+
-      "<td>"+l.questionsStudied+"</td>"+
-      "<td><span class='badge "+badgeClass+"'>"+rate+"%</span></td>"+
-      "<td>"+subjCell("moji")+"</td>"+
-      "<td>"+subjCell("bunpo")+"</td>"+
-      "<td>"+subjCell("dokkai")+"</td>"+
-      "<td>"+subjCell("choukai")+"</td>"+
-      "<td>"+escapeHtml(examCell)+"</td>"+
-      "<td class='"+staleClass+"'>"+escapeHtml(lastSeenCell)+"</td>"+
-      "<td>"+statusCell+"</td>";
-    // 空のNTLP状態<td>を、ボタン入りの本物と差し替える(勤務先列が1つ増えたぶん+1)
-    const ntlpTdIndex = checkboxTd ? 5 : 4;
-    tr.children[ntlpTdIndex].replaceWith(ntlpTd);
-    if(checkboxTd) tr.children[0].replaceWith(checkboxTd);
-    tr.className = "clickable";
-    tr.title = "クリックで詳細(個人カルテ)を見る";
-    tr.onclick = ()=>{
-      dashState.selectedLearner = { company_id: l.company_id, learner_id: l.learner_id };
-      render();
-    };
-    tbody.appendChild(tr);
+    g.workplaceMap[key].learners.push(l);
   });
-  table.appendChild(tbody);
+
+  const companyIds = Object.keys(companyGroups).sort((a,b)=>
+    companyGroups[a].companyName.localeCompare(companyGroups[b].companyName, "ja"));
+
+  // フィルタで企業が1社だけに絞られている場合は、毎回クリックさせずに自動展開する
+  const soleCompany = companyIds.length === 1 ? companyIds[0] : null;
+
+  const container = document.createElement("div");
+
+  companyIds.forEach(companyId=>{
+    const g = companyGroups[companyId];
+    const companyLearnerCount = Object.values(g.workplaceMap).reduce((s,wg)=>s+wg.learners.length, 0);
+    const isExpanded = soleCompany ? true : !!dashState.expandedCompanies[companyId];
+
+    const companyHeader = document.createElement("div");
+    companyHeader.className = "tree-company-header";
+    companyHeader.innerHTML =
+      "<span class='tree-toggle'>"+(isExpanded ? "▼" : "▶")+"</span>"+
+      "<span class='tree-company-name'>"+escapeHtml(g.companyName)+"</span>"+
+      "<span class='tree-count'>"+companyLearnerCount+"人</span>";
+    if(!soleCompany){
+      companyHeader.onclick = ()=> toggleCompanyExpand(companyId);
+    } else {
+      companyHeader.style.cursor = "default";
+    }
+    container.appendChild(companyHeader);
+
+    if(!isExpanded) return;
+
+    const workplaceKeys = Object.keys(g.workplaceMap).sort((a,b)=>{
+      if(a === "__unset__") return 1;
+      if(b === "__unset__") return -1;
+      return g.workplaceMap[a].label.localeCompare(g.workplaceMap[b].label, "ja");
+    });
+
+    const soleWorkplace = workplaceKeys.length === 1 ? workplaceKeys[0] : null;
+
+    workplaceKeys.forEach(wpKey=>{
+      const wg = g.workplaceMap[wpKey];
+      const fullKey = companyId + "::" + wpKey;
+      const wpExpanded = soleWorkplace ? true : !!dashState.expandedWorkplaces[fullKey];
+
+      const wpHeader = document.createElement("div");
+      wpHeader.className = "tree-workplace-header";
+      wpHeader.innerHTML =
+        "<span class='tree-toggle'>"+(wpExpanded ? "▼" : "▶")+"</span>"+
+        "<span class='tree-workplace-name'>"+escapeHtml(wg.label)+"</span>"+
+        "<span class='tree-count'>"+wg.learners.length+"人</span>";
+      if(!soleWorkplace){
+        wpHeader.onclick = ()=> toggleWorkplaceExpand(fullKey);
+      } else {
+        wpHeader.style.cursor = "default";
+      }
+      container.appendChild(wpHeader);
+
+      if(!wpExpanded) return;
+
+      // 並び替え(選択中の列があればそれで、無ければ期生・号順=受験申請アプリと同じ進級順)
+      const sortedLearners = sortLearnersForDisplay(wg.learners);
+
+      // 5件ずつのページング
+      const totalPages = Math.max(1, Math.ceil(sortedLearners.length / STUDENTS_PER_PAGE));
+      let page = dashState.studentPageByWorkplace[fullKey] || 0;
+      if(page >= totalPages) page = totalPages - 1;
+      if(page < 0) page = 0;
+      const pageLearners = sortedLearners.slice(page*STUDENTS_PER_PAGE, page*STUDENTS_PER_PAGE + STUDENTS_PER_PAGE);
+
+      const wpBody = document.createElement("div");
+      wpBody.className = "tree-workplace-body";
+
+      const table = document.createElement("table");
+      const checkboxHeader = scopeForTable.isAdmin;
+      table.appendChild(buildSortableThead(checkboxHeader));
+      const tbody = document.createElement("tbody");
+      pageLearners.forEach(l=> tbody.appendChild(buildLearnerRow(l, scopeForTable)));
+      table.appendChild(tbody);
+      wpBody.appendChild(table);
+
+      if(totalPages > 1){
+        const pager = document.createElement("div");
+        pager.className = "tree-pager";
+        const prevBtn = document.createElement("button");
+        prevBtn.className = "ghost"; prevBtn.textContent = "◀ 前へ";
+        prevBtn.disabled = page === 0;
+        prevBtn.onclick = ()=>{ dashState.studentPageByWorkplace[fullKey] = page - 1; renderTableOnly(); };
+        const nextBtn = document.createElement("button");
+        nextBtn.className = "ghost"; nextBtn.textContent = "次へ ▶";
+        nextBtn.disabled = page >= totalPages - 1;
+        nextBtn.onclick = ()=>{ dashState.studentPageByWorkplace[fullKey] = page + 1; renderTableOnly(); };
+        const pageLabel = document.createElement("span");
+        pageLabel.className = "tree-pager-label";
+        pageLabel.textContent = (page+1) + " / " + totalPages + "ページ（" + sortedLearners.length + "人）";
+        pager.appendChild(prevBtn); pager.appendChild(pageLabel); pager.appendChild(nextBtn);
+        wpBody.appendChild(pager);
+      }
+
+      container.appendChild(wpBody);
+    });
+  });
+
   tableWrap.innerHTML = "";
-  tableWrap.appendChild(table);
+  tableWrap.appendChild(container);
 }
 
 function escapeHtml(s){
