@@ -77,11 +77,19 @@ button.danger:hover{background:#faf3f0;}
 .icon{width:13px;height:13px;flex:0 0 auto;vertical-align:middle;}
 .icon-warn{color:var(--red);}
 .stat-block{background:transparent;border-radius:0;
-  padding:0;text-align:left;flex:1;border:none;}
-.stat-block .num{font-size:26px;font-weight:300;color:var(--text-main);letter-spacing:-.02em;}
+  padding:0;text-align:left;border:none;display:flex;flex-direction:column;}
+.stat-block .num{font-size:26px;font-weight:300;color:var(--text-main);letter-spacing:-.02em;line-height:1.2;}
 .stat-block .lbl{font-size:11px;color:var(--text-sub);margin-top:5px;font-weight:400;}
+.stat-block .stat-sub{font-size:10.5px;color:var(--text-sub);margin-top:2px;font-weight:500;}
 .stat-block.alert .num{color:var(--red);}
-.summary-cardgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 16px;margin-bottom:0;}
+.summary-cardgrid{display:grid;gap:22px 16px;margin-bottom:0;align-items:start;}
+.summary-cardgrid + .summary-cardgrid{margin-top:20px;}
+.summary-cardgrid.cols-3{grid-template-columns:repeat(3,1fr);}
+.summary-cardgrid.cols-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width: 520px){
+  .summary-cardgrid.cols-3{grid-template-columns:repeat(2,1fr);}
+  .summary-cardgrid.cols-4{grid-template-columns:repeat(2,1fr);}
+}
 .followup-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .followup-row:last-child{border-bottom:none;}
 .followup-row:hover{background:var(--blue-light);}
@@ -753,6 +761,93 @@ function buildLearnerSummary(){
   });
 }
 
+// ============================================================
+// 以下5つは、今回④で「データだけ利用可能にして画面には出さない」とした指標。
+// 既存の取得済みデータ(learners配列・dashState)から計算するだけで、
+// 新規のSupabaseアクセスは発生しない。まだどこからも呼び出していない
+// (呼べば値を返すだけの純粋関数。将来、必要になったセクションから呼ぶ想定)。
+// ============================================================
+
+// 企業別 平均進捗・平均正答率ランキング(降順)
+function computeCompanyProgressRanking(learners){
+  const byCompany = {};
+  learners.forEach(l=>{
+    if(!byCompany[l.company_id]) byCompany[l.company_id] = { company_id: l.company_id, companyName: l.companyName, learners: [] };
+    byCompany[l.company_id].learners.push(l);
+  });
+  return Object.values(byCompany).map(g=>{
+    const withRate = g.learners.filter(l=>l.n > 0);
+    const avgRate = withRate.length ? Math.round(withRate.reduce((s,l)=>s+l.rate,0)/withRate.length) : 0;
+    const avgProgress = g.learners.length ? Math.round(g.learners.reduce((s,l)=>s+l.progressPct,0)/g.learners.length) : 0;
+    return { company_id: g.company_id, companyName: g.companyName, count: g.learners.length, avgRate, avgProgress };
+  }).sort((a,b)=> b.avgProgress - a.avgProgress);
+}
+
+// 事業所別 要フォロー人数の分布
+function computeWorkplaceFollowUpDistribution(learners){
+  const byWorkplace = {};
+  learners.forEach(l=>{
+    const w = l.workplaces && l.workplaces[0];
+    const key = w ? w.id : "__unset__";
+    const label = w ? w.workplace_name : "未設定";
+    if(!byWorkplace[key]) byWorkplace[key] = { workplace_id: key, label, total: 0, followUp: 0 };
+    byWorkplace[key].total += 1;
+    if(l.needsFollowUp) byWorkplace[key].followUp += 1;
+  });
+  return Object.values(byWorkplace).sort((a,b)=> b.followUp - a.followUp);
+}
+
+// 期生・号別の平均進捗・平均正答率比較
+function computePeriodComparison(learners){
+  const byPeriod = {};
+  learners.forEach(l=>{
+    const key = (l.kisei || "不明") + "・" + (l.go || "不明");
+    if(!byPeriod[key]) byPeriod[key] = { label: key, learners: [] };
+    byPeriod[key].learners.push(l);
+  });
+  return Object.values(byPeriod).map(g=>{
+    const withRate = g.learners.filter(l=>l.n > 0);
+    const avgRate = withRate.length ? Math.round(withRate.reduce((s,l)=>s+l.rate,0)/withRate.length) : 0;
+    const avgProgress = g.learners.length ? Math.round(g.learners.reduce((s,l)=>s+l.progressPct,0)/g.learners.length) : 0;
+    return { label: g.label, count: g.learners.length, avgRate, avgProgress };
+  });
+}
+
+// 学習継続日数(直近の連続学習日数)。daily_summaryのdailyRowsから算出。
+function computeStudyStreakDays(l){
+  if(!l.dailyRows || l.dailyRows.length === 0) return 0;
+  const dates = [...new Set(l.dailyRows.map(d=>d.summary_date))].sort().reverse();
+  let streak = 0;
+  let cursor = new Date();
+  cursor.setHours(0,0,0,0);
+  for(const dateStr of dates){
+    const d = new Date(dateStr);
+    d.setHours(0,0,0,0);
+    const diffDays = Math.round((cursor - d) / 86400000);
+    if(diffDays === streak){ streak += 1; cursor = d; }
+    else break;
+  }
+  return streak;
+}
+
+// 模試(exam_log)関連の詳細指標: 科目別の平均点・受験回数
+function computeExamDetailStats(exams){
+  const byGroup = { moji: {n:0,total:0,attempts:0}, bunpo: {n:0,total:0,attempts:0}, choukai: {n:0,total:0,attempts:0} };
+  exams.forEach(e=>{
+    const g = e.exam_group === "moji" ? "moji" : e.exam_group === "choukai" ? "choukai" : "bunpo";
+    if(!byGroup[g]) return;
+    byGroup[g].n += e.correct || 0;
+    byGroup[g].total += e.total || 0;
+    byGroup[g].attempts += 1;
+  });
+  const result = {};
+  Object.keys(byGroup).forEach(g=>{
+    const st = byGroup[g];
+    result[g] = { attempts: st.attempts, avgPct: st.total > 0 ? Math.round(st.n/st.total*100) : 0 };
+  });
+  return result;
+}
+
 async function loadDashboardData(){
   dashState.loading = true; dashState.error = null;
   render();
@@ -807,11 +902,14 @@ function renderOverallSummary(){
   const avgRate = withRate.length ? Math.round(withRate.reduce((s,l)=>s+l.rate,0)/withRate.length) : 0;
   const avgProgress = learners.length ? Math.round(learners.reduce((s,l)=>s+l.progressPct,0)/learners.length) : 0;
 
-  const block = (num, lbl, alert)=>{
-    const b = el('<div class="stat-block'+(alert?' alert':'')+'"></div>');
-    b.innerHTML = "<div class='num'>"+num+"</div><div class='lbl'>"+lbl+"</div>";
+  const block = (num, lbl, opts)=>{
+    opts = opts || {};
+    const b = el('<div class="stat-block'+(opts.alert?' alert':'')+'"></div>');
+    b.innerHTML = "<div class='num'>"+num+"</div><div class='lbl'>"+lbl+"</div>"+
+      (opts.sub ? "<div class='stat-sub'>"+opts.sub+"</div>" : "");
     return b;
   };
+  const pct = (part, total)=> total > 0 ? (Math.round(part/total*1000)/10) + "%" : "-";
 
   // ---- NTLPアカウント登録状況カード(組合管理者のみ表示。企業担当者には出さない) ----
   if(scope.isAdmin){
@@ -820,31 +918,55 @@ function renderOverallSummary(){
     regTitle.className = "card-title";
     regTitle.textContent = "NTLPアカウント登録状況";
     regCard.appendChild(regTitle);
-    const regGrid = el('<div class="summary-cardgrid"></div>');
-    regGrid.appendChild(block(totalLearners+"人", "全実習生"));
-    regGrid.appendChild(block(ntlpRegistered.length+"人", "NTLP登録済"));
-    regGrid.appendChild(block(ntlpUnregistered.length+"人", "NTLP未登録"));
-    regGrid.appendChild(block(canIssue.length+"人", "アカウント発行可能"));
-    regGrid.appendChild(block(companyMappingMissing.length+"人", "企業マッピング未設定", companyMappingMissing.length>0));
-    regCard.appendChild(regGrid);
+    const regGrid1 = el('<div class="summary-cardgrid cols-3"></div>');
+    regGrid1.appendChild(block(totalLearners+"人", "対象実習生"));
+    regGrid1.appendChild(block(ntlpRegistered.length+"人", "NTLP登録済", {sub: pct(ntlpRegistered.length, totalLearners)}));
+    regGrid1.appendChild(block(ntlpUnregistered.length+"人", "NTLP未登録", {sub: pct(ntlpUnregistered.length, totalLearners)}));
+    regCard.appendChild(regGrid1);
+    const regGrid2 = el('<div class="summary-cardgrid cols-3"></div>');
+    regGrid2.appendChild(block(canIssue.length+"人", "アカウント発行可能"));
+    regGrid2.appendChild(block(companyMappingMissing.length+"人", "企業マッピング未設定", {alert: companyMappingMissing.length>0}));
+    regCard.appendChild(regGrid2);
     wrap.appendChild(regCard);
   }
 
   // ---- 全体サマリーカード ----
+  const notStudied = learners.filter(l=>l.questionsStudied === 0);
   const summaryCard = el('<div class="card"></div>');
   const summaryTitle = document.createElement("div");
   summaryTitle.className = "card-title";
   summaryTitle.textContent = "全体サマリー";
   summaryCard.appendChild(summaryTitle);
-  const grid = el('<div class="summary-cardgrid"></div>');
-  grid.appendChild(block(totalLearners+"人", "登録学習者数"));
-  grid.appendChild(block(studying.length+"人", "学習中"));
-  grid.appendChild(block(thisWeek.length+"人", "今週学習した人数"));
-  grid.appendChild(block(followUps.length+"人", "要フォロー", followUps.length>0));
-  grid.appendChild(block(avgRate+"%", "平均正答率"));
-  grid.appendChild(block(avgProgress+"%", "平均進捗"));
-  summaryCard.appendChild(grid);
+  const gridA = el('<div class="summary-cardgrid cols-3"></div>');
+  gridA.appendChild(block(totalLearners+"人", "対象学習者"));
+  gridA.appendChild(block(studying.length+"人", "学習中"));
+  gridA.appendChild(block(thisWeek.length+"人", "今週学習した人数"));
+  summaryCard.appendChild(gridA);
+  const gridB = el('<div class="summary-cardgrid cols-4"></div>');
+  gridB.appendChild(block(notStudied.length+"人", "未学習"));
+  gridB.appendChild(block(followUps.length+"人", "要フォロー", {alert: followUps.length>0}));
+  gridB.appendChild(block(avgRate+"%", "平均正答率"));
+  gridB.appendChild(block(avgProgress+"%", "平均進捗"));
+  summaryCard.appendChild(gridB);
   wrap.appendChild(summaryCard);
+
+  // ---- 企業・事業所カード ----
+  // 企業数・事業所数はマスタ件数そのもの(companies/workplacesテーブルの全件)。
+  // 勤務先設定済/未設定は、対象学習者のうちstudent_workplacesで事業所が紐づいているかどうか。
+  const withWorkplace = learners.filter(l=>l.workplaces && l.workplaces.length > 0);
+  const withoutWorkplace = learners.filter(l=>!l.workplaces || l.workplaces.length === 0);
+  const companyWpCard = el('<div class="card"></div>');
+  const companyWpTitle = document.createElement("div");
+  companyWpTitle.className = "card-title";
+  companyWpTitle.textContent = "企業・事業所";
+  companyWpCard.appendChild(companyWpTitle);
+  const companyWpGrid = el('<div class="summary-cardgrid cols-4"></div>');
+  companyWpGrid.appendChild(block(dashState.companies.length+"社", "企業数"));
+  companyWpGrid.appendChild(block(dashState.workplaces.length+"事業所", "事業所数"));
+  companyWpGrid.appendChild(block(withWorkplace.length+"人", "勤務先設定済"));
+  companyWpGrid.appendChild(block(withoutWorkplace.length+"人", "勤務先未設定", {alert: withoutWorkplace.length>0}));
+  companyWpCard.appendChild(companyWpGrid);
+  wrap.appendChild(companyWpCard);
 
   // ---- 要フォロー学習者 ----
   if(followUps.length > 0){
