@@ -762,12 +762,10 @@ function buildLearnerSummary(){
       l.trainingEndDate = r.training_end_date;
       l.learnerName = r.learner_name || null;
       l.inRoster = true;
-      l.isFinished = r.training_end_date ? (new Date(r.training_end_date) < new Date()) : false;
     } else {
       l.trainingEndDate = null;
       l.learnerName = null;
       l.inRoster = false;
-      l.isFinished = false;
     }
 
     // NTLP登録状況: roster.learner_id = students.dekisugi_student_code で名寄せ
@@ -778,11 +776,18 @@ function buildLearnerSummary(){
     // 勤務先事業所(Phase 3.5): student_workplaces経由。複数事業所を許容する配列。
     l.workplaces = workplacesByCode[l.learner_id] || [];
 
-    // 期生・号(Phase 3.5): student_periods経由。
+    // 期生・号・国籍・在籍フラグ(Phase 3.5): student_periods経由。
     const period = periodByCode[l.learner_id];
     l.kisei = period ? period.kisei : null;
     l.go = period ? period.go : null;
     l.nationality = period ? period.nationality : null;
+    l.dekisugiStatus = period ? period.dekisugi_status : null;
+
+    // 実習終了済み判定: roster.training_end_date はほぼ全員空欄で機能しないため、
+    // Dekisugiの在籍フラグ名(dekisugi_status)を正とする。「在籍」以外は全て終了済み扱い。
+    // (中途帰国・帰国(実習完了)・特定活動中(特定技能等への移行)・他組合管理・入国キャンセル等)
+    // 在籍フラグ自体が無い(student_periodsに一致が無い)場合だけは、判断材料が無いため終了済みにしない。
+    l.isFinished = l.dekisugiStatus ? (l.dekisugiStatus !== "在籍") : false;
 
     // アカウント発行可否: 未登録 かつ 企業マスタに存在 かつ Dekisugi企業IDのマッピング済み
     const dekisugiCompanyId = companyDekisugiMap[l.company_id];
@@ -1395,7 +1400,7 @@ function renderLearnerKarte(){
   const subEl = document.createElement("div");
   subEl.style.cssText = "font-size:13px;color:var(--text-sub);margin-top:6px;font-weight:600;";
   subEl.textContent = (l.companyName || l.company_id) + " ／ 実習生ID: " + l.learner_id +
-    (l.trainingEndDate ? " ／ 実習終了予定: " + l.trainingEndDate + (l.isFinished ? "（終了済み）" : "") : "");
+    (l.dekisugiStatus ? " ／ 在籍状況: " + l.dekisugiStatus : "");
   headCard.appendChild(subEl);
 
   const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
