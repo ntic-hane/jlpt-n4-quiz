@@ -85,17 +85,22 @@ button.danger{background:#fff;color:var(--red);border:1px solid var(--red);borde
 button.danger:hover{background:#faf3f0;}
 .icon{width:13px;height:13px;flex:0 0 auto;vertical-align:middle;}
 .icon-warn{color:var(--red);}
-.stat-block{background:#fff;border:1px solid var(--border);border-radius:8px;
-  padding:14px 12px;text-align:left;display:flex;flex-direction:column;}
+.stat-block{background:transparent;border:none;border-radius:0;
+  padding:0 16px 0 0;text-align:left;display:flex;flex-direction:column;}
 .stat-block .num{font-size:24px;font-weight:600;color:var(--text-main);letter-spacing:-.02em;line-height:1.2;
   font-variant-numeric:tabular-nums;}
 .stat-block .lbl{font-size:11px;color:var(--text-sub);margin-top:6px;font-weight:400;}
 .stat-block .stat-sub{font-size:10.5px;color:var(--text-sub);margin-top:2px;font-weight:500;}
 .stat-block.alert .num{color:var(--red);}
-.summary-cardgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:0;align-items:stretch;}
-.summary-cardgrid + .summary-cardgrid{margin-top:12px;}
+.summary-cardgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 0;margin-bottom:0;align-items:stretch;}
+.summary-cardgrid + .summary-cardgrid{margin-top:20px;}
+/* 枠(4辺のボックス)は使わず、列の間だけ縦線を1本入れる(1列目には付けない) */
+.summary-cardgrid .stat-block{border-left:1px solid var(--border);padding-left:16px;}
+.summary-cardgrid .stat-block:nth-child(4n+1){border-left:none;padding-left:0;}
 @media (max-width: 520px){
-  .summary-cardgrid{grid-template-columns:repeat(2,1fr);}
+  .summary-cardgrid{grid-template-columns:repeat(2,1fr);row-gap:16px;}
+  .summary-cardgrid .stat-block:nth-child(4n+1){border-left:1px solid var(--border);padding-left:16px;}
+  .summary-cardgrid .stat-block:nth-child(2n+1){border-left:none;padding-left:0;}
   /* スマホでは指でタップしやすいよう、ページャーのボタンを大きくする(目安44px角) */
   .pagination-page{width:40px;height:40px;font-size:14px;}
   .pagination-nav{padding:10px 12px;font-size:14px;}
