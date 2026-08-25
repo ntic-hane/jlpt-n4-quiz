@@ -185,11 +185,38 @@ function sessionScope(){
   if(!session) return { isAdmin:false, role:null, companyId:null };
   const payload = decodeJwt(session.access_token);
   const meta = (payload.app_metadata) || {};
-  const role = meta.role || null;
-  // isAdminは既存互換のため残す(role==='ntic_admin'と同義)。
-  // companyIdはUI表示・初期フィルタ等の補助情報に過ぎず、権限判定には使わない
-  // (実際のアクセス範囲はcompany_users/company_user_workplacesとRLSが正)。
-  return { isAdmin: role === "ntic_admin", role: role, companyId: meta.company_id || null };
+  const jwtRole = meta.role || null;
+  if(jwtRole === "ntic_admin"){
+    return { isAdmin: true, role: "ntic_admin", companyId: null };
+  }
+  if(jwtRole === "company_user"){
+    // JWTには"company_user"という粗い印だけを持たせている(認証=JWT、権限=DBの方針)。
+    // 実際のロール(company_owner/workplace_manager)・所属企業は、
+    // company_usersテーブルへの問い合わせ結果(dashState.companyUserInfo)を正とする。
+    // まだ問い合わせ前(undefined)の間は「権限未確定」として扱い、解決後に確定させる。
+    if(dashState.companyUserInfo){
+      return { isAdmin:false, role: dashState.companyUserInfo.role, companyId: dashState.companyUserInfo.company_id };
+    }
+    return { isAdmin:false, role: "company_user_pending", companyId:null };
+  }
+  // 実習生本人など、それ以外のroleは対象外(companyIdはUI補助情報のみ、権限判定には使わない)
+  return { isAdmin: false, role: jwtRole, companyId: meta.company_id || null };
+}
+
+// company_usersテーブルへ自分の所属・ロールを問い合わせる(RLSにより本人の行のみ返る)。
+async function resolveCompanyUserInfo(){
+  try{
+    const payload = decodeJwt(session.access_token);
+    const uid = payload.sub;
+    const res = await fetch(SUPABASE_URL + "/rest/v1/company_users?auth_user_id=eq." + encodeURIComponent(uid) + "&status=eq.active&select=*", {
+      headers: authHeaders()
+    });
+    const rows = res.ok ? await res.json() : [];
+    dashState.companyUserInfo = rows.length > 0 ? rows[0] : null; // null = 該当なし(権限未設定)
+  }catch(e){
+    dashState.companyUserInfo = null;
+  }
+  render();
 }
 
 // ---- 自前の確認ダイアログ(confirm/alert禁止) ----
@@ -539,7 +566,7 @@ async function fetchAllPaged(table, params){
   return all;
 }
 
-let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], companyFilter: "", workplaceFilter: "", selectedLearner: null,
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null,
   bulkSelected: {}, // key(company_id::learner_id) -> true の形で選択状態を保持
   bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null // 一括発行の進捗・結果
 };
@@ -863,15 +890,28 @@ function renderDashboard(){
   if(scope.isAdmin) whoText += "（NTIC管理者・全社閲覧）";
   else if(scope.role === "company_owner") whoText += "（企業代表・自社全事業所閲覧）";
   else if(scope.role === "workplace_manager") whoText += "（事業所担当者・担当事業所のみ閲覧）";
+  else if(scope.role === "company_user_pending") whoText += "（権限確認中...）";
   else if(scope.companyId) whoText += "（企業: " + scope.companyId + " の閲覧権限）";
   else whoText += "（閲覧権限が設定されていません。管理者にご連絡ください）";
   who.textContent = whoText;
   topbar.appendChild(who);
   const logoutBtn = document.createElement("button");
   logoutBtn.className = "ghost"; logoutBtn.textContent = "ログアウト";
-  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], companyFilter:"", workplaceFilter:"", selectedLearner:null, bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
+  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
   topbar.appendChild(logoutBtn);
   wrap.appendChild(topbar);
+
+  // company_users問い合わせがまだの場合、先にそれを解決してから権限判定する
+  if(scope.role === "company_user_pending"){
+    const pendingCard = el('<div class="card"></div>');
+    pendingCard.appendChild(el('<div class="loading">権限を確認しています...</div>'));
+    wrap.appendChild(pendingCard);
+    if(!dashState._companyUserFetchTriggered){
+      dashState._companyUserFetchTriggered = true;
+      resolveCompanyUserInfo();
+    }
+    return wrap;
+  }
 
   const hasAnyAccess = scope.isAdmin || scope.role === "company_owner" || scope.role === "workplace_manager" || !!scope.companyId;
   if(!hasAnyAccess){
