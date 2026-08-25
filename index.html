@@ -2808,6 +2808,23 @@ function renderHeader(){
       titleEl.textContent = fullTitle;
     }
   }
+
+  // ロゴタップでホームに戻れるようにする(問題演習中・模試中はタブバー自体が非表示になるため、
+  // ヘッダーだけが常に見えている状態になる。そこからでもホームに戻れる手段として)。
+  // ログイン前後の画面では戻る先が無い/意味が無いため無効化する。
+  const logoEl = document.getElementById("orgLogo");
+  const canGoHome = !["login","passwordChange"].includes(ST.view);
+  logoEl.style.cursor = canGoHome ? "pointer" : "default";
+  logoEl.onclick = canGoHome ? ()=>{
+    if(ST.view === "home") return;
+    // 模試の途中でうっかりロゴを押して抜けてしまわないよう、既存の「戻る」ボタンと同じ確認を挟む
+    if(ST.mode === "mock" && ["select","question"].includes(ST.view)){
+      ask(tr(T.quitMock), ()=>{ clearTimer(); ST.view="home"; render(); });
+    } else {
+      ST.view = "home"; render();
+    }
+  } : null;
+
   const bar = document.getElementById("langBar");
   bar.innerHTML = "";
 
