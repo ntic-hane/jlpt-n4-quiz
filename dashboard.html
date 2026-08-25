@@ -566,7 +566,7 @@ async function fetchAllPaged(table, params){
   return all;
 }
 
-let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null,
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null,
   bulkSelected: {}, // key(company_id::learner_id) -> true の形で選択状態を保持
   bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null // 一括発行の進捗・結果
 };
@@ -615,6 +615,10 @@ function buildLearnerSummary(){
     if(!workplacesByCode[sw.dekisugi_student_code]) workplacesByCode[sw.dekisugi_student_code] = [];
     workplacesByCode[sw.dekisugi_student_code].push(w);
   });
+
+  // 期生・号(student_periods)の名寄せ: student_periods.dekisugi_student_code = roster.learner_id
+  const periodByCode = {}; // dekisugi_student_code -> { kisei, go }
+  dashState.studentPeriods.forEach(sp=>{ periodByCode[sp.dekisugi_student_code] = sp; });
 
   // ---- roster(組合の実習生管理台帳)を起点に、全員分のエントリを先に作る ----
   // これにより、まだ一度もNTLPを使っていない(学習データが0件の)実習生も一覧に表示される。
@@ -685,6 +689,11 @@ function buildLearnerSummary(){
     // 勤務先事業所(Phase 3.5): student_workplaces経由。複数事業所を許容する配列。
     l.workplaces = workplacesByCode[l.learner_id] || [];
 
+    // 期生・号(Phase 3.5): student_periods経由。
+    const period = periodByCode[l.learner_id];
+    l.kisei = period ? period.kisei : null;
+    l.go = period ? period.go : null;
+
     // アカウント発行可否: 未登録 かつ 企業マスタに存在 かつ Dekisugi企業IDのマッピング済み
     const dekisugiCompanyId = companyDekisugiMap[l.company_id];
     l.dekisugiCompanyId = dekisugiCompanyId || null;
@@ -733,7 +742,7 @@ async function loadDashboardData(){
   dashState.loading = true; dashState.error = null;
   render();
   try{
-    const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces] = await Promise.all([
+    const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods] = await Promise.all([
       fetchAll("progress"),
       fetchAll("exam_log", "select=*&order=taken_at.desc&limit=500"),
       fetchAll("learner_activity"),
@@ -742,7 +751,8 @@ async function loadDashboardData(){
       fetchAllPaged("students", "select=*&order=id").catch(()=>[]),
       fetchAll("daily_summary", "select=*&order=summary_date.desc&limit=2000").catch(()=>[]),
       fetchAllPaged("workplaces", "select=*&order=company_id").catch(()=>[]),
-      fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[])
+      fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[]),
+      fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[])
     ]);
     dashState.progress = progress;
     dashState.exams = exams;
@@ -753,6 +763,7 @@ async function loadDashboardData(){
     dashState.dailySummary = dailySummary;
     dashState.workplaces = workplaces;
     dashState.studentWorkplaces = studentWorkplaces;
+    dashState.studentPeriods = studentPeriods;
     dashState.loading = false;
   }catch(e){
     dashState.loading = false;
@@ -897,7 +908,7 @@ function renderDashboard(){
   topbar.appendChild(who);
   const logoutBtn = document.createElement("button");
   logoutBtn.className = "ghost"; logoutBtn.textContent = "ログアウト";
-  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
+  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
   topbar.appendChild(logoutBtn);
   wrap.appendChild(topbar);
 
@@ -1340,7 +1351,7 @@ function renderTableOnly(){
   const checkboxHeader = sessionScope().isAdmin ? "<th></th>" : "";
   table.innerHTML = "<thead><tr>"+
     checkboxHeader+
-    "<th>企業</th><th>氏名</th><th>実習生ID</th><th>勤務先</th><th>NTLP状態</th><th>実習終了予定</th><th>学習済み問題数</th><th>通算正答率</th>"+
+    "<th>企業</th><th>氏名</th><th>実習生ID</th><th>勤務先</th><th>NTLP状態</th><th>期生・号</th><th>学習済み問題数</th><th>通算正答率</th>"+
     "<th>文字語彙</th><th>文法</th><th>読解</th><th>聴解</th>"+
     "<th>最新模試</th><th>最終学習</th><th>状態</th>"+
     "</tr></thead>";
@@ -1365,9 +1376,11 @@ function renderTableOnly(){
     }
     let companyCell = l.companyName ? l.companyName : l.company_id;
     if(!l.companyName) companyCell += " <span class='badge mid' title='企業マスターに未登録'>未登録</span>";
-    let endCell = l.trainingEndDate ? l.trainingEndDate : "-";
-    if(l.isFinished) endCell += " <span class='badge low'>終了済み</span>";
-    else if(!l.inRoster) endCell = "<span class='badge mid' title='ロースターに実習生IDが見つかりません'>未登録</span>";
+    let periodCell;
+    if(l.kisei && l.go) periodCell = escapeHtml(l.kisei + "・" + l.go);
+    else if(l.kisei) periodCell = escapeHtml(l.kisei);
+    else if(l.go) periodCell = escapeHtml(l.go);
+    else periodCell = "-";
     let learnerCell = escapeHtml(l.learner_id);
     const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
     if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
@@ -1463,7 +1476,7 @@ function renderTableOnly(){
       "<td>"+learnerCell+"</td>"+
       "<td>"+workplaceCell+"</td>"+
       "<td></td>"+ // NTLP状態セルは後でDOM要素として挿入(ボタンのため)
-      "<td>"+endCell+"</td>"+
+      "<td>"+periodCell+"</td>"+
       "<td>"+l.questionsStudied+"</td>"+
       "<td><span class='badge "+badgeClass+"'>"+rate+"%</span></td>"+
       "<td>"+subjCell("moji")+"</td>"+
