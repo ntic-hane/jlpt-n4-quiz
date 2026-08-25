@@ -991,7 +991,10 @@ function renderDashboard(){
     sortedWorkplaces.forEach(w=>{
       const opt = document.createElement("option");
       opt.value = w.id;
-      opt.textContent = w.workplace_name;
+      // 同じ企業内で、事業所名が同じでもdekisugi_workplace_idの有無で別枠になっているケースがあるため
+      // (例: 現場作業員向けの法人代表扱いと、実際に特定の事業所IDを持つ本社勤務が両方存在する)、
+      // IDが無い方には注記を付けて区別できるようにする。
+      opt.textContent = w.workplace_name + (w.dekisugi_workplace_id ? "" : "（事業所未特定・法人代表扱い）");
       if(dashState.workplaceFilter === w.id) opt.selected = true;
       workplaceSelect.appendChild(opt);
     });
