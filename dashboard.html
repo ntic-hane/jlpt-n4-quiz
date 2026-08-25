@@ -99,9 +99,10 @@ button.danger:hover{background:#faf3f0;}
 .subj-trend-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
 .subj-trend-track{height:1px;background:var(--border);}
 .subj-trend-fill{height:100%;background:var(--navy);}
-.tree-company-header{display:flex;align-items:center;gap:10px;padding:12px 4px;cursor:pointer;
-  font-weight:600;font-size:14px;border-bottom:1px solid var(--border);user-select:none;}
-.tree-company-header:hover{background:var(--blue-light);}
+.tree-company-header{display:flex;align-items:center;gap:10px;padding:12px 4px;
+  font-weight:600;font-size:14px;border-bottom:1px solid var(--border);}
+.tree-company-header .tree-company-name{user-select:none;}
+.tree-company-header > div:first-child:hover{background:var(--blue-light);}
 .tree-workplace-header{display:flex;align-items:center;gap:10px;padding:10px 4px 10px 26px;cursor:pointer;
   font-weight:500;font-size:13px;color:var(--text-main);border-bottom:1px solid var(--border);
   background:#fafafb;user-select:none;}
@@ -111,7 +112,7 @@ button.danger:hover{background:#faf3f0;}
 .tree-workplace-name{flex:1;}
 .tree-count{color:var(--text-sub);font-size:12px;font-weight:400;}
 .tree-workplace-body{padding-left:26px;margin-bottom:4px;}
-.tree-pager{display:flex;align-items:center;gap:12px;padding:10px 4px;font-size:12.5px;}
+.tree-pager{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 4px;font-size:12.5px;}
 .tree-pager button:disabled{opacity:.35;cursor:default;text-decoration:none;}
 .tree-pager-label{color:var(--text-sub);}
 </style>
@@ -589,7 +590,7 @@ async function fetchAllPaged(table, params){
   return all;
 }
 
-let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc",
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc", companyFlatMode: {}, companyPage: 0,
   bulkSelected: {}, // key(company_id::learner_id) -> true の形で選択状態を保持
   bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null // 一括発行の進捗・結果
 };
@@ -1074,7 +1075,7 @@ function renderDashboard(){
   topbar.appendChild(who);
   const logoutBtn = document.createElement("button");
   logoutBtn.className = "ghost"; logoutBtn.textContent = "ログアウト";
-  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, expandedCompanies:{}, expandedWorkplaces:{}, studentPageByWorkplace:{}, sortColumn:null, sortDirection:"asc", bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
+  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, expandedCompanies:{}, expandedWorkplaces:{}, studentPageByWorkplace:{}, sortColumn:null, sortDirection:"asc", companyFlatMode:{}, companyPage:0, bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
   topbar.appendChild(logoutBtn);
   wrap.appendChild(topbar);
 
@@ -1148,7 +1149,7 @@ function renderDashboard(){
       if(dashState.companyFilter === c.company_id) opt.selected = true;
       companySelect.appendChild(opt);
     });
-    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; refreshWorkplaceFilterOptions(); renderTableOnly(); renderBulkBar(); };
+    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; dashState.companyPage = 0; refreshWorkplaceFilterOptions(); renderTableOnly(); renderBulkBar(); };
     filters.appendChild(companySelect);
   }
   // 事業所フィルタ(Phase 3.5): ntic_admin・company_ownerのみ表示。
@@ -1641,7 +1642,8 @@ function toggleWorkplaceExpand(key){
   renderTableOnly();
 }
 
-const STUDENTS_PER_PAGE = 5;
+const STUDENTS_PER_PAGE = 10;
+const COMPANIES_PER_PAGE = 5;
 
 // クリックで並び替えできる列の定義。値取得関数(getValue)を統一して比較する。
 const SORT_GETTERS = {
@@ -1721,6 +1723,53 @@ function buildSortableThead(checkboxHeader){
   return thead;
 }
 
+function toggleCompanyFlatMode(companyId){
+  dashState.companyFlatMode[companyId] = !dashState.companyFlatMode[companyId];
+  renderTableOnly();
+}
+
+// 実習生一覧テーブル(並び替え・5件ページング込み)を組み立てる。事業所ごとの表示と、
+// 企業まとめて表示の両方から呼べるよう、ページング状態のキー(pageKey)だけ呼び出し側で変える。
+function renderStudentTableBlock(learners, pageKey, scopeForTable){
+  const sortedLearners = sortLearnersForDisplay(learners);
+
+  const totalPages = Math.max(1, Math.ceil(sortedLearners.length / STUDENTS_PER_PAGE));
+  let page = dashState.studentPageByWorkplace[pageKey] || 0;
+  if(page >= totalPages) page = totalPages - 1;
+  if(page < 0) page = 0;
+  const pageLearners = sortedLearners.slice(page*STUDENTS_PER_PAGE, page*STUDENTS_PER_PAGE + STUDENTS_PER_PAGE);
+
+  const body = document.createElement("div");
+  body.className = "tree-workplace-body";
+
+  const table = document.createElement("table");
+  const checkboxHeader = scopeForTable.isAdmin;
+  table.appendChild(buildSortableThead(checkboxHeader));
+  const tbody = document.createElement("tbody");
+  pageLearners.forEach(l=> tbody.appendChild(buildLearnerRow(l, scopeForTable)));
+  table.appendChild(tbody);
+  body.appendChild(table);
+
+  if(totalPages > 1){
+    const pager = document.createElement("div");
+    pager.className = "tree-pager";
+    const prevBtn = document.createElement("button");
+    prevBtn.className = "ghost"; prevBtn.textContent = "◀ 前へ";
+    prevBtn.disabled = page === 0;
+    prevBtn.onclick = ()=>{ dashState.studentPageByWorkplace[pageKey] = page - 1; renderTableOnly(); };
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "ghost"; nextBtn.textContent = "次へ ▶";
+    nextBtn.disabled = page >= totalPages - 1;
+    nextBtn.onclick = ()=>{ dashState.studentPageByWorkplace[pageKey] = page + 1; renderTableOnly(); };
+    const pageLabel = document.createElement("span");
+    pageLabel.className = "tree-pager-label";
+    pageLabel.textContent = (page+1) + " / " + totalPages + "ページ（" + sortedLearners.length + "人）";
+    pager.appendChild(prevBtn); pager.appendChild(pageLabel); pager.appendChild(nextBtn);
+    body.appendChild(pager);
+  }
+  return body;
+}
+
 function renderTableOnly(){
   const tableWrap = document.getElementById("tableWrap");
   if(!tableWrap) return;
@@ -1756,25 +1805,63 @@ function renderTableOnly(){
 
   const container = document.createElement("div");
 
-  companyIds.forEach(companyId=>{
+  // 企業一覧も5社ずつページング(企業が1社に絞られている時はページングの意味が無いので出さない)
+  let pagedCompanyIds = companyIds;
+  let companyTotalPages = 1;
+  let companyPageIdx = 0;
+  if(!soleCompany){
+    companyTotalPages = Math.max(1, Math.ceil(companyIds.length / COMPANIES_PER_PAGE));
+    companyPageIdx = dashState.companyPage || 0;
+    if(companyPageIdx >= companyTotalPages) companyPageIdx = companyTotalPages - 1;
+    if(companyPageIdx < 0) companyPageIdx = 0;
+    pagedCompanyIds = companyIds.slice(companyPageIdx*COMPANIES_PER_PAGE, companyPageIdx*COMPANIES_PER_PAGE + COMPANIES_PER_PAGE);
+  }
+
+  pagedCompanyIds.forEach(companyId=>{
     const g = companyGroups[companyId];
     const companyLearnerCount = Object.values(g.workplaceMap).reduce((s,wg)=>s+wg.learners.length, 0);
     const isExpanded = soleCompany ? true : !!dashState.expandedCompanies[companyId];
+    // 事業所が2つ以上ある企業だけ、「事業所ごと／まとめて」の切り替えを出す
+    // (社長など、全事業所のスタッフを一気に見たい人向け。店長など事業所が1つしかない人には出す意味がない)
+    const workplaceCount = Object.keys(g.workplaceMap).length;
+    const flatMode = workplaceCount > 1 && !!dashState.companyFlatMode[companyId];
 
-    const companyHeader = document.createElement("div");
-    companyHeader.className = "tree-company-header";
-    companyHeader.innerHTML =
+    const companyHeaderRow = document.createElement("div");
+    companyHeaderRow.className = "tree-company-header";
+    const companyHeaderMain = document.createElement("div");
+    companyHeaderMain.style.cssText = "display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;";
+    companyHeaderMain.innerHTML =
       "<span class='tree-toggle'>"+(isExpanded ? "▼" : "▶")+"</span>"+
-      "<span class='tree-company-name'>"+escapeHtml(g.companyName)+"</span>"+
-      "<span class='tree-count'>"+companyLearnerCount+"人</span>";
+      "<span class='tree-company-name'>"+escapeHtml(g.companyName)+"</span>";
     if(!soleCompany){
-      companyHeader.onclick = ()=> toggleCompanyExpand(companyId);
+      companyHeaderMain.onclick = ()=> toggleCompanyExpand(companyId);
     } else {
-      companyHeader.style.cursor = "default";
+      companyHeaderMain.style.cursor = "default";
     }
-    container.appendChild(companyHeader);
+    companyHeaderRow.appendChild(companyHeaderMain);
+    if(workplaceCount > 1){
+      const flatToggle = document.createElement("button");
+      flatToggle.className = "ghost";
+      flatToggle.style.cssText = "font-size:11.5px;padding:2px 8px;margin-right:10px;";
+      flatToggle.textContent = flatMode ? "事業所ごとに見る" : "全員まとめて見る";
+      flatToggle.onclick = (ev)=>{ ev.stopPropagation(); toggleCompanyFlatMode(companyId); };
+      companyHeaderRow.appendChild(flatToggle);
+    }
+    const companyCountEl = document.createElement("span");
+    companyCountEl.className = "tree-count";
+    companyCountEl.textContent = companyLearnerCount + "人";
+    companyHeaderRow.appendChild(companyCountEl);
+    container.appendChild(companyHeaderRow);
 
     if(!isExpanded) return;
+
+    // ---- まとめて表示: 事業所の区切りを出さず、企業内の全員を1つの表にする ----
+    if(flatMode){
+      const allLearners = [];
+      Object.values(g.workplaceMap).forEach(wg=> allLearners.push(...wg.learners));
+      container.appendChild(renderStudentTableBlock(allLearners, "company::"+companyId, scopeForTable));
+      return;
+    }
 
     const workplaceKeys = Object.keys(g.workplaceMap).sort((a,b)=>{
       if(a === "__unset__") return 1;
@@ -1804,48 +1891,29 @@ function renderTableOnly(){
 
       if(!wpExpanded) return;
 
-      // 並び替え(選択中の列があればそれで、無ければ期生・号順=受験申請アプリと同じ進級順)
-      const sortedLearners = sortLearnersForDisplay(wg.learners);
-
-      // 5件ずつのページング
-      const totalPages = Math.max(1, Math.ceil(sortedLearners.length / STUDENTS_PER_PAGE));
-      let page = dashState.studentPageByWorkplace[fullKey] || 0;
-      if(page >= totalPages) page = totalPages - 1;
-      if(page < 0) page = 0;
-      const pageLearners = sortedLearners.slice(page*STUDENTS_PER_PAGE, page*STUDENTS_PER_PAGE + STUDENTS_PER_PAGE);
-
-      const wpBody = document.createElement("div");
-      wpBody.className = "tree-workplace-body";
-
-      const table = document.createElement("table");
-      const checkboxHeader = scopeForTable.isAdmin;
-      table.appendChild(buildSortableThead(checkboxHeader));
-      const tbody = document.createElement("tbody");
-      pageLearners.forEach(l=> tbody.appendChild(buildLearnerRow(l, scopeForTable)));
-      table.appendChild(tbody);
-      wpBody.appendChild(table);
-
-      if(totalPages > 1){
-        const pager = document.createElement("div");
-        pager.className = "tree-pager";
-        const prevBtn = document.createElement("button");
-        prevBtn.className = "ghost"; prevBtn.textContent = "◀ 前へ";
-        prevBtn.disabled = page === 0;
-        prevBtn.onclick = ()=>{ dashState.studentPageByWorkplace[fullKey] = page - 1; renderTableOnly(); };
-        const nextBtn = document.createElement("button");
-        nextBtn.className = "ghost"; nextBtn.textContent = "次へ ▶";
-        nextBtn.disabled = page >= totalPages - 1;
-        nextBtn.onclick = ()=>{ dashState.studentPageByWorkplace[fullKey] = page + 1; renderTableOnly(); };
-        const pageLabel = document.createElement("span");
-        pageLabel.className = "tree-pager-label";
-        pageLabel.textContent = (page+1) + " / " + totalPages + "ページ（" + sortedLearners.length + "人）";
-        pager.appendChild(prevBtn); pager.appendChild(pageLabel); pager.appendChild(nextBtn);
-        wpBody.appendChild(pager);
-      }
-
-      container.appendChild(wpBody);
+      container.appendChild(renderStudentTableBlock(wg.learners, fullKey, scopeForTable));
     });
   });
+
+  // 企業一覧のページャー(企業が2社以上あり、絞り込まれていない時だけ表示)
+  if(!soleCompany && companyTotalPages > 1){
+    const companyPager = document.createElement("div");
+    companyPager.className = "tree-pager";
+    companyPager.style.paddingLeft = "4px";
+    const prevBtn = document.createElement("button");
+    prevBtn.className = "ghost"; prevBtn.textContent = "◀ 前へ";
+    prevBtn.disabled = companyPageIdx === 0;
+    prevBtn.onclick = ()=>{ dashState.companyPage = companyPageIdx - 1; renderTableOnly(); };
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "ghost"; nextBtn.textContent = "次へ ▶";
+    nextBtn.disabled = companyPageIdx >= companyTotalPages - 1;
+    nextBtn.onclick = ()=>{ dashState.companyPage = companyPageIdx + 1; renderTableOnly(); };
+    const pageLabel = document.createElement("span");
+    pageLabel.className = "tree-pager-label";
+    pageLabel.textContent = (companyPageIdx+1) + " / " + companyTotalPages + "ページ（" + companyIds.length + "社）";
+    companyPager.appendChild(prevBtn); companyPager.appendChild(pageLabel); companyPager.appendChild(nextBtn);
+    container.appendChild(companyPager);
+  }
 
   tableWrap.innerHTML = "";
   tableWrap.appendChild(container);
