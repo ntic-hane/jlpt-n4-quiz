@@ -782,12 +782,15 @@ function buildLearnerSummary(){
     l.go = period ? period.go : null;
     l.nationality = period ? period.nationality : null;
     l.dekisugiStatus = period ? period.dekisugi_status : null;
+    l.statusOverrideFinished = period ? !!period.status_override_finished : false;
 
     // 実習終了済み判定: roster.training_end_date はほぼ全員空欄で機能しないため、
     // Dekisugiの在籍フラグ名(dekisugi_status)を正とする。「在籍」以外は全て終了済み扱い。
     // (中途帰国・帰国(実習完了)・特定活動中(特定技能等への移行)・他組合管理・入国キャンセル等)
     // 在籍フラグ自体が無い(student_periodsに一致が無い)場合だけは、判断材料が無いため終了済みにしない。
-    l.isFinished = l.dekisugiStatus ? (l.dekisugiStatus !== "在籍") : false;
+    // 加えて、在籍フラグは「在籍」のままでも現在の号が既に終了しており、特定技能等への移行後に
+    // 更新されていないと推測される人(status_override_finished)も終了済み扱いにする。
+    l.isFinished = l.dekisugiStatus ? (l.dekisugiStatus !== "在籍" || l.statusOverrideFinished) : false;
 
     // アカウント発行可否: 未登録 かつ 企業マスタに存在 かつ Dekisugi企業IDのマッピング済み
     const dekisugiCompanyId = companyDekisugiMap[l.company_id];
@@ -1400,7 +1403,8 @@ function renderLearnerKarte(){
   const subEl = document.createElement("div");
   subEl.style.cssText = "font-size:13px;color:var(--text-sub);margin-top:6px;font-weight:600;";
   subEl.textContent = (l.companyName || l.company_id) + " ／ 実習生ID: " + l.learner_id +
-    (l.dekisugiStatus ? " ／ 在籍状況: " + l.dekisugiStatus : "");
+    (l.dekisugiStatus ? " ／ 在籍状況: " + l.dekisugiStatus : "") +
+    (l.statusOverrideFinished ? "（号は終了済み・特定技能等へ移行の可能性）" : "");
   headCard.appendChild(subEl);
 
   const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
