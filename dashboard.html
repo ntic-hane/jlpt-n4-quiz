@@ -779,6 +779,7 @@ function buildLearnerSummary(){
     const period = periodByCode[l.learner_id];
     l.kisei = period ? period.kisei : null;
     l.go = period ? period.go : null;
+    l.nationality = period ? period.nationality : null;
 
     // アカウント発行可否: 未登録 かつ 企業マスタに存在 かつ Dekisugi企業IDのマッピング済み
     const dekisugiCompanyId = companyDekisugiMap[l.company_id];
@@ -1087,7 +1088,8 @@ function buildSummaryContent(wrap){
       const nameDiv = document.createElement("div");
       const nameLine = document.createElement("div");
       nameLine.className = "followup-name";
-      nameLine.textContent = (l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）";
+      const fFlag = NATIONALITY_FLAG[l.nationality] || "";
+      nameLine.textContent = (fFlag ? fFlag+" " : "") + (l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）";
       const reasonLine = document.createElement("div");
       reasonLine.className = "followup-reason";
       reasonLine.textContent = l.followUpReasons.join(" / ");
@@ -1617,6 +1619,13 @@ function stripCompanyPrefix(name, companyName){
 }
 
 // 1人分の実習生行(<tr>)を組み立てる。企業・勤務先は階層見出し側で表現するため、ここでは含めない。
+// 国籍名から国旗絵文字に変換する(該当が無ければ何も付けない)。
+const NATIONALITY_FLAG = {
+  "フィリピン": "🇵🇭", "タイ": "🇹🇭", "インドネシア": "🇮🇩", "ネパール": "🇳🇵",
+  "ベトナム": "🇻🇳", "ミャンマー": "🇲🇲", "カンボジア": "🇰🇭", "中国": "🇨🇳",
+  "モンゴル": "🇲🇳", "スリランカ": "🇱🇰", "バングラデシュ": "🇧🇩"
+};
+
 function buildLearnerRow(l, scopeForTable){
   const tr = document.createElement("tr");
   const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
@@ -1641,7 +1650,9 @@ function buildLearnerRow(l, scopeForTable){
   let learnerCell = escapeHtml(l.learner_id);
   const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
   if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
-  let nameCell = l.learnerName ? escapeHtml(l.learnerName) : "-";
+  const flag = NATIONALITY_FLAG[l.nationality] || "";
+  const flagSpan = flag ? "<span title='"+escapeHtml(l.nationality)+"' style='margin-right:5px;'>"+flag+"</span>" : "";
+  let nameCell = flagSpan + (l.learnerName ? escapeHtml(l.learnerName) : "-");
 
   let ntlpCell;
   if(l.ntlpRegistered){
