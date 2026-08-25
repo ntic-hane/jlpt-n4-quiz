@@ -112,9 +112,17 @@ button.danger:hover{background:#faf3f0;}
 .tree-workplace-name{flex:1;}
 .tree-count{color:var(--text-sub);font-size:12px;font-weight:400;}
 .tree-workplace-body{padding-left:26px;margin-bottom:4px;}
-.tree-pager{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 4px;font-size:12.5px;}
-.tree-pager button:disabled{opacity:.35;cursor:default;text-decoration:none;}
-.tree-pager-label{color:var(--text-sub);}
+.tree-pager{display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 4px 2px;font-size:13px;}
+.tree-pager-count{text-align:center;font-size:11.5px;color:var(--text-sub);padding-bottom:10px;}
+.pagination-nav{background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;
+  padding:6px 8px;border-radius:6px;}
+.pagination-nav:hover{background:var(--blue-light);}
+.pagination-nav:disabled{color:#c4c7cd;cursor:default;background:none;}
+.pagination-page{width:28px;height:28px;border:none;background:transparent;border-radius:6px;
+  cursor:pointer;font-size:13px;color:var(--text-main);}
+.pagination-page:hover{background:var(--blue-light);}
+.pagination-page.active{background:var(--navy);color:#fff;font-weight:600;}
+.pagination-ellipsis{color:var(--text-sub);padding:0 2px;}
 </style>
 </head>
 <body>
@@ -1723,6 +1731,54 @@ function buildSortableThead(checkboxHeader){
   return thead;
 }
 
+// ページネーションUI(番号ボタン＋省略記号)を組み立てる。
+// currentPageIdxは0始まり。onChangeには新しいページ番号(0始まり)が渡される。
+function buildPaginationControl(currentPageIdx, totalPages, onChange){
+  const wrap = document.createElement("div");
+  wrap.className = "pagination";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.className = "pagination-nav";
+  prevBtn.innerHTML = "‹ 前へ";
+  prevBtn.disabled = currentPageIdx === 0;
+  prevBtn.onclick = ()=> onChange(currentPageIdx - 1);
+  wrap.appendChild(prevBtn);
+
+  // 表示するページ番号を決める: 先頭・末尾は常に表示、現在ページの前後1つも表示、間は省略記号
+  const last = totalPages - 1;
+  const pages = [];
+  const addPage = p=>{ if(!pages.includes(p)) pages.push(p); };
+  addPage(0);
+  for(let p = currentPageIdx-1; p <= currentPageIdx+1; p++){ if(p >= 0 && p <= last) addPage(p); }
+  addPage(last);
+  pages.sort((a,b)=>a-b);
+
+  let prevShown = -1;
+  pages.forEach(p=>{
+    if(prevShown !== -1 && p - prevShown > 1){
+      const ellipsis = document.createElement("span");
+      ellipsis.className = "pagination-ellipsis";
+      ellipsis.textContent = "…";
+      wrap.appendChild(ellipsis);
+    }
+    const btn = document.createElement("button");
+    btn.className = "pagination-page" + (p === currentPageIdx ? " active" : "");
+    btn.textContent = String(p+1);
+    btn.onclick = ()=> onChange(p);
+    wrap.appendChild(btn);
+    prevShown = p;
+  });
+
+  const nextBtn = document.createElement("button");
+  nextBtn.className = "pagination-nav";
+  nextBtn.innerHTML = "次へ ›";
+  nextBtn.disabled = currentPageIdx >= last;
+  nextBtn.onclick = ()=> onChange(currentPageIdx + 1);
+  wrap.appendChild(nextBtn);
+
+  return wrap;
+}
+
 function toggleCompanyFlatMode(companyId){
   dashState.companyFlatMode[companyId] = !dashState.companyFlatMode[companyId];
   renderTableOnly();
@@ -1751,21 +1807,16 @@ function renderStudentTableBlock(learners, pageKey, scopeForTable){
   body.appendChild(table);
 
   if(totalPages > 1){
-    const pager = document.createElement("div");
-    pager.className = "tree-pager";
-    const prevBtn = document.createElement("button");
-    prevBtn.className = "ghost"; prevBtn.textContent = "◀ 前へ";
-    prevBtn.disabled = page === 0;
-    prevBtn.onclick = ()=>{ dashState.studentPageByWorkplace[pageKey] = page - 1; renderTableOnly(); };
-    const nextBtn = document.createElement("button");
-    nextBtn.className = "ghost"; nextBtn.textContent = "次へ ▶";
-    nextBtn.disabled = page >= totalPages - 1;
-    nextBtn.onclick = ()=>{ dashState.studentPageByWorkplace[pageKey] = page + 1; renderTableOnly(); };
-    const pageLabel = document.createElement("span");
-    pageLabel.className = "tree-pager-label";
-    pageLabel.textContent = (page+1) + " / " + totalPages + "ページ（" + sortedLearners.length + "人）";
-    pager.appendChild(prevBtn); pager.appendChild(pageLabel); pager.appendChild(nextBtn);
+    const pager = buildPaginationControl(page, totalPages, (newPage)=>{
+      dashState.studentPageByWorkplace[pageKey] = newPage;
+      renderTableOnly();
+    });
+    pager.classList.add("tree-pager");
+    const countLabel = document.createElement("div");
+    countLabel.className = "tree-pager-count";
+    countLabel.textContent = sortedLearners.length + "人";
     body.appendChild(pager);
+    body.appendChild(countLabel);
   }
   return body;
 }
@@ -1897,22 +1948,16 @@ function renderTableOnly(){
 
   // 企業一覧のページャー(企業が2社以上あり、絞り込まれていない時だけ表示)
   if(!soleCompany && companyTotalPages > 1){
-    const companyPager = document.createElement("div");
-    companyPager.className = "tree-pager";
-    companyPager.style.paddingLeft = "4px";
-    const prevBtn = document.createElement("button");
-    prevBtn.className = "ghost"; prevBtn.textContent = "◀ 前へ";
-    prevBtn.disabled = companyPageIdx === 0;
-    prevBtn.onclick = ()=>{ dashState.companyPage = companyPageIdx - 1; renderTableOnly(); };
-    const nextBtn = document.createElement("button");
-    nextBtn.className = "ghost"; nextBtn.textContent = "次へ ▶";
-    nextBtn.disabled = companyPageIdx >= companyTotalPages - 1;
-    nextBtn.onclick = ()=>{ dashState.companyPage = companyPageIdx + 1; renderTableOnly(); };
-    const pageLabel = document.createElement("span");
-    pageLabel.className = "tree-pager-label";
-    pageLabel.textContent = (companyPageIdx+1) + " / " + companyTotalPages + "ページ（" + companyIds.length + "社）";
-    companyPager.appendChild(prevBtn); companyPager.appendChild(pageLabel); companyPager.appendChild(nextBtn);
+    const companyPager = buildPaginationControl(companyPageIdx, companyTotalPages, (newPage)=>{
+      dashState.companyPage = newPage;
+      renderTableOnly();
+    });
+    companyPager.classList.add("tree-pager");
     container.appendChild(companyPager);
+    const countLabel = document.createElement("div");
+    countLabel.className = "tree-pager-count";
+    countLabel.textContent = companyIds.length + "社";
+    container.appendChild(countLabel);
   }
 
   tableWrap.innerHTML = "";
