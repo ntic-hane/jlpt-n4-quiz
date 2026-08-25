@@ -1462,9 +1462,16 @@ function renderTableOnly(){
     }
 
     // 勤務先セル(Phase 3.5)。複数事業所の場合は全て「／」区切りで表示。未設定は「未設定」。
+    // 企業名と重複する接頭辞(例:「アサヒグローバルホーム株式会社　○○店」の企業名部分)は省いて店舗名だけ表示する。
+    // 完全一致(店舗名が無く企業名そのものの場合)は省くと空になるため、元の名前のまま表示する。
+    const stripCompanyPrefix = (name, companyName)=>{
+      if(!companyName || !name.startsWith(companyName)) return name;
+      const rest = name.slice(companyName.length).replace(/^[\s　]+/, "");
+      return rest || name;
+    };
     let workplaceCell;
     if(l.workplaces && l.workplaces.length > 0){
-      workplaceCell = escapeHtml(l.workplaces.map(w=>w.workplace_name).join(" ／ "));
+      workplaceCell = escapeHtml(l.workplaces.map(w=>stripCompanyPrefix(w.workplace_name, l.companyName)).join(" ／ "));
     } else {
       workplaceCell = "<span class='badge mid'>未設定</span>";
     }
