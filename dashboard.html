@@ -21,6 +21,16 @@
 body{margin:0;font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,-apple-system,sans-serif;
   background:var(--bg);color:var(--text-main);-webkit-font-smoothing:antialiased;
   overflow-x:hidden;width:100%;}
+/* 上から下へ引っ張って更新(プルリフレッシュ)のインジケーター。
+   ページ最上部でのみ反応し、JSがtransformでtranslateYを動かして引っ張り具合を表現する。 */
+.pull-refresh-indicator{position:fixed;top:0;left:0;right:0;height:56px;display:flex;
+  align-items:center;justify-content:center;transform:translateY(-56px);z-index:200;
+  transition:transform .2s ease;pointer-events:none;}
+.pull-refresh-indicator.dragging{transition:none;}
+.pull-refresh-spinner{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--border);
+  border-top-color:var(--green);transform:rotate(0deg);}
+.pull-refresh-indicator.spinning .pull-refresh-spinner{animation:pull-refresh-spin .7s linear infinite;}
+@keyframes pull-refresh-spin{to{transform:rotate(360deg);}}
 header{background:var(--bg);color:var(--text-main);padding:10px 18px;
   padding-top:calc(10px + env(safe-area-inset-top));border-bottom:1px solid var(--border);}
 @supports not (padding-top: env(safe-area-inset-top)) { header{padding-top:14px;} }
@@ -149,6 +159,7 @@ button.danger:hover{background:#faf3f0;}
 </head>
 <body>
 <header><div class="headerTop"><img id="orgLogo" src="data:image/png;base64,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" alt="N.T.I.C" class="orgLogo"><h1><span class="appTitleTop">N.T.I.C Academy</span><span class="appTitleMain">管理者ダッシュボード</span></h1></div></header>
+<div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-spinner"></div></div>
 <main id="app"></main>
 <footer>© 日本トータル情報事業協同組合</footer>
 
@@ -195,6 +206,7 @@ function openKarte(company_id, learner_id){
   dashState.selectedLearner = { company_id, learner_id };
   history.pushState({ view: "karte", company_id, learner_id }, "");
   render();
+  window.scrollTo(0, 0);
 }
 function closeKarte(){
   // 履歴を1つ戻すことで、popstateハンドラがselectedLearnerを閉じてrenderする。
@@ -209,6 +221,7 @@ window.addEventListener("popstate", (ev)=>{
     dashState.selectedLearner = null;
   }
   render();
+  window.scrollTo(0, 0);
 });
 // 起動時点の状態を明示しておく(このエントリ自体が増えるわけではなく、既存の1件に印を付けるだけ)。
 history.replaceState({ view: "dashboard" }, "");
@@ -956,6 +969,39 @@ async function loadDashboardData(){
   }catch(e){
     dashState.loading = false;
     dashState.error = "データの取得に失敗しました。時間をおいて再読み込みしてください。";
+  }
+  render();
+}
+
+// 上から下へ引っ張って更新(プルリフレッシュ)用。loadDashboardData()と違い、
+// dashState.loadingは変更しない(=画面が「読み込み中...」に差し替わらず、今の表示を保ったまま
+// 裏側で最新データを取りに行き、届いたら差し替える)。
+async function pullRefreshDashboardData(){
+  try{
+    const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods] = await Promise.all([
+      fetchAll("progress"),
+      fetchAll("exam_log", "select=*&order=taken_at.desc&limit=500"),
+      fetchAll("learner_activity"),
+      fetchAllPaged("companies", "select=*&order=company_id").catch(()=>[]),
+      fetchAllPaged("roster", "select=*&order=company_id,learner_id").catch(()=>[]),
+      fetchAllPaged("students", "select=*&order=id").catch(()=>[]),
+      fetchAll("daily_summary", "select=*&order=summary_date.desc&limit=2000").catch(()=>[]),
+      fetchAllPaged("workplaces", "select=*&order=company_id").catch(()=>[]),
+      fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[]),
+      fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[])
+    ]);
+    dashState.progress = progress;
+    dashState.exams = exams;
+    dashState.activity = activity;
+    dashState.companies = companies;
+    dashState.roster = roster;
+    dashState.students = students;
+    dashState.dailySummary = dailySummary;
+    dashState.workplaces = workplaces;
+    dashState.studentWorkplaces = studentWorkplaces;
+    dashState.studentPeriods = studentPeriods;
+  }catch(e){
+    // プルリフレッシュの失敗は画面を壊さず、静かに諦める(既存表示はそのまま)
   }
   render();
 }
@@ -2108,6 +2154,59 @@ function renderTableOnly(){
 function escapeHtml(s){
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
+
+// ---- プルリフレッシュ(上から下へ引っ張って更新) ----
+// ページの一番上(scrollY===0)にいる時だけ反応させ、それ以外(一覧を下にスクロール中)は
+// 通常のスクロール動作を邪魔しないようにする。
+(function initPullRefresh(){
+  const indicator = document.getElementById("pullRefreshIndicator");
+  const spinnerEl = indicator ? indicator.querySelector(".pull-refresh-spinner") : null;
+  const THRESHOLD = 64; // これ以上引っ張ったら離した時に更新する
+  const MAX_PULL = 90;
+  let startY = null, pulling = false, refreshing = false;
+
+  document.addEventListener("touchstart", (ev)=>{
+    if(refreshing || window.scrollY > 0 || ev.touches.length !== 1) { startY = null; return; }
+    startY = ev.touches[0].clientY;
+    pulling = false;
+  }, { passive: true });
+
+  document.addEventListener("touchmove", (ev)=>{
+    if(startY === null || refreshing) return;
+    const dy = ev.touches[0].clientY - startY;
+    if(dy <= 0) return; // 上方向や横方向の動きは無視
+    if(window.scrollY > 0) { startY = null; return; } // 引っ張っている途中で通常スクロールに移った場合は中断
+    pulling = true;
+    const pull = Math.min(dy * 0.5, MAX_PULL); // 指の動きよりゆっくり追従させる(ゴムのような感触)
+    if(indicator){
+      indicator.classList.add("dragging");
+      indicator.style.transform = "translateY(" + (pull - 56) + "px)";
+    }
+    if(spinnerEl) spinnerEl.style.transform = "rotate(" + (pull / MAX_PULL * 360) + "deg)";
+  }, { passive: true });
+
+  document.addEventListener("touchend", ()=>{
+    if(!pulling || refreshing){ startY = null; pulling = false; return; }
+    pulling = false;
+    const pulledEnough = indicator && indicator.style.transform &&
+      Math.abs(parseFloat(indicator.style.transform.replace(/[^\-0-9.]/g,""))+56) >= THRESHOLD*0.5;
+    if(indicator) indicator.classList.remove("dragging");
+    if(pulledEnough && session){
+      refreshing = true;
+      if(indicator){ indicator.style.transform = "translateY(0)"; indicator.classList.add("spinning"); }
+      pullRefreshDashboardData().finally(()=>{
+        refreshing = false;
+        if(indicator){
+          indicator.classList.remove("spinning");
+          indicator.style.transform = "translateY(-56px)";
+        }
+      });
+    } else if(indicator){
+      indicator.style.transform = "translateY(-56px)";
+    }
+    startY = null;
+  });
+})();
 
 render();
 })();

@@ -93,6 +93,7 @@ ruby rt{font-size:10px;color:var(--sub);user-select:none;}
 .feedback{margin-top:12px;margin-bottom:4px;padding:12px;border-radius:4px;font-size:13px;line-height:1.6;border:1px solid var(--line);}
 .feedback.ok{color:#3d7a52;}
 .feedback.ng{color:var(--accent);}
+.explanation-note{font-size:11px;color:var(--sub);line-height:1.5;padding:0 2px;}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .timer{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
 .timer.warn{color:var(--accent);}
@@ -109,6 +110,10 @@ ruby rt{font-size:10px;color:var(--sub);user-select:none;}
 .gridnum button{flex:0 0 auto;width:34px;height:34px;padding:0;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;}
 .gridnum button.done{background:var(--bgpanel);border-color:var(--line);color:var(--sub);}
 .gridnum button.current{background:var(--blue);color:#fff;border-color:var(--blue);}
+.mockprogwrap{margin-bottom:12px;}
+.mockproglabel{font-size:12px;color:var(--sub);margin-bottom:5px;font-variant-numeric:tabular-nums;}
+.mockprogtrack{height:6px;border-radius:3px;background:var(--bgpanel);overflow:hidden;}
+.mockprogfill{height:100%;background:var(--blue);border-radius:3px;transition:width .2s ease;}
 
 /* ---- 本人向けダッシュボード(ミニマル版) ---- */
 .jsection{padding:28px 0;}
@@ -222,6 +227,11 @@ const T = {
   correct:      ["正解","Correct","Benar","Tama","ถูกต้อง"],
   incorrect:    ["不正解","Incorrect","Salah","Mali","ไม่ถูกต้อง"],
   explanation:  ["解説","Explanation","Penjelasan","Paliwanag","คำอธิบาย"],
+  explanationNote: ["※ 解説はJLPT N4の標準的な文法の使い分けに基づいています。実際の会話では、この限りではない場合があります。",
+    "※ Explanations are based on standard JLPT N4 grammar usage. Actual conversation may differ from this.",
+    "※ Penjelasan berdasarkan penggunaan tata bahasa standar JLPT N4. Percakapan sehari-hari mungkin berbeda.",
+    "※ Ang mga paliwanag ay batay sa karaniwang gramatika ng JLPT N4. Maaaring iba ang gamit sa tunay na pag-uusap.",
+    "※ คำอธิบายอิงตามหลักไวยากรณ์มาตรฐานของ JLPT N4 การสนทนาจริงอาจแตกต่างจากนี้"],
   result:       ["結果","Result","Hasil","Resulta","ผลลัพธ์"],
   score:        ["得点","Score","Skor","Marka","คะแนน"],
   passLine:     ["合格ライン: 90/180点（各区分の基準点も必要）","Pass line: 90/180 (also need per-section minimums)","Batas lulus: 90/180 (perlu juga nilai minimum per bagian)","Pass line: 90/180 (kailangan din ng minimum sa bawat bahagi)","เกณฑ์ผ่าน: 90/180 คะแนน (ต้องได้คะแนนขั้นต่ำในแต่ละหมวดด้วย)"],
@@ -1071,7 +1081,7 @@ const DATA_BUNPO = [
     "q": ["天気予報によると、明日は雨が降る（　　）です。","According to the weather forecast, it (　　) rain tomorrow.","Menurut ramalan cuaca, besok (　　) hujan.","Ayon sa forecast, (　　) umulan bukas.","ตามพยากรณ์อากาศ พรุ่งนี้ฝนจะตก (　　)"],
     "o": [["そう","is said to (hearsay, from forecast)","katanya akan (dari sumber langsung)","sinasabing (mula sa forecast)","ตามที่ว่า (ได้ยินมา, จากพยากรณ์)"],["よう","seems like","sepertinya akan","mukhang","ดูเหมือนจะ"],["らしい","apparently (2nd-hand info, less direct)","katanya (info tidak langsung)","diumano (di-tuwirang impormasyon)","ได้ยินว่า (ข้อมูลทางอ้อม)"],["みたい","looks like (casual)","kelihatannya akan (santai)","parang (kaswal)","ดูเหมือนจะ (แบบลำลอง)"]],
     "a": 0,
-    "e": ["情報の出どころ（天気予報）がはっきりしているときは伝聞の「そう」が最も自然です。","When the source of information (weather forecast) is clear, the hearsay form 'sou' is most natural.","Ketika sumber informasi (ramalan cuaca) jelas, bentuk 'sou' (menurut kabar) paling alami.","Kapag malinaw ang pinagmulan ng impormasyon (forecast), pinaka-natural ang anyong 'sou' (sinasabing).","เมื่อที่มาของข้อมูล (พยากรณ์อากาศ) ชัดเจน รูปบอกเล่าต่อ 'そう' เป็นธรรมชาติที่สุด"],
+    "e": ["情報の出どころ（天気予報）がはっきりしているときは伝聞の「そう」が最も自然です。（※「みたい」も会話ではよく使われますが、JLPT文法としては伝聞の「そう」が最も適切とされます。）","When the source of information (weather forecast) is clear, the hearsay form 'sou' is most natural. (Note: 'mitai' is also common in casual speech, but 'sou' (hearsay) is considered most correct for JLPT grammar.)","Ketika sumber informasi (ramalan cuaca) jelas, bentuk 'sou' (menurut kabar) paling alami. (Catatan: 'mitai' juga sering dipakai dalam percakapan santai, tapi 'sou' (menurut kabar) dianggap paling tepat untuk tata bahasa JLPT.)","Kapag malinaw ang pinagmulan ng impormasyon (forecast), pinaka-natural ang anyong 'sou' (sinasabing). (Tandaan: karaniwan ding ginagamit ang 'mitai' sa kaswal na pananalita, pero ang 'sou' (sinasabing) ang itinuturing na pinaka-tama para sa gramatika ng JLPT.)","เมื่อที่มาของข้อมูล (พยากรณ์อากาศ) ชัดเจน รูปบอกเล่าต่อ 'そう' เป็นธรรมชาติที่สุด (หมายเหตุ: 'みたい' ก็ใช้บ่อยในบทสนทนาทั่วไป แต่ในหลักไวยากรณ์ JLPT ถือว่า 'そう' (บอกเล่าต่อ) ถูกต้องที่สุด)"],
   },
   {
     "c": "bunpo2",
@@ -3719,6 +3729,23 @@ function renderQuestion(){
   wrap.appendChild(top);
 
   if(ST.mode === "mock"){
+    // 全体の進み具合を一目で見えるよう、問題番号ボタン(横スクロール)とは別に
+    // 常時全幅で見えるバーを用意する(72問等、番号ボタンだけだとスクロールしないと分からないため)。
+    const mockProgWrap = document.createElement("div");
+    mockProgWrap.className = "mockprogwrap";
+    const mockProgLabel = document.createElement("div");
+    mockProgLabel.className = "mockproglabel";
+    mockProgLabel.textContent = (ST.idx+1)+" / "+ST.queue.length;
+    const mockProgTrack = document.createElement("div");
+    mockProgTrack.className = "mockprogtrack";
+    const mockProgFill = document.createElement("div");
+    mockProgFill.className = "mockprogfill";
+    mockProgFill.style.width = Math.round((ST.idx+1)/ST.queue.length*100) + "%";
+    mockProgTrack.appendChild(mockProgFill);
+    mockProgWrap.appendChild(mockProgLabel);
+    mockProgWrap.appendChild(mockProgTrack);
+    wrap.appendChild(mockProgWrap);
+
     const grid = el('<div class="gridnum"></div>');
     ST.queue.forEach((qq,i)=>{
       const b = document.createElement("button");
@@ -3896,6 +3923,9 @@ function renderQuestion(){
     fb.className = "feedback " + (correct ? "ok":"ng");
     fb.textContent = (correct ? tr(T.correct) : tr(T.incorrect)) + "　" + tr(T.explanation) + "：" + tr(q.e);
     card.appendChild(fb);
+    const fbNote = el('<div class="explanation-note"></div>');
+    fbNote.textContent = tr(T.explanationNote);
+    card.appendChild(fbNote);
   }
 
   wrap.appendChild(card);
@@ -4018,6 +4048,11 @@ function renderResult(){
     listCard.appendChild(row);
   });
   wrap.appendChild(listCard);
+
+  const listNote = el('<div class="explanation-note"></div>');
+  listNote.style.margin = "10px 2px 0";
+  listNote.textContent = tr(T.explanationNote);
+  wrap.appendChild(listNote);
 
   const homeBtn = document.createElement("button");
   homeBtn.className = "primary"; homeBtn.style.width="100%";
