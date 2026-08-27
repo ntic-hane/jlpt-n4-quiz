@@ -606,7 +606,8 @@ function renderLogin(){
         btn.disabled = false; btn.textContent = "ログイン";
         return;
       }
-      session = { access_token: data.access_token, email: email.value };
+      session = { access_token: data.access_token, refresh_token: data.refresh_token,
+        expires_at: Date.now() + (data.expires_in || 3600) * 1000, email: email.value };
       render();
     }catch(e){
       err.textContent = "通信エラーが発生しました。ネットワーク接続を確認してください。";
@@ -656,7 +657,7 @@ async function resolveCompanyUserInfo(){
     const payload = decodeJwt(session.access_token);
     const uid = payload.sub;
     const res = await fetch(SUPABASE_URL + "/rest/v1/company_users?auth_user_id=eq." + encodeURIComponent(uid) + "&status=eq.active&select=*", {
-      headers: authHeaders()
+      headers: await getAuthHeaders()
     });
     const rows = res.ok ? await res.json() : [];
     dashState.companyUserInfo = rows.length > 0 ? rows[0] : null; // null = 該当なし(権限未設定)
@@ -682,7 +683,7 @@ function ask(message, onYes, onNo, yesLabel){
 // ---- 学習者データの削除(NTIC管理者のみ) ----
 async function deleteLearnerData(companyId, learnerId){
   const filterQS = "company_id=eq." + encodeURIComponent(companyId) + "&learner_id=eq." + encodeURIComponent(learnerId);
-  const headers = authHeaders();
+  const headers = await getAuthHeaders();
   await Promise.all([
     fetch(SUPABASE_URL + "/rest/v1/progress?" + filterQS, { method: "DELETE", headers }),
     fetch(SUPABASE_URL + "/rest/v1/exam_log?" + filterQS, { method: "DELETE", headers }),
@@ -698,7 +699,7 @@ async function deleteLearnerData(companyId, learnerId){
 async function issueAccount(learner){
   const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/create_student_account", {
     method: "POST",
-    headers: authHeaders(),
+    headers: await getAuthHeaders(),
     body: JSON.stringify({
       p_dekisugi_student_code: learner.learner_id,
       p_name: learner.learnerName || learner.learner_id,
@@ -722,7 +723,7 @@ async function issueAccount(learner){
 async function resetStudentPassword(learner){
   const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/reset_student_password", {
     method: "POST",
-    headers: authHeaders(),
+    headers: await getAuthHeaders(),
     body: JSON.stringify({ p_dekisugi_student_code: learner.learner_id })
   });
   const data = await res.json();
@@ -1045,9 +1046,40 @@ function authHeaders(){
   };
 }
 
+// アクセストークンは通常1時間ほどで失効する。以前は更新の仕組みが無く、
+// 一括発行のように何百件も連続でリクエストする処理の途中でトークンが切れると、
+// それ以降が全部「権限がありません」エラーで失敗する、という不具合があった。
+// リクエストの直前に毎回これを呼び、期限が近ければ自動的にリフレッシュしてから
+// ヘッダーを返すようにする(認証付きリクエストは必ずこちらを使うこと。authHeaders()を直接使わない)。
+async function refreshSessionIfNeeded(){
+  if(!session) return;
+  const bufferMs = 60000; // 期限の60秒前から早めに更新する
+  if(Date.now() < session.expires_at - bufferMs) return; // まだ十分に余裕がある
+  if(!session.refresh_token) return; // リフレッシュトークンが無い(古いログイン等)場合は何もしない
+  try{
+    const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: session.refresh_token })
+    });
+    const data = await res.json();
+    if(res.ok && data.access_token){
+      session.access_token = data.access_token;
+      session.refresh_token = data.refresh_token || session.refresh_token;
+      session.expires_at = Date.now() + (data.expires_in || 3600) * 1000;
+    }
+    // 失敗した場合は何もしない(次のリクエストが401になった際、既存の再ログイン導線に任せる)
+  }catch(e){ /* ネットワークエラー等。同上 */ }
+}
+
+async function getAuthHeaders(){
+  await refreshSessionIfNeeded();
+  return authHeaders();
+}
+
 async function fetchAll(table, params){
   const url = SUPABASE_URL + "/rest/v1/" + table + "?" + (params||"select=*");
-  const doFetch = ()=> fetch(url, { headers: authHeaders() });
+  const doFetch = async ()=> fetch(url, { headers: await getAuthHeaders() });
   let res = await doFetch();
   if(res.status === 401){
     // ログイン直後、発行されたばかりのトークンが一瞬だけ未反映で401になることがあるため、
@@ -1077,7 +1109,7 @@ async function fetchAllPaged(table, params){
   for(let page=0; page<maxPages; page++){
     const base = params || "select=*";
     const url = SUPABASE_URL + "/rest/v1/" + table + "?" + base + "&limit=" + pageSize + "&offset=" + offset;
-    const doFetch = ()=> fetch(url, { headers: authHeaders() });
+    const doFetch = async ()=> fetch(url, { headers: await getAuthHeaders() });
     let res = await doFetch();
     if(res.status === 401){
       await new Promise(r=>setTimeout(r, 600));
