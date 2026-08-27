@@ -3943,6 +3943,13 @@ function renderQuestion(){
         recordAnswer(q.id, i===q.a, q.subj, ST.lang !== "ja");
       }
       render();
+      // 回答直後は、フィードバックや「次へ」ボタンが画面外(下)に隠れていることが多く、
+      // 毎回手動でスクロールしないと押せなかったため、自動で見える位置まで動かす。
+      // (画面に既に収まっている場合は動かさない = block:"nearest")
+      requestAnimationFrame(()=>{
+        const navEl = document.querySelector("#app .rowbtns");
+        if(navEl) navEl.scrollIntoView({behavior:"smooth", block:"nearest"});
+      });
     };
     card.appendChild(optBtn);
   }
