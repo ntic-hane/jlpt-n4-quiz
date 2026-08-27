@@ -112,10 +112,16 @@ main{max-width:900px;margin:0 auto;padding:var(--sp-6) var(--sp-4) 60px;width:10
     border-top:1px solid var(--border);z-index:150;padding-bottom:env(safe-area-inset-bottom);}
   .mobile-bottomnav-btn{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
     background:none;border:none;padding:12px 2px 10px;min-height:60px;color:var(--text-sub);font-size:11px;font-weight:600;cursor:pointer;
-    -webkit-tap-highlight-color:transparent;}
+    -webkit-tap-highlight-color:transparent;white-space:nowrap;}
   .mobile-bottomnav-btn:active{background:var(--blue-light);}
   .mobile-bottomnav-btn.active{color:var(--green);}
   .mobile-bottomnav-icon svg{width:25px;height:25px;}
+}
+/* 320px前後のごく小さい画面向け: 「企業・事業所」等の長いラベルでもはみ出さないよう
+   文字サイズ・アイコンサイズ・paddingを少しだけ詰める(タップ領域はできるだけ維持する) */
+@media (max-width: 340px){
+  .mobile-bottomnav-btn{font-size:9.5px;padding:10px 1px 8px;min-height:56px;gap:3px;}
+  .mobile-bottomnav-icon svg{width:22px;height:22px;}
 }
 footer{text-align:center;font-size:11px;color:var(--text-sub);padding:18px 20px 28px;}
 /* ==== 共通カードコンポーネント。種類を問わずすべてのカードはこのルールに従う ====
@@ -198,6 +204,15 @@ button.danger:hover{background:#faf3f0;}
   margin:0;}
 .stat-block .stat-sub{font-size:var(--fs-kpi-num);color:var(--text-main);margin:0;font-weight:var(--fw-kpi-num);}
 .stat-block.alert .num{color:var(--red);}
+/* 320px前後のごく小さい画面向け: 「NTLP登録済」等の6文字前後のタイトルが、アイコンと
+   並んだ状態で1行に収まりきらず折り返してしまうため、この幅だけタイトル文字とアイコンを
+   少し縮める(ベース定義より後ろに書くことで確実に上書きする) */
+@media (max-width: 340px){
+  .kpi-card{padding:12px;}
+  .stat-icon{width:26px;height:26px;}
+  .stat-icon svg{width:18px;height:18px;}
+  .stat-block .lbl{font-size:11.5px;}
+}
 
 .kpi-cardgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4);margin-bottom:0;}
 .kpi-cardgrid.cols-2.stretch-fill{flex:1;align-content:stretch;}
@@ -701,22 +716,41 @@ async function issueAccount(learner){
   return Array.isArray(data) ? data[0] : data;
 }
 
-// ---- 発行結果の一度限りの表示モーダル(初期パスワードはここでしか見られない) ----
-function showIssueResultModal(loginId, initialPassword){
+// ---- NTLPパスワードリセット(NTIC管理者のみ)。既に発行済みのアカウントを、
+// 同じログインIDのまま新しい初期パスワードで上書きする(学習履歴は消えない)。
+// 「本人が紙を無くした」「入力ミス」等、今後繰り返し起こりうる運用に対応するための機能。 ----
+async function resetStudentPassword(learner){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/reset_student_password", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ p_dekisugi_student_code: learner.learner_id })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    const msg = (data && (data.message || data.error_description)) || "パスワードリセットに失敗しました。";
+    throw new Error(msg);
+  }
+  return Array.isArray(data) ? data[0] : data;
+}
+
+// ---- 発行結果の一度限りの表示モーダル(初期パスワードはここでしか見られない)。
+// アカウント発行・パスワードリセットの両方から共通で使う。 ----
+function showIssueResultModal(loginId, initialPassword, opts){
+  opts = opts || {};
   const bg = document.createElement("div");
   bg.className = "modal-bg";
   const box = document.createElement("div");
   box.className = "modal-box";
   const title = document.createElement("div");
   title.style.cssText = "font-weight:700;font-size:15px;margin-bottom:12px;";
-  title.textContent = "アカウントを発行しました";
+  title.textContent = opts.title || "アカウントを発行しました";
   box.appendChild(title);
   const desc = document.createElement("p");
-  desc.textContent = "この情報は今だけ表示されます。実習生本人に控えてもらうか、紙等で案内してください。";
+  desc.textContent = opts.desc || "この情報は今だけ表示されます。実習生本人に控えてもらうか、紙等で案内してください。";
   box.appendChild(desc);
   const infoBox = document.createElement("div");
   infoBox.style.cssText = "background:var(--blue-light);border-radius:6px;padding:14px;margin-bottom:16px;font-size:14px;line-height:2;";
-  infoBox.innerHTML = "ログインID：<b>"+escapeHtml(loginId)+"</b><br>初期パスワード：<b>"+escapeHtml(initialPassword)+"</b>";
+  infoBox.innerHTML = "ログインID：<b>"+escapeHtml(loginId)+"</b><br>"+(opts.title && opts.title.includes("リセット") ? "新しいパスワード" : "初期パスワード")+"：<b>"+escapeHtml(initialPassword)+"</b>";
   box.appendChild(infoBox);
   const closeBtn = document.createElement("button");
   closeBtn.className = "primary"; closeBtn.style.width = "100%";
@@ -805,11 +839,12 @@ async function runBulkIssue(targets){
 
   for(const l of targets){
     let entry;
+    const workplaceName = (l.workplaces && l.workplaces.length) ? l.workplaces.map(w=>w.workplace_name).join("・") : "未設定";
     try{
       const result = await issueAccount(l);
-      entry = { name: l.learnerName || l.learner_id, company: l.companyName || l.company_id, loginId: result.login_id, password: result.initial_password, success: true, error: null };
+      entry = { name: l.learnerName || l.learner_id, company: l.companyName || l.company_id, workplace: workplaceName, loginId: result.login_id, password: result.initial_password, success: true, error: null };
     }catch(e){
-      entry = { name: l.learnerName || l.learner_id, company: l.companyName || l.company_id, loginId: "-", password: "-", success: false, error: e.message || "不明なエラー" };
+      entry = { name: l.learnerName || l.learner_id, company: l.companyName || l.company_id, workplace: workplaceName, loginId: "-", password: "-", success: false, error: e.message || "不明なエラー" };
     }
     dashState.bulkResults.push(entry);
     dashState.bulkDone += 1;
@@ -880,6 +915,43 @@ function buildBulkResultContent(){
     csvWarn.textContent = "⚠️ CSVには初期パスワードが平文で含まれます。取り扱いに注意し、配布後は速やかに削除してください。このファイルはブラウザ内でのみ生成され、サーバーには保存されません。";
     card.appendChild(csvWarn);
 
+    // 事業所ごとに配布できるよう、企業→事業所→氏名/ID/PWのツリー形式でテキスト化する。
+    // 店舗責任者に渡す紙のリストをそのまま作れるように、コピペしやすい形にしておく。
+    if(successCount > 0){
+      const treeTitle = document.createElement("div");
+      treeTitle.className = "card-title";
+      treeTitle.style.marginTop = "18px";
+      treeTitle.textContent = "事業所ごとの配布用リスト（コピペ用）";
+      card.appendChild(treeTitle);
+      const treeDesc = el('<div class="card-desc"></div>');
+      treeDesc.textContent = "企業→事業所ごとにまとめています。店舗責任者様へお渡しする一覧の下書きとしてお使いください。";
+      card.appendChild(treeDesc);
+
+      const treeText = buildBulkTreeText(dashState.bulkResults);
+      const treeArea = document.createElement("textarea");
+      treeArea.readOnly = true;
+      treeArea.value = treeText;
+      treeArea.style.cssText = "width:100%;min-height:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.7;padding:12px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;margin-bottom:10px;white-space:pre;";
+      card.appendChild(treeArea);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "secondary";
+      copyBtn.textContent = "クリップボードにコピー";
+      copyBtn.style.marginBottom = "16px";
+      copyBtn.onclick = async ()=>{
+        try{
+          await navigator.clipboard.writeText(treeText);
+          copyBtn.textContent = "コピーしました ✓";
+          setTimeout(()=>{ copyBtn.textContent = "クリップボードにコピー"; }, 2000);
+        }catch(e){
+          treeArea.focus();
+          treeArea.select();
+          copyBtn.textContent = "選択したので Ctrl+C でコピーしてください";
+        }
+      };
+      card.appendChild(copyBtn);
+    }
+
     const btnRow = el('<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>');
     const csvBtn = document.createElement("button");
     csvBtn.className = "secondary";
@@ -919,6 +991,31 @@ function buildBulkResultContent(){
 }
 
 // CSV生成・ダウンロード。ブラウザ内で完結し、どこにも送信・保存しない。
+// 一括発行結果を「企業→事業所→氏名/ID/PW」のツリー形式のテキストに整形する。
+// 発行に失敗した分(ID/PWが無い)は除外する。
+function buildBulkTreeText(results){
+  const successResults = results.filter(r=>r.success);
+  const byCompany = {};
+  successResults.forEach(r=>{
+    if(!byCompany[r.company]) byCompany[r.company] = {};
+    const wp = r.workplace || "未設定";
+    if(!byCompany[r.company][wp]) byCompany[r.company][wp] = [];
+    byCompany[r.company][wp].push(r);
+  });
+  const lines = [];
+  Object.keys(byCompany).forEach(company=>{
+    lines.push("■ " + company);
+    Object.keys(byCompany[company]).forEach(workplace=>{
+      lines.push("　▼ " + workplace);
+      byCompany[company][workplace].forEach(r=>{
+        lines.push("　　" + r.name + "　ID: " + r.loginId + "　PW: " + r.password);
+      });
+    });
+    lines.push("");
+  });
+  return lines.join("\n").trim();
+}
+
 function downloadBulkResultCsv(results){
   const header = ["氏名","企業名","ログインID","初期パスワード","結果"];
   const rows = results.map(r=>[r.name, r.company, r.loginId, r.password, r.success ? "成功" : "失敗"]);
@@ -2318,6 +2415,34 @@ function renderLearnerKarte(){
     notFound.textContent = "この学習者のデータが見つかりませんでした。";
     wrap.appendChild(notFound);
     return wrap;
+  }
+
+  // パスワードリセット(NTIC管理者のみ・既にNTLP登録済みの人だけ対象)。
+  // 「本人が紙を無くした」等、発行後に繰り返し起こりうる運用のための機能。
+  if(karteScope.isAdmin && l.ntlpRegistered){
+    const resetBtn = document.createElement("button");
+    resetBtn.className = "secondary";
+    resetBtn.textContent = "パスワードをリセット";
+    resetBtn.onclick = ()=>{
+      ask("実習生ID「"+l.learner_id+"」（"+(l.learnerName||"")+"）のパスワードをリセットし、新しい初期パスワードを発行します。現在のパスワードは使えなくなります。よろしいですか？", async ()=>{
+        resetBtn.disabled = true; resetBtn.textContent = "リセット中...";
+        try{
+          const result = await resetStudentPassword(l);
+          resetBtn.disabled = false; resetBtn.textContent = "パスワードをリセット";
+          showIssueResultModal(result.login_id, result.new_password, {
+            title: "パスワードをリセットしました",
+            desc: "この情報は今だけ表示されます。実習生本人に控えてもらうか、紙等で案内してください。"
+          });
+        }catch(e){
+          resetBtn.disabled = false; resetBtn.textContent = "パスワードをリセット";
+          const errBox = document.createElement("div");
+          errBox.className = "errormsg";
+          errBox.textContent = e.message || "リセットに失敗しました。時間をおいて再度お試しください。";
+          resetBtn.parentElement.appendChild(errBox);
+        }
+      }, null, "はい、リセットする");
+    };
+    topRow.appendChild(resetBtn);
   }
 
   // ヘッダーカード
