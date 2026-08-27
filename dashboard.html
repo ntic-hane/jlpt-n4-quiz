@@ -16,6 +16,35 @@
   --bg:#ffffff; --border:#e6e7ea; --text-main:#1a1f29; --text-sub:#8a8f99;
   --radius:6px; --radius-sm:4px;
   --shadow:none;
+
+  /* ==== デザインシステム: タイポグラフィ ====
+     同じ意味のテキストは必ずこのトークンを使う。個別に別サイズを指定しない。 */
+  --fs-page-title:24px;   --fw-page-title:700;
+  --fs-section-title:16px; --fw-section-title:700;
+  --fs-card-title:13px;   --fw-card-title:600;
+  --fs-kpi-num:30px;      --fw-kpi-num:700;
+  --fs-kpi-num-lg:36px;   --fw-kpi-num-lg:700;
+  --fs-body:13px;         --fw-body:400;
+  --fs-caption:11px;      --fw-caption:400;
+  --fs-small-label:10px;  --fw-small-label:500;
+
+  /* ==== デザインシステム: 余白(8px単位のスケール) ==== */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px; --sp-8:32px;
+
+  /* ==== デザインシステム: カード共通ルール ==== */
+  --card-radius:12px;
+  --card-border:1px solid var(--border);
+  --card-shadow:0 1px 2px rgba(20,33,61,.05);
+  --card-padding:var(--sp-4);
+
+  /* ==== デザインシステム: アイコン共通ルール ==== */
+  --icon-size:24px;
+  --icon-bg-size:32px;
+  --icon-radius:8px;
+
+  /* ==== デザインシステム: 波形アクセント(カード種別ごとに高さ・不透明度を固定) ==== */
+  --wave-h-kpi:36px;      --wave-op-kpi:.55;   /* 通常のKPIカード(4枚) */
+  --wave-h-small:26px;    --wave-op-small:.18; /* 小型カード(学習中・企業数など) */
 }
 *{box-sizing:border-box;}
 body{margin:0;font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,-apple-system,sans-serif;
@@ -42,13 +71,61 @@ header h1 .appTitleTop{display:block;font-size:11px;font-weight:700;color:var(--
   letter-spacing:.02em;}
 header h1 .appTitleMain{display:block;font-size:17px;font-weight:800;color:var(--green);
   letter-spacing:.01em;margin-top:1px;}
-main{max-width:900px;margin:0 auto;padding:28px 20px 60px;width:100%;box-sizing:border-box;}
+.headerUserInfo{margin-left:auto;display:flex;align-items:center;gap:10px;flex:0 0 auto;}
+.headerUserInfo .huiText{text-align:right;line-height:1.35;display:none;}
+.headerUserInfo .huiEmail{font-size:12.5px;font-weight:600;color:var(--text-main);}
+.headerUserInfo .huiRole{font-size:11px;color:var(--text-sub);}
+.headerUserInfo .huiAvatar{width:32px;height:32px;border-radius:50%;background:var(--green);
+  color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer;
+  font-size:13px;font-weight:700;}
+@media (min-width: 640px){
+  .headerUserInfo .huiText{display:block;}
+}
+main{max-width:900px;margin:0 auto;padding:var(--sp-6) var(--sp-4) 60px;width:100%;box-sizing:border-box;}
+/* PC上部タブ */
+.tabnav{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto;}
+.tabnav-btn{display:flex;align-items:center;gap:7px;background:none;border:none;border-bottom:2.5px solid transparent;
+  padding:11px 16px;font-size:13.5px;font-weight:600;color:var(--text-sub);cursor:pointer;white-space:nowrap;flex:0 0 auto;}
+.tabnav-btn:hover{color:var(--text-main);}
+.tabnav-btn.active{color:var(--green);border-bottom-color:var(--green);}
+.tabnav-icon{width:16px;height:16px;display:flex;}
+.tabnav-icon svg{width:16px;height:16px;}
+/* 学習タブ内のサブナビ(セグメント型ボタン、タブより一段階下の階層だと分かるようにする) */
+.subnav{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-6);flex-wrap:wrap;}
+.subnav-btn{background:#fff;border:1px solid var(--border);border-radius:999px;padding:var(--sp-2) var(--sp-4);
+  font-size:var(--fs-body);font-weight:600;color:var(--text-sub);cursor:pointer;}
+.subnav-btn:hover{color:var(--text-main);border-color:#c7cad0;}
+.subnav-btn.active{background:var(--green);border-color:var(--green);color:#fff;}
+/* スマホ下部固定ナビ(PC幅では非表示) */
+.mobile-bottomnav{display:none;}
+/* 企業・事業所ミニサマリー(概要タブ用の簡易版) */
+.company-mini-summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-4);flex:1;}
+.company-mini-nums{display:flex;gap:var(--sp-6);align-items:baseline;}
+.company-mini-num{font-size:var(--fs-kpi-num);font-weight:var(--fw-kpi-num);color:var(--text-main);}
+.company-mini-unit{font-size:var(--fs-body);color:var(--text-sub);margin-left:var(--sp-1);}
+.detail-link-btn{background:none;border:none;color:var(--green);font-weight:700;font-size:13px;cursor:pointer;padding:6px 0;}
+.detail-link-btn:hover{text-decoration:underline;}
+@media (max-width: 780px){
+  .tabnav{display:none;}
+  main{padding-bottom:88px;} /* 下部固定ナビの高さ分、コンテンツが隠れないよう余白を確保 */
+  .mobile-bottomnav{display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;
+    border-top:1px solid var(--border);z-index:150;padding-bottom:env(safe-area-inset-bottom);}
+  .mobile-bottomnav-btn{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;padding:9px 2px 8px;color:var(--text-sub);font-size:10.5px;font-weight:600;cursor:pointer;}
+  .mobile-bottomnav-btn.active{color:var(--green);}
+  .mobile-bottomnav-icon svg{width:19px;height:19px;}
+}
 footer{text-align:center;font-size:11px;color:var(--text-sub);padding:18px 20px 28px;}
-.card{background:#fff;border-radius:var(--radius);padding:22px 0;margin-bottom:0;
-  border:none;border-bottom:1px solid var(--border);max-width:100%;overflow-x:hidden;}
-.card:first-of-type{padding-top:2px;}
-.card-title{font-weight:600;font-size:11px;color:var(--text-sub);margin-bottom:16px;
-  border-left:none;padding-left:0;letter-spacing:.07em;text-transform:uppercase;}
+/* ==== 共通カードコンポーネント。種類を問わずすべてのカードはこのルールに従う ====
+   (以前は用途ごとに個別のpadding/radius/shadowを上書きしていたが、それをやめて統一する) */
+.card{background:#fff;border-radius:var(--card-radius);padding:var(--card-padding);margin-bottom:0;
+  border:var(--card-border);box-shadow:var(--card-shadow);max-width:100%;overflow-x:hidden;box-sizing:border-box;}
+/* ==== 共通セクション見出し(Section Header)。「タイトル」→「必要なら説明」の同じ構造を全箇所で使う ==== */
+.card-title{font-weight:var(--fw-section-title);font-size:var(--fs-section-title);color:var(--text-main);
+  margin-bottom:var(--sp-4);line-height:1.3;
+  border-left:none;padding-left:0;letter-spacing:0;text-transform:none;}
+.card-desc{font-size:var(--fs-body);font-weight:var(--fw-body);color:var(--text-sub);
+  margin-top:calc(var(--sp-1) * -1);margin-bottom:var(--sp-4);line-height:1.5;}
 input{padding:11px 0;border:none;border-bottom:1px solid var(--border);border-radius:0;font-size:14px;
   width:100%;max-width:100%;box-sizing:border-box;margin-bottom:10px;background:transparent;transition:border-color .15s;}
 input:focus{outline:none;border-color:var(--green);}
@@ -98,13 +175,135 @@ button.danger{background:#fff;color:var(--red);border:1px solid var(--red);borde
 button.danger:hover{background:#faf3f0;}
 .icon{width:13px;height:13px;flex:0 0 auto;vertical-align:middle;}
 .icon-warn{color:var(--red);}
+/* ==== 共通アイコン(全カード種別で同じサイズ・角丸。色だけカテゴリで変える) ==== */
+.stat-icon{width:var(--icon-bg-size);height:var(--icon-bg-size);border-radius:var(--icon-radius);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.stat-icon svg{width:var(--icon-size);height:var(--icon-size);}
+
+/* ==== KPI/小型カード共通の数値ブロック(stat-block)。実際の見た目は常に.kpi-cardと併用される。 ====
+   構造を2段に固定する:
+   ① stat-header = 「アイコン＋タイトル」を横1列で並べ、カード左上に固定する
+   ② stat-numwrap = 「数字＋(補足)」。①より下の残り高さいっぱいに広がり、その中で縦中央に来る
+   これにより、補足の有無でカードごとに数字の高さがブレなくなる。 */
 .stat-block{background:transparent;border:none;border-radius:0;
-  padding:0 16px 0 0;text-align:left;display:flex;flex-direction:column;}
-.stat-block .num{font-size:24px;font-weight:600;color:var(--text-main);letter-spacing:-.02em;line-height:1.2;
-  font-variant-numeric:tabular-nums;}
-.stat-block .lbl{font-size:11px;color:var(--text-sub);margin-top:6px;font-weight:400;}
-.stat-block .stat-sub{font-size:10.5px;color:var(--text-sub);margin-top:2px;font-weight:500;}
+  padding:0;text-align:left;display:flex;flex-direction:column;height:100%;}
+.stat-header{display:flex;align-items:center;gap:var(--sp-2);flex:0 0 auto;}
+.stat-numwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;}
+.num-line{display:flex;align-items:baseline;justify-content:center;gap:var(--sp-1);flex-wrap:wrap;width:100%;}
+.stat-block .num{font-size:var(--fs-kpi-num);font-weight:var(--fw-kpi-num);color:var(--text-main);
+  letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums;}
+.stat-block .lbl{font-size:var(--fs-card-title);font-weight:var(--fw-card-title);color:var(--text-main);
+  margin:0;}
+.stat-block .stat-sub{font-size:var(--fs-kpi-num);color:var(--text-main);margin:0;font-weight:var(--fw-kpi-num);}
 .stat-block.alert .num{color:var(--red);}
+
+.kpi-cardgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4);margin-bottom:0;}
+.kpi-cardgrid.cols-2.stretch-fill{flex:1;align-content:stretch;}
+.kpi-cardgrid.cols-2.stretch-fill .kpi-card{height:100%;}
+
+/* ==== 共通KPIカード。同じ種類のカードは必ずこの1つの定義だけを使う ====
+   構造(固定・2段): [アイコン＋タイトルの行(上固定)] / [数字＋補足(残り高さで縦中央)] */
+.kpi-card{border-radius:var(--card-radius);padding:var(--card-padding);border:var(--card-border);
+  position:relative;overflow:hidden;box-shadow:var(--card-shadow);
+  display:flex;flex-direction:column;box-sizing:border-box;}
+.kpi-card > *{position:relative;z-index:1;}
+.kpi-card > svg.kpi-card-wave{position:absolute;left:0;right:0;bottom:0;width:100%;
+  height:var(--wave-h-kpi);opacity:var(--wave-op-kpi);pointer-events:none;z-index:0;}
+.kpi-card.wave-subtle > svg.kpi-card-wave{opacity:var(--wave-op-small);height:var(--wave-h-small);}
+.kpi-card .num.num-long{font-size:var(--fs-section-title);}
+@media (max-width: 640px){
+  .kpi-cardgrid{grid-template-columns:repeat(2,1fr);}
+  .kpi-card .num{font-size:24px;}
+  .kpi-card .num.num-long{font-size:19px;}
+}
+.kpi-cardgrid.cols-2{grid-template-columns:repeat(2,1fr);}
+.kpi-cardgrid.cols-3{grid-template-columns:repeat(3,1fr);}
+@media (max-width: 640px){
+  .kpi-cardgrid.cols-3{grid-template-columns:repeat(2,1fr);}
+}
+
+/* サマリー全体をflex columnにし、各セクションへ.dash-sec-*クラスで印を付けておくことで、
+   スマホ幅だけ表示順を並び替えられるようにする(PC幅では通常のDOM順=現在の見た目のまま)。 */
+#summaryWrap{display:flex;flex-direction:column;gap:var(--sp-8);}
+
+/* 「概要の顔」：ページ上部の導入エリア。大きすぎない、視線の起点。 */
+.overview-hero{padding:var(--sp-1) var(--sp-1) var(--sp-2);}
+.overview-hero-eyebrow{font-size:var(--fs-caption);font-weight:700;color:var(--text-sub);letter-spacing:.04em;text-transform:uppercase;}
+.overview-hero-title{font-size:var(--fs-page-title);font-weight:var(--fw-page-title);color:var(--text-main);margin-top:var(--sp-1);}
+.overview-hero-desc{font-size:var(--fs-body);color:var(--text-sub);margin-top:var(--sp-1);}
+.overview-hero-stats{font-size:var(--fs-body);color:var(--text-sub);margin-top:var(--sp-2);font-weight:600;}
+
+/* セクションごとの「面」。カード自体は白のまま、その周りに薄い色の背景を敷いて塊を作る。
+   色は淡く、ブランドカラー(緑)を基調に、要フォローはオレンジ、学習状況は寒色系。 */
+.section-plate{border-radius:16px;padding:var(--sp-6);}
+.section-plate-blue{background:#f7fafc;}
+.section-plate-green{background:#f7faf8;}
+.section-plate .dash-2col{margin-top:0;}
+
+/* KPIカードの強弱: 要フォローだけ枠・影を強くして最重要アクションだと分かるようにする */
+.kpi-card-priority{border-color:#e8b98f;box-shadow:0 2px 8px rgba(181,80,47,.12);}
+.kpi-card-priority .stat-icon{background:#fff !important;}
+
+.mobile-company-select{display:none;}
+@media (max-width: 780px){
+  .mobile-company-select{display:block;background:#fff;border:1px solid var(--border);border-radius:12px;
+    padding:12px 14px;}
+  .mobile-company-select label{display:block;font-size:11.5px;color:var(--text-sub);margin-bottom:6px;font-weight:600;}
+  .mobile-company-select select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff;}
+  /* 以前はここで各セクションにCSS orderを付けて並び替えていたが、タブ構造の導入により
+     DOM上の並びが既に望ましい順序(企業選択→KPI→要フォロー→学習状況→企業情報)になったため、
+     orderによる並び替えは廃止した(むしろ「顔」エリア等の新セクションと衝突するバグの元だった)。 */
+}
+
+/* アカウント発行可能のリンク行(最上段KPIから外した分。控えめなクリッカブル行) */
+.issue-link-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-sub);
+  margin-top:10px;padding:0 2px;}
+.issue-link-row svg{width:14px;height:14px;flex:0 0 auto;}
+.issue-link-row b{color:var(--text-main);font-weight:700;}
+
+/* 2カラムレイアウト(学習ステータス+学習状況サマリー)。スマホでは1カラムに積む。 */
+.dash-2col{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);margin-top:var(--sp-6);align-items:stretch;}
+.dash-2col > .card{height:100%;box-sizing:border-box;display:flex;flex-direction:column;}
+@media (max-width: 860px){
+  .dash-2col{grid-template-columns:1fr;}
+}
+
+/* ドーナツグラフ */
+.donut-body{display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+.donut-wrap{position:relative;flex:0 0 auto;}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.donut-center-num{font-size:22px;font-weight:700;color:var(--text-main);line-height:1.1;}
+.donut-center-lbl{font-size:10px;color:var(--text-sub);margin-top:2px;}
+.donut-legend{flex:1 1 160px;display:flex;flex-direction:column;gap:10px;min-width:150px;}
+.donut-legend-row{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+.donut-legend-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+.donut-legend-lbl{color:var(--text-sub);flex:1;}
+.donut-legend-num{font-weight:700;color:var(--text-main);white-space:nowrap;}
+.donut-legend-pct{font-weight:400;color:var(--text-sub);font-size:11px;}
+.donut-trend-divider{border-top:1px solid var(--border);margin:20px 0 16px;}
+.trend-subtitle{font-size:14px;margin-bottom:12px;}
+/* 折れ線グラフの底を、右側カラム(学習状況サマリー)の下端に揃えるため、
+   このセクションをカード内で残りの高さいっぱいに広げ、中の線グラフを一番下に押し付ける。 */
+.donut-trend-section{display:flex;flex-direction:column;flex:1;}
+.donut-trend-section .linechart-wrap{margin-top:auto;}
+
+/* 折れ線グラフ */
+.linechart-wrap{width:100%;margin-top:6px;}
+.linechart-legend{display:flex;gap:16px;margin-bottom:4px;}
+.linechart-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-sub);}
+.linechart-legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+/* 企業マッピング状況(進捗バー) */
+.mapping-body{margin-top:var(--sp-1);padding:var(--sp-6);border-radius:var(--card-radius);text-align:center;}
+.mapping-hero{font-size:var(--fs-kpi-num-lg);font-weight:var(--fw-kpi-num-lg);line-height:1.1;letter-spacing:-.02em;}
+.mapping-hero-sub{font-size:var(--fs-body);color:var(--text-sub);font-weight:600;margin-top:var(--sp-2);margin-bottom:var(--sp-4);}
+.mapping-nums{display:flex;gap:32px;margin-bottom:14px;}
+.mapping-num{font-size:26px;font-weight:700;color:var(--text-main);line-height:1.2;}
+.mapping-lbl{font-size:12px;color:var(--text-sub);margin-top:4px;}
+.mapping-track{height:10px;border-radius:5px;background:rgba(255,255,255,.6);overflow:hidden;max-width:320px;margin:0 auto;}
+.mapping-fill{height:100%;background:var(--green);border-radius:5px;transition:width .3s ease;}
+.mapping-pct{font-size:11.5px;color:var(--text-sub);margin-top:10px;}
+
 .summary-cardgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 0;margin-bottom:0;align-items:stretch;}
 .summary-cardgrid + .summary-cardgrid{margin-top:20px;}
 /* 枠(4辺のボックス)は使わず、列の間だけ縦線を1本入れる(1列目には付けない) */
@@ -122,12 +321,96 @@ button.danger:hover{background:#faf3f0;}
 .followup-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .followup-row:last-child{border-bottom:none;}
 .followup-row:hover{background:var(--blue-light);}
-.followup-name{font-size:13.5px;font-weight:600;}
+.followup-name{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.followup-namewrap{min-width:0;flex:1 1 auto;overflow:hidden;}
+.followup-row .badge{flex:0 0 auto;margin-left:12px;}
 .followup-reason{font-size:11.5px;color:var(--text-sub);margin-top:2px;}
-.subj-trend-row{margin:13px 0;}
-.subj-trend-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
-.subj-trend-track{height:1px;background:var(--border);}
-.subj-trend-fill{height:100%;background:var(--green);}
+/* 要フォローは「対応が必要な情報」として、他のセクションより明確に目立たせる
+   (オレンジ系のアイコン・タイトル、薄いオレンジのカード背景) */
+.followup-card{background:#fffaf3;border:1px solid #f5deba;border-radius:var(--card-radius);padding:var(--sp-6) !important;}
+.followup-titlewrap{display:flex;align-items:flex-start;gap:var(--sp-3);margin-bottom:var(--sp-4);}
+.followup-titleicon{width:var(--icon-bg-size);height:var(--icon-bg-size);border-radius:var(--icon-radius);background:#fdf3e8;color:var(--red);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.followup-titleicon svg{width:var(--icon-size);height:var(--icon-size);}
+.followup-title{font-size:var(--fs-section-title);font-weight:var(--fw-section-title);margin-bottom:var(--sp-1);}
+.followup-subtitle{font-size:var(--fs-body);color:var(--text-sub);}
+.followup-more-btn{margin-top:var(--sp-3);background:none;border:none;color:var(--green);font-weight:700;
+  font-size:var(--fs-body);cursor:pointer;padding:var(--sp-2) 0;}
+.followup-more-btn:hover{text-decoration:underline;}
+.followup-empty{font-size:var(--fs-body);color:var(--text-sub);padding:var(--sp-2) 0;}
+.subj-trend-row{margin:var(--sp-4) 0;}
+.subj-trend-top{display:flex;justify-content:space-between;font-size:var(--fs-section-title);
+  font-weight:600;margin-bottom:var(--sp-2);}
+.subj-trend-track{height:10px;border-radius:5px;background:#eef0f2;overflow:hidden;}
+.subj-trend-fill{height:100%;border-radius:5px;background:var(--green);transition:width .3s ease;}
+/* 分野別傾向の棒グラフ */
+.barchart-wrap{width:100%;}
+/* 苦手ランキング(カテゴリ別、正答率が低い順)。
+   [順位] [カテゴリ名] [参加率・正答率を並べた縦棒ミニグラフ] の3列構成。 */
+.cat-rank-list{display:flex;flex-direction:column;}
+.cat-rank-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) 0;
+  border-bottom:1px solid var(--border);}
+.cat-rank-row:last-child{border-bottom:none;}
+.cat-rank-num{font-size:var(--fs-body);font-weight:700;color:var(--text-sub);
+  width:20px;flex:0 0 auto;font-variant-numeric:tabular-nums;}
+.cat-rank-info{flex:1;min-width:0;}
+.cat-rank-top{display:flex;align-items:baseline;gap:var(--sp-2);flex-wrap:wrap;}
+.cat-rank-label{font-size:var(--fs-card-title);font-weight:var(--fw-card-title);color:var(--text-main);}
+.cat-rank-subj{font-size:var(--fs-caption);color:var(--text-sub);}
+.cat-rank-chart{flex:0 0 auto;width:150px;}
+
+/* 得意・苦手ハイライト(分野別サブタブの上部) */
+.cat-highlight{border-radius:var(--card-radius);padding:var(--sp-6);text-align:center;}
+.cat-highlight-lbl{font-size:var(--fs-body);font-weight:600;color:var(--text-sub);}
+.cat-highlight-cat{font-size:var(--fs-section-title);font-weight:700;margin-top:var(--sp-2);}
+.cat-highlight-subj{font-size:var(--fs-caption);color:var(--text-sub);font-weight:400;margin-left:var(--sp-2);}
+.cat-highlight-rate{font-size:var(--fs-kpi-num-lg);font-weight:var(--fw-kpi-num-lg);margin-top:var(--sp-2);}
+.cat-highlight-sub{font-size:var(--fs-caption);color:var(--text-sub);margin-top:var(--sp-1);}
+
+/* 学習タブ「実習生別」の一覧行 */
+/* 実習生別一覧のソート見出し行 */
+.learner-mgmt-sortheader{display:flex;gap:var(--sp-4);padding-bottom:var(--sp-2);border-bottom:1px solid var(--border);
+  margin-bottom:var(--sp-2);}
+.learner-mgmt-sortbtn{background:none;border:none;font-size:var(--fs-caption);font-weight:600;color:var(--text-sub);
+  cursor:pointer;padding:var(--sp-1) 0;display:flex;align-items:center;gap:3px;}
+.learner-mgmt-sortbtn:hover{color:var(--text-main);}
+.learner-mgmt-sortbtn.active{color:var(--green);}
+.learner-mgmt-sortarrow{font-size:10px;}
+.learner-mgmt-list{display:flex;flex-direction:column;}
+.learner-mgmt-row{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-3) 0;
+  border-bottom:1px solid var(--border);cursor:pointer;flex-wrap:wrap;}
+.learner-mgmt-row:last-child{border-bottom:none;}
+.learner-mgmt-row:hover{background:var(--blue-light);}
+.learner-mgmt-main{flex:1 1 200px;min-width:0;}
+.learner-mgmt-name{font-size:var(--fs-card-title);font-weight:700;color:var(--text-main);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.learner-mgmt-company{font-size:var(--fs-caption);color:var(--text-sub);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.learner-mgmt-metrics{display:flex;gap:var(--sp-6);flex:0 0 auto;}
+.learner-mgmt-metric{text-align:center;}
+.learner-mgmt-metric-lbl{display:block;font-size:var(--fs-small-label);color:var(--text-sub);}
+.learner-mgmt-metric-val{display:block;font-size:var(--fs-card-title);font-weight:700;color:var(--text-main);
+  font-variant-numeric:tabular-nums;margin-top:2px;}
+.badge-pill{font-size:var(--fs-caption);font-weight:700;padding:4px 10px;border-radius:999px;flex:0 0 auto;}
+/* 学習タブ「実習生別」：スマホでは縦積みのカード形式にする。
+   (このブロックをbase定義より後ろに置くことで確実に上書きする。CSSの@media自体は
+   詳細度を上げないため、base定義より前に書くと後勝ちでbaseに負けてしまう) */
+@media (max-width: 780px){
+  .learner-mgmt-row{flex-direction:column;align-items:flex-start;gap:var(--sp-2);flex-wrap:nowrap;}
+  .learner-mgmt-main{flex:0 0 auto;width:100%;min-width:0;}
+  .learner-mgmt-metrics{gap:var(--sp-4);width:100%;justify-content:flex-start;flex:0 0 auto;}
+  .learner-mgmt-metric{text-align:left;}
+}
+
+/* 学習タブ「学習履歴」 */
+.history-list{display:flex;flex-direction:column;}
+.history-row{display:flex;align-items:baseline;gap:var(--sp-4);padding:var(--sp-3) 0;border-bottom:1px solid var(--border);}
+.history-row:last-child{border-bottom:none;}
+.history-date{font-size:var(--fs-caption);color:var(--text-sub);font-weight:600;flex:0 0 auto;width:78px;}
+.history-main{flex:1;min-width:0;}
+.history-name{font-size:var(--fs-card-title);font-weight:600;color:var(--text-main);}
+.history-company{font-size:var(--fs-caption);color:var(--text-sub);font-weight:400;}
+.history-detail{font-size:var(--fs-caption);color:var(--text-sub);margin-top:2px;}
 .tree-company-header{display:flex;align-items:center;gap:10px;padding:12px 4px;
   font-weight:600;font-size:14px;border-bottom:1px solid var(--border);}
 .tree-company-header .tree-company-name{user-select:none;}
@@ -158,7 +441,7 @@ button.danger:hover{background:#faf3f0;}
 </style>
 </head>
 <body>
-<header><div class="headerTop"><img id="orgLogo" src="data:image/png;base64,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" alt="N.T.I.C" class="orgLogo"><h1><span class="appTitleTop">N.T.I.C Academy</span><span class="appTitleMain">管理者ダッシュボード</span></h1></div></header>
+<header><div class="headerTop"><img id="orgLogo" src="data:image/png;base64,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" alt="N.T.I.C" class="orgLogo"><h1><span class="appTitleTop">N.T.I.C Academy</span><span class="appTitleMain">管理者ダッシュボード</span></h1><div id="headerUserInfo" class="headerUserInfo"></div></div></header>
 <div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-spinner"></div></div>
 <main id="app"></main>
 <footer>© 日本トータル情報事業協同組合</footer>
@@ -194,6 +477,44 @@ function render(){
     logoEl.style.cursor = canGoHome ? "pointer" : "default";
     logoEl.onclick = canGoHome ? ()=> closeKarte() : null;
   }
+
+  renderHeaderUserInfo();
+}
+
+// ヘッダー右上のログイン情報(メール・ロール・アバター)を更新する。
+// 以前は本文側に「ログイン中: xxx」という行で表示していたが、参考デザインに合わせて
+// ヘッダー内(ロゴの右側)に統合した。
+function renderHeaderUserInfo(){
+  const box = document.getElementById("headerUserInfo");
+  if(!box) return;
+  box.innerHTML = "";
+  if(!session) return;
+
+  const scope = sessionScope();
+  let roleText = "";
+  if(scope.isAdmin) roleText = "NTIC管理者・全社閲覧";
+  else if(scope.role === "company_owner") roleText = "企業代表・自社全事業所閲覧";
+  else if(scope.role === "workplace_manager") roleText = "事業所担当者・担当事業所のみ閲覧";
+  else if(scope.role === "company_user_pending") roleText = "権限確認中...";
+  else if(scope.companyId) roleText = "企業: " + scope.companyId + " の閲覧権限";
+  else roleText = "閲覧権限が設定されていません";
+
+  const text = document.createElement("div");
+  text.className = "huiText";
+  text.innerHTML = "<div class='huiEmail'>"+escapeHtml(session.email)+"</div><div class='huiRole'>"+escapeHtml(roleText)+"</div>";
+  box.appendChild(text);
+
+  const avatar = document.createElement("div");
+  avatar.className = "huiAvatar";
+  avatar.textContent = (session.email||"?").charAt(0).toUpperCase();
+  avatar.title = session.email + "（" + roleText + "）タップでログアウト";
+  avatar.onclick = ()=>{
+    if(!confirm("ログアウトしますか？")) return;
+    session = null;
+    dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, expandedCompanies:{}, expandedWorkplaces:{}, studentPageByWorkplace:{}, sortColumn:null, sortDirection:"asc", companyFlatMode:{}, companyPage:0, activeTab:"overview", learningSubTab:"overview", learningLearnerFilter:"all", learningLearnerSearch:"", learningLearnerPage:0, learningLearnerSortCol:"lastSeen", learningLearnerSortDir:"asc", bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null };
+    render();
+  };
+  box.appendChild(avatar);
 }
 
 // ---- 個人カルテの開閉をブラウザ履歴に積む ----
@@ -671,7 +992,12 @@ async function fetchAllPaged(table, params){
   return all;
 }
 
-let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc", companyFlatMode: {}, companyPage: 0,
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc", companyFlatMode: {}, companyPage: 0, activeTab: "overview",
+  learningSubTab: "overview", // 学習タブのサブナビ: overview/learners/subjects/history
+  learningLearnerFilter: "all", // 実習生別一覧の絞り込みプリセット: all/notstudied/stale/lowprogress/lowrate/followup
+  learningLearnerSearch: "", // 実習生別一覧の氏名検索
+  learningLearnerPage: 0,
+  learningLearnerSortCol: "lastSeen", learningLearnerSortDir: "asc", // 実習生別一覧のソート状態
   bulkSelected: {}, // key(company_id::learner_id) -> true の形で選択状態を保持
   bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null // 一括発行の進捗・結果
 };
@@ -729,12 +1055,12 @@ function buildLearnerSummary(){
   // これにより、まだ一度もNTLPを使っていない(学習データが0件の)実習生も一覧に表示される。
   dashState.roster.forEach(r=>{
     const key = r.company_id + "::" + r.learner_id;
-    map[key] = { company_id:r.company_id, learner_id:r.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{} };
+    map[key] = { company_id:r.company_id, learner_id:r.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{}, catStats:{} };
   });
 
   dashState.progress.forEach(p=>{
     const key = p.company_id + "::" + p.learner_id;
-    if(!map[key]) map[key] = { company_id:p.company_id, learner_id:p.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{} };
+    if(!map[key]) map[key] = { company_id:p.company_id, learner_id:p.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{}, catStats:{} };
     map[key].n += p.n_count;
     map[key].c += p.c_count;
     map[key].tn += (p.tn_count || 0);
@@ -749,22 +1075,28 @@ function buildLearnerSummary(){
       map[key].subjStats[subj].tn += (p.tn_count || 0);
       map[key].subjStats[subj].tc += (p.tc_count || 0);
     }
+    const cat = meta ? meta.cat : null;
+    if(cat){
+      if(!map[key].catStats[cat]) map[key].catStats[cat] = {n:0,c:0};
+      map[key].catStats[cat].n += p.n_count;
+      map[key].catStats[cat].c += p.c_count;
+    }
   });
   dashState.exams.forEach(e=>{
     const key = e.company_id + "::" + e.learner_id;
-    if(!map[key]) map[key] = { company_id:e.company_id, learner_id:e.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{} };
+    if(!map[key]) map[key] = { company_id:e.company_id, learner_id:e.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{}, catStats:{} };
     if(!map[key].lastExam || new Date(e.taken_at) > new Date(map[key].lastExam.taken_at)){
       map[key].lastExam = e;
     }
   });
   dashState.activity.forEach(a=>{
     const key = a.company_id + "::" + a.learner_id;
-    if(!map[key]) map[key] = { company_id:a.company_id, learner_id:a.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{} };
+    if(!map[key]) map[key] = { company_id:a.company_id, learner_id:a.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{}, catStats:{} };
     map[key].lastSeen = a.last_seen_at;
   });
   (dashState.dailySummary || []).forEach(d=>{
     const key = d.company_id + "::" + d.learner_id;
-    if(!map[key]) map[key] = { company_id:d.company_id, learner_id:d.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{} };
+    if(!map[key]) map[key] = { company_id:d.company_id, learner_id:d.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{}, catStats:{} };
     if(!map[key].dailyRows) map[key].dailyRows = [];
     map[key].dailyRows.push(d);
   });
@@ -777,10 +1109,12 @@ function buildLearnerSummary(){
     if(r){
       l.trainingEndDate = r.training_end_date;
       l.learnerName = r.learner_name || null;
+      l.learnerNameKana = r.learner_name_kana || null;
       l.inRoster = true;
     } else {
       l.trainingEndDate = null;
       l.learnerName = null;
+      l.learnerNameKana = null;
       l.inRoster = false;
     }
 
@@ -1012,13 +1346,16 @@ function fmtNum(n){ return Number(n).toLocaleString("ja-JP"); }
 function renderOverallSummary(){
   const wrap = document.createElement("div");
   wrap.id = "summaryWrap";
-  buildSummaryContent(wrap);
+  buildSummaryContent(wrap, dashState.activeTab);
   return wrap;
 }
 
-// summaryWrapの中身を組み立てる。初回描画(renderOverallSummary)と、
-// 企業フィルタ変更時の部分再描画(renderSummaryOnly)の両方から呼べるよう分離している。
-function buildSummaryContent(wrap){
+// summaryWrapの中身を組み立てる。tabで「今表示すべきタブ」を指定し、該当セクションだけを
+// wrapへ追加する(計算自体は全タブ共通で行い、出し分けだけをtabで制御する)。
+// 初回描画(renderOverallSummary)と、企業フィルタ変更時の部分再描画(renderSummaryOnly)の
+// 両方から呼べるよう分離している。
+function buildSummaryContent(wrap, tab){
+  tab = tab || "overview";
   const scope = sessionScope();
   // 企業フィルタは表(テーブル)側だけの絞り込みなのでここでは適用しないが、
   // 実習終了済みの実習生は、この全体サマリーからも一律で除外する(現在学習中の実習生のみを扱う運用のため)。
@@ -1033,76 +1370,348 @@ function buildSummaryContent(wrap){
   const studying = learners.filter(l=>l.questionsStudied > 0 && !l.isFinished);
   const thisWeek = learners.filter(l=>l.lastSeen && (Date.now()-new Date(l.lastSeen).getTime()) <= 7*86400000);
   const followUps = learners.filter(l=>l.needsFollowUp);
+  const notStudied = learners.filter(l=>l.questionsStudied === 0);
   const withRate = learners.filter(l=>l.n > 0);
   const avgRate = withRate.length ? Math.round(withRate.reduce((s,l)=>s+l.rate,0)/withRate.length) : 0;
   const avgProgress = learners.length ? Math.round(learners.reduce((s,l)=>s+l.progressPct,0)/learners.length) : 0;
 
+  const KPI_WAVE_SVG_TPL = '<svg class="kpi-card-wave" style="color:COLORPLACEHOLDER;" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,28 C 30,10 50,34 80,20 C 110,6 130,30 160,18 C 180,10 190,20 200,14 L200,40 L0,40 Z" fill="currentColor"/></svg>';
   const block = (num, lbl, opts)=>{
     opts = opts || {};
-    const b = el('<div class="stat-block'+(opts.alert?' alert':'')+'"></div>');
-    b.innerHTML = "<div class='num'>"+num+"</div><div class='lbl'>"+lbl+"</div>"+
-      (opts.sub ? "<div class='stat-sub'>"+opts.sub+"</div>" : "");
+    const color = opts.alert ? "red" : (opts.color || "gray");
+    const c = STAT_COLORS[color];
+    const cardStyle = opts.card ? " style='background:"+c.bg+";'" : "";
+    // 数字が長すぎてカードからはみ出す場合だけ縮小する(例:「1,027人」のようにカンマ区切りで
+    // 7文字以上になるケース)。「613人」「577人」のような普通の3桁+単位(4文字)までは
+    // 縮小せず、同じ行のKPIカード同士でサイズが揃うようにする。
+    const numLongClass = String(num).length >= 7 ? " num-long" : "";
+    const b = el('<div class="stat-block'+(opts.card?' kpi-card':'')+(opts.waveSubtle?' wave-subtle':'')+(opts.alert?' alert':'')+'"'+cardStyle+'></div>');
+    const waveHtml = opts.card ? KPI_WAVE_SVG_TPL.replace("COLORPLACEHOLDER", c.icon) : "";
+    const iconHtml = opts.icon ? "<div class='stat-icon' style='background:"+(opts.card?"#fff":c.bg)+";color:"+c.icon+";'>"+STAT_ICONS[opts.icon]+"</div>" : "";
+    // 構造を「アイコン+タイトル(1行、常に左上固定)」→「数字(補足)を1行で、残りの高さで縦中央」の
+    // 2段に分ける。補足を数字の下ではなく同じ行に置くことで、補足の有無でカードの見た目の
+    // 高さがブレないようにする(以前は補足が数字の下に来る2行構成で、補足の有無によって
+    // 数字の位置がカードごとにズレて見えていた)。
+    b.innerHTML = waveHtml +
+      "<div class='stat-header'>"+iconHtml+"<div class='lbl'>"+lbl+"</div></div>"+
+      "<div class='stat-numwrap'><div class='num-line'><span class='num"+numLongClass+"'"+(opts.alert?" style='color:"+STAT_COLORS.red.icon+"'":"")+">"+num+"</span>"+
+      (opts.sub ? "<span class='stat-sub'>（"+opts.sub+"）</span>" : "")+"</div></div>";
+    if(opts.onclick){ b.style.cursor = "pointer"; b.onclick = opts.onclick; }
     return b;
   };
   const pct = (part, total)=> total > 0 ? (Math.round(part/total*1000)/10) + "%" : "-";
+  const scrollToFollowUp = ()=>{
+    const target = document.getElementById("followupSection");
+    if(target) target.scrollIntoView({behavior:"smooth", block:"start"});
+  };
 
-  // ---- NTLPアカウント登録状況カード(組合管理者のみ表示。企業担当者には出さない) ----
-  if(scope.isAdmin){
-    const regCard = el('<div class="card"></div>');
-    const regTitle = document.createElement("div");
-    regTitle.className = "card-title";
-    regTitle.textContent = "NTLPアカウント登録状況";
-    regCard.appendChild(regTitle);
-    const regGrid = el('<div class="summary-cardgrid"></div>');
-    regGrid.appendChild(block(fmtNum(totalLearners)+"人", "対象実習生"));
-    regGrid.appendChild(block(fmtNum(ntlpRegistered.length)+"人", "NTLP登録済", {sub: pct(ntlpRegistered.length, totalLearners)}));
-    regGrid.appendChild(block(fmtNum(ntlpUnregistered.length)+"人", "NTLP未登録", {sub: pct(ntlpUnregistered.length, totalLearners)}));
-    regGrid.appendChild(block(fmtNum(canIssue.length)+"人", "アカウント発行可能"));
-    regGrid.appendChild(block(fmtNum(companyMappingMissing.length)+"人", "企業マッピング未設定", {alert: companyMappingMissing.length>0}));
-    regCard.appendChild(regGrid);
-    wrap.appendChild(regCard);
+  // ==== モバイル専用の企業選択(PC幅では非表示。企業が複数ある管理者にのみ表示) ====
+  // PC側の詳細フィルタ(企業・事業所プルダウン)は一覧表の上に既にあるが、スマホでは
+  // 画面の一番上で企業を切り替えられた方が使いやすいため、同じ状態(dashState.companyFilter)を
+  // 操作する簡易版セレクターをここに複製する。company_ownerは元々自社データしか無いため対象外。
+  if(scope.isAdmin && dashState.companies.length > 1 && tab === "overview"){
+    const mobileSelWrap = el('<div class="dash-sec-mobileselect mobile-company-select"></div>');
+    const mobileSel = document.createElement("select");
+    const allOpt = document.createElement("option");
+    allOpt.value = ""; allOpt.textContent = "すべての企業";
+    mobileSel.appendChild(allOpt);
+    const sortedForMobile = dashState.companies.slice().sort((a,b)=> a.company_name.localeCompare(b.company_name,"ja"));
+    sortedForMobile.forEach(c=>{
+      const opt = document.createElement("option");
+      opt.value = c.company_id;
+      opt.textContent = c.company_name;
+      if(dashState.companyFilter === c.company_id) opt.selected = true;
+      mobileSel.appendChild(opt);
+    });
+    mobileSel.onchange = ()=>{
+      dashState.companyFilter = mobileSel.value; dashState.workplaceFilter = ""; dashState.companyPage = 0;
+      const pcSelect = document.getElementById("companyFilterSelect");
+      if(pcSelect) pcSelect.value = mobileSel.value;
+      refreshWorkplaceFilterOptions(); renderSummaryOnly(); renderTableOnly(); renderBulkBar();
+    };
+    mobileSelWrap.innerHTML = "<label>企業を選択</label>";
+    mobileSelWrap.appendChild(mobileSel);
+    wrap.appendChild(mobileSelWrap);
   }
 
-  // ---- 全体サマリーカード ----
-  const notStudied = learners.filter(l=>l.questionsStudied === 0);
-  const summaryCard = el('<div class="card"></div>');
-  const summaryTitle = document.createElement("div");
-  summaryTitle.className = "card-title";
-  summaryTitle.textContent = "全体サマリー";
-  summaryCard.appendChild(summaryTitle);
-  const summaryGrid = el('<div class="summary-cardgrid"></div>');
-  summaryGrid.appendChild(block(fmtNum(totalLearners)+"人", "対象学習者"));
-  summaryGrid.appendChild(block(fmtNum(studying.length)+"人", "学習中"));
-  summaryGrid.appendChild(block(fmtNum(thisWeek.length)+"人", "今週学習した人数"));
-  summaryGrid.appendChild(block(fmtNum(notStudied.length)+"人", "未学習"));
-  summaryGrid.appendChild(block(fmtNum(followUps.length)+"人", "要フォロー", {alert: followUps.length>0}));
-  summaryGrid.appendChild(block(avgRate+"%", "平均正答率"));
-  summaryGrid.appendChild(block(avgProgress+"%", "平均進捗"));
-  summaryCard.appendChild(summaryGrid);
-  wrap.appendChild(summaryCard);
+  // ==== 「概要の顔」：ページ上部の導入エリア(overviewタブのみ。視線の起点を作る) ====
+  if(tab === "overview"){
+    const heroWrap = el('<div class="overview-hero"></div>');
+    const heroLabel = scope.isAdmin ? "全体状況" : "自社の状況";
+    const heroDesc = scope.isAdmin
+      ? fmtNum(totalLearners)+"人の実習生を管理しています"
+      : fmtNum(totalLearners)+"人の学習者を管理しています";
+    const heroStatsParts = scope.isAdmin
+      ? ["登録率 "+pct(ntlpRegistered.length, totalLearners), "学習中 "+fmtNum(studying.length)+"人", "要フォロー "+fmtNum(followUps.length)+"人"]
+      : ["学習中 "+fmtNum(studying.length)+"人", "要フォロー "+fmtNum(followUps.length)+"人"];
+    heroWrap.innerHTML =
+      "<div class='overview-hero-eyebrow'>N.T.I.C Academy</div>"+
+      "<div class='overview-hero-title'>"+heroLabel+"</div>"+
+      "<div class='overview-hero-desc'>"+heroDesc+"</div>"+
+      "<div class='overview-hero-stats'>"+heroStatsParts.join("　｜　")+"</div>";
+    wrap.appendChild(heroWrap);
+  }
 
-  // ---- 企業・事業所カード ----
-  // 企業数・事業所数はマスタ件数そのもの(companies/workplacesテーブルの全件)。
-  // 勤務先設定済/未設定は、対象学習者のうちstudent_workplacesで事業所が紐づいているかどうか。
-  const withWorkplace = learners.filter(l=>l.workplaces && l.workplaces.length > 0);
-  const withoutWorkplace = learners.filter(l=>!l.workplaces || l.workplaces.length === 0);
-  const companyWpCard = el('<div class="card"></div>');
-  const companyWpTitle = document.createElement("div");
-  companyWpTitle.className = "card-title";
-  companyWpTitle.textContent = "企業・事業所";
-  companyWpCard.appendChild(companyWpTitle);
-  const companyWpGrid = el('<div class="summary-cardgrid"></div>');
-  companyWpGrid.appendChild(block(fmtNum(dashState.companies.length)+"社", "企業数"));
-  companyWpGrid.appendChild(block(fmtNum(dashState.workplaces.length)+"事業所", "事業所数"));
-  companyWpGrid.appendChild(block(fmtNum(withWorkplace.length)+"人", "勤務先設定済"));
-  companyWpGrid.appendChild(block(fmtNum(withoutWorkplace.length)+"人", "勤務先未設定", {alert: withoutWorkplace.length>0}));
-  companyWpCard.appendChild(companyWpGrid);
-  wrap.appendChild(companyWpCard);
+  // ==== ① 最上段の重要KPI(4枚。overviewタブのみ) ====
+  if(tab === "overview"){
+  const kpiRow = el('<div class="kpi-cardgrid"></div>');
+  kpiRow.appendChild(block(fmtNum(totalLearners)+"人", scope.isAdmin ? "対象実習生" : "対象学習者", {icon:"users", color:"green", card:true}));
+  if(scope.isAdmin){
+    kpiRow.appendChild(block(fmtNum(ntlpRegistered.length)+"人", "NTLP登録済", {sub: pct(ntlpRegistered.length, totalLearners), icon:"userCheck", color:"blue", card:true}));
+    kpiRow.appendChild(block(fmtNum(ntlpUnregistered.length)+"人", "NTLP未登録", {sub: pct(ntlpUnregistered.length, totalLearners), icon:"userX", color:"purple", card:true, waveSubtle:true}));
+  } else {
+    kpiRow.appendChild(block(fmtNum(studying.length)+"人", "学習中", {icon:"book", color:"blue", card:true}));
+    kpiRow.appendChild(block(fmtNum(notStudied.length)+"人", "未学習", {icon:"userOff", color:"purple", card:true, waveSubtle:true}));
+  }
+  const followUpKpi = block(fmtNum(followUps.length)+"人", "要フォロー", {alert: followUps.length>0, icon:"alertTriangle", card:true, onclick: followUps.length>0 ? scrollToFollowUp : null});
+  if(followUps.length > 0) followUpKpi.classList.add("kpi-card-priority");
+  kpiRow.appendChild(followUpKpi);
+  kpiRow.classList.add("dash-sec-kpi");
+  wrap.appendChild(kpiRow);
+  }
 
-  // ---- 選択中の企業のサマリーカード(ntic_adminが企業フィルタで1社に絞っている時だけ表示) ----
-  // company_ownerはRLSで元々自社データしか見えていないため、上の「全体サマリー」がそのまま
-  // 自社サマリーとして機能している。ここはntic_adminが組合全体の中から1社を選んだ時の専用表示。
-  if(scope.isAdmin && dashState.companyFilter.trim()){
+  // NTLPアカウント発行可能は最上段から外し、小さなリンク行として登録状況の近くに残す(管理者のみ)。
+  if(scope.isAdmin && canIssue.length > 0 && tab === "overview"){
+    const issueLink = el('<div class="issue-link-row"></div>');
+    issueLink.innerHTML = "<span>"+STAT_ICONS.idCard+"</span><span>アカウント発行可能な実習生が <b>"+fmtNum(canIssue.length)+"人</b> います</span>";
+    issueLink.classList.add("dash-sec-kpi");
+    wrap.appendChild(issueLink);
+  }
+
+  // ==== 要フォロー学習者(概要タブのみ。対応が必要な情報なので、KPIのすぐ下＝上位に配置する。
+  //      「今どうなっているか」を一目で把握する場所という位置づけのため、最大3名だけ見せ、
+  //      残りは「すべて見る」で展開する形にする) ====
+  if(tab === "overview"){
+  const fCard = el('<div class="card followup-card"></div>');
+  fCard.id = "followupSection";
+  const fTitleWrap = el('<div class="followup-titlewrap"></div>');
+  fTitleWrap.innerHTML = "<span class='followup-titleicon'>"+STAT_ICONS.alertTriangle+"</span>"+
+    "<div><div class='card-title followup-title'>要フォロー</div>"+
+    "<div class='followup-subtitle'>学習停滞・正答率低下など、確認が必要な実習生</div></div>";
+  fCard.appendChild(fTitleWrap);
+  if(followUps.length > 0){
+    followUps.sort((a,b)=>{
+      const at = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+      const bt = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+      return at - bt; // 学習が止まっている人を上に
+    });
+    const FOLLOWUP_PREVIEW_COUNT = 3;
+    const followUpList = el('<div class="followup-list"></div>');
+    const renderFollowUpRow = (l)=>{
+      const row = el('<div class="followup-row"></div>');
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "followup-namewrap";
+      const nameLine = document.createElement("div");
+      nameLine.className = "followup-name";
+      nameLine.innerHTML = flagBadge(l.nationality) + escapeHtml((l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）");
+      const reasonLine = document.createElement("div");
+      reasonLine.className = "followup-reason";
+      reasonLine.textContent = l.followUpReasons.join(" / ");
+      nameDiv.appendChild(nameLine); nameDiv.appendChild(reasonLine);
+      const badge = el('<span class="badge low">要フォロー</span>');
+      row.appendChild(nameDiv); row.appendChild(badge);
+      row.onclick = ()=> openKarte(l.company_id, l.learner_id);
+      return row;
+    };
+    followUps.slice(0, FOLLOWUP_PREVIEW_COUNT).forEach(l=> followUpList.appendChild(renderFollowUpRow(l)));
+    fCard.appendChild(followUpList);
+    if(followUps.length > FOLLOWUP_PREVIEW_COUNT){
+      const moreList = el('<div class="followup-list" style="display:none;"></div>');
+      followUps.slice(FOLLOWUP_PREVIEW_COUNT).forEach(l=> moreList.appendChild(renderFollowUpRow(l)));
+      fCard.appendChild(moreList);
+      const moreBtn = el('<button class="followup-more-btn"></button>');
+      moreBtn.textContent = "すべて見る（"+followUps.length+"人）→";
+      moreBtn.onclick = ()=>{
+        moreList.style.display = "block";
+        moreBtn.style.display = "none";
+      };
+      fCard.appendChild(moreBtn);
+    }
+  } else {
+    const empty = el('<div class="followup-empty"></div>');
+    empty.textContent = "現在、要フォローの学習者はいません。";
+    fCard.appendChild(empty);
+  }
+  fCard.classList.add("dash-sec-followup");
+  wrap.appendChild(fCard);
+  }
+
+  // ==== ② 学習ステータス(ドーナツ) + 学習状況サマリー の2カラム(overviewタブのみ) ====
+  if(tab === "overview"){
+  const statusSection = el('<div class="section-plate section-plate-blue"></div>');
+  const twoCol = el('<div class="dash-2col"></div>');
+
+  const donutCard = el('<div class="card"></div>');
+  const donutTitle = el('<div class="card-title"></div>'); donutTitle.textContent = "学習ステータス";
+  donutCard.appendChild(donutTitle);
+  const donutBody = el('<div class="donut-body"></div>');
+  const donutSegs = [
+    {value: studying.length, color: STAT_COLORS.blue.icon, label:"学習中"},
+    {value: Math.max(0, thisWeek.length - studying.length) , color: STAT_COLORS.purple.icon, label:"今週学習"},
+    {value: followUps.length, color: STAT_COLORS.orange.icon, label:"要フォロー"},
+    {value: notStudied.length, color: "#d7dade", label:"未学習"}
+  ];
+  const centerHtml = "<div class='donut-center-num'>"+fmtNum(totalLearners)+"</div><div class='donut-center-lbl'>対象学習者</div>";
+  donutBody.appendChild(buildDonutChart(donutSegs, {centerLabel: centerHtml}));
+  const donutLegend = el('<div class="donut-legend"></div>');
+  const legendItems = [
+    {c: STAT_COLORS.blue.icon, lbl:"学習中", n: studying.length},
+    {c: STAT_COLORS.purple.icon, lbl:"今週学習", n: thisWeek.length},
+    {c: STAT_COLORS.orange.icon, lbl:"要フォロー", n: followUps.length},
+    {c: "#b7bcc4", lbl:"未学習", n: notStudied.length}
+  ];
+  legendItems.forEach(it=>{
+    const row = el('<div class="donut-legend-row"></div>');
+    row.innerHTML = "<span class='donut-legend-dot' style='background:"+it.c+";'></span>"+
+      "<span class='donut-legend-lbl'>"+it.lbl+"</span>"+
+      "<span class='donut-legend-num'>"+fmtNum(it.n)+"人 <span class='donut-legend-pct'>("+pct(it.n, totalLearners)+")</span></span>";
+    donutLegend.appendChild(row);
+  });
+  donutBody.appendChild(donutLegend);
+  donutCard.appendChild(donutBody);
+
+  // ==== ③ 登録・学習推移(折れ線、直近6ヶ月) ====
+  // ドーナツグラフのカードは、右側の「学習状況サマリー」(カード4枚)より縦に短くなり、
+  // 下に余白ができてしまうため、その余白を使ってこの下に差し込む(独立カードにはしない)。
+  // NTLP登録者数=students.created_at、学習開始者数=daily_summaryに記録がある学習者の初回記録日、
+  // をそれぞれ月末時点の累計で集計する。実データが少ない期間はそのまま0近辺で表示する(誤魔化さない)。
+  const trendSection = el('<div class="donut-trend-section"></div>');
+  const trendDivider = el('<div class="donut-trend-divider"></div>');
+  trendSection.appendChild(trendDivider);
+  const trendLineTitle = el('<div class="card-title trend-subtitle"></div>'); trendLineTitle.textContent = "登録・学習推移（直近6ヶ月）";
+  trendSection.appendChild(trendLineTitle);
+
+  const monthLabels = [];
+  const monthEnds = [];
+  const now = new Date();
+  for(let i=5; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i+1, 0, 23, 59, 59); // その月の月末
+    monthLabels.push((d.getMonth()+1)+"月");
+    monthEnds.push(d);
+  }
+  const studentsForTrend = scope.isAdmin ? dashState.students : dashState.students.filter(s=>learners.some(l=>l.learner_id===s.dekisugi_student_code));
+  const regByMonth = monthEnds.map(end=>
+    studentsForTrend.filter(s=>s.created_at && new Date(s.created_at) <= end).length
+  );
+  const learnerFirstSeen = {};
+  dashState.dailySummary.forEach(d=>{
+    if(!d.learner_id || !d.summary_date) return;
+    const t = new Date(d.summary_date).getTime();
+    if(!learnerFirstSeen[d.learner_id] || t < learnerFirstSeen[d.learner_id]) learnerFirstSeen[d.learner_id] = t;
+  });
+  const relevantLearnerIds = scope.isAdmin ? null : new Set(learners.map(l=>l.learner_id));
+  const studyByMonth = monthEnds.map(end=>
+    Object.keys(learnerFirstSeen).filter(lid=>
+      (!relevantLearnerIds || relevantLearnerIds.has(lid)) && learnerFirstSeen[lid] <= end.getTime()
+    ).length
+  );
+
+  const lineSeries = [
+    {label:"NTLP登録済", color: STAT_COLORS.green.icon, points: monthLabels.map((lbl,i)=>({x_label:lbl, y:regByMonth[i]}))},
+    {label:"学習開始者数", color: STAT_COLORS.blue.icon, points: monthLabels.map((lbl,i)=>({x_label:lbl, y:studyByMonth[i]}))}
+  ];
+  const trendLegend = el('<div class="linechart-legend"></div>');
+  lineSeries.forEach(s=>{
+    const item = el('<span class="linechart-legend-item"></span>');
+    item.innerHTML = "<span class='linechart-legend-dot' style='background:"+s.color+";'></span>"+s.label;
+    trendLegend.appendChild(item);
+  });
+  trendSection.appendChild(trendLegend);
+  trendSection.appendChild(buildLineChart(lineSeries, {height: 180}));
+  donutCard.appendChild(trendSection);
+
+  twoCol.appendChild(donutCard);
+
+  const statusCard = el('<div class="card"></div>');
+  const statusTitle = el('<div class="card-title"></div>'); statusTitle.textContent = "学習状況サマリー";
+  statusCard.appendChild(statusTitle);
+  const statusGrid = el('<div class="kpi-cardgrid cols-2 stretch-fill"></div>');
+  statusGrid.appendChild(block(avgRate+"%", "平均正答率", {icon:"target", color:"green", card:true, waveSubtle:true}));
+  statusGrid.appendChild(block(avgProgress+"%", "平均進捗", {icon:"trendingUp", color:"blue", card:true, waveSubtle:true}));
+  statusGrid.appendChild(block(fmtNum(studying.length)+"人", "学習中", {icon:"book", color:"purple", card:true, waveSubtle:true}));
+  statusGrid.appendChild(block(fmtNum(notStudied.length)+"人", "未学習", {icon:"userOff", color:"gray", card:true, waveSubtle:true}));
+  statusCard.appendChild(statusGrid);
+  twoCol.appendChild(statusCard);
+
+  statusSection.appendChild(twoCol);
+  statusSection.classList.add("dash-sec-status");
+  wrap.appendChild(statusSection);
+  }
+
+  // ==== ③' overviewタブ向けの企業・事業所ミニサマリー(数字だけ、詳細はcompaniesタブへ) ====
+  // ==== ③' overviewタブ向けの「企業・事業所ミニサマリー」＋「企業マッピング状況」の2カラム
+  //      (どちらも縦に長くないので、横並びにして画面の高さを節約する) ====
+  const overviewBottomRow = tab === "overview" && scope.isAdmin ? el('<div class="dash-2col dash-sec-company"></div>') : null;
+
+  if(tab === "overview" && scope.isAdmin){
+    const miniCard = el('<div class="card"></div>');
+    const miniTitle = el('<div class="card-title"></div>'); miniTitle.textContent = "企業・事業所";
+    miniCard.appendChild(miniTitle);
+    const miniBody = el('<div class="company-mini-summary"></div>');
+    miniBody.innerHTML =
+      "<div class='company-mini-nums'>"+
+        "<div><span class='company-mini-num'>"+fmtNum(dashState.companies.length)+"</span><span class='company-mini-unit'>社</span></div>"+
+        "<div><span class='company-mini-num'>"+fmtNum(dashState.workplaces.length)+"</span><span class='company-mini-unit'>事業所</span></div>"+
+      "</div>";
+    const detailLink = el('<button class="detail-link-btn"></button>');
+    detailLink.textContent = "詳細を見る →";
+    detailLink.onclick = ()=>{ dashState.activeTab = "companies"; render(); };
+    miniBody.appendChild(detailLink);
+    miniCard.appendChild(miniBody);
+    overviewBottomRow.appendChild(miniCard);
+  }
+
+  // ==== ④ 企業・事業所サマリー(companiesタブのみ。企業担当者には自社の情報しか無く意味が薄いため管理者限定) ====
+  if(tab === "companies" && scope.isAdmin){
+    const withWorkplace = learners.filter(l=>l.workplaces && l.workplaces.length > 0);
+    const withoutWorkplace = learners.filter(l=>!l.workplaces || l.workplaces.length === 0);
+    const companyWpCard = el('<div class="card"></div>');
+    const companyWpTitle = el('<div class="card-title"></div>'); companyWpTitle.textContent = "企業・事業所サマリー";
+    companyWpCard.appendChild(companyWpTitle);
+    const companyWpGrid = el('<div class="kpi-cardgrid"></div>');
+    companyWpGrid.appendChild(block(fmtNum(dashState.companies.length)+"社", "企業数", {icon:"building", color:"green", card:true, waveSubtle:true}));
+    companyWpGrid.appendChild(block(fmtNum(dashState.workplaces.length)+"事業所", "事業所数", {icon:"building2", color:"blue", card:true, waveSubtle:true}));
+    companyWpGrid.appendChild(block(fmtNum(withWorkplace.length)+"人", "勤務先設定済", {icon:"usersGroup", color:"purple", card:true, waveSubtle:true}));
+    companyWpGrid.appendChild(block(fmtNum(withoutWorkplace.length)+"人", "勤務先未設定", {alert: withoutWorkplace.length>0, icon:"userOff", card:true, waveSubtle:true}));
+    companyWpCard.appendChild(companyWpGrid);
+    companyWpCard.classList.add("dash-sec-company");
+    wrap.appendChild(companyWpCard);
+  }
+
+  // ==== ⑤ 企業マッピング状況(「◯%」を主役にした構成。完了なら緑、未完了ならオレンジ。
+  //      overview(概要)・companies(企業・事業所)、両方のタブに出す ====
+  if((tab === "overview" || tab === "companies") && scope.isAdmin){
+    const mappedCompanies = dashState.companies.filter(c=>c.dekisugi_company_id).length;
+    const totalCompanies = dashState.companies.length;
+    const mappingPct = totalCompanies > 0 ? Math.round(mappedCompanies/totalCompanies*100) : 0;
+    const mappingDone = mappingPct >= 100;
+    const mappingTone = mappingDone ? STAT_COLORS.green : STAT_COLORS.orange;
+    const mapCard = el('<div class="card"></div>');
+    const mapTitle = el('<div class="card-title"></div>'); mapTitle.textContent = "企業マッピング状況";
+    mapCard.appendChild(mapTitle);
+    const mapBody = el('<div class="mapping-body"></div>');
+    mapBody.style.background = mappingTone.bg;
+    mapBody.innerHTML =
+      "<div class='mapping-hero' style='color:"+mappingTone.icon+"'>"+mappingPct+"%</div>"+
+      "<div class='mapping-hero-sub'>"+fmtNum(mappedCompanies)+" / "+fmtNum(totalCompanies)+"社"+(mappingDone?"（完了）":"")+"</div>"+
+      "<div class='mapping-track'><div class='mapping-fill' style='width:"+mappingPct+"%;background:"+mappingTone.icon+";'></div></div>"+
+      (mappingDone ? "" : "<div class='mapping-pct'>未設定："+fmtNum(totalCompanies-mappedCompanies)+"社</div>");
+    mapCard.appendChild(mapBody);
+    if(tab === "overview"){
+      overviewBottomRow.appendChild(mapCard);
+    } else {
+      mapCard.classList.add("dash-sec-company");
+      wrap.appendChild(mapCard);
+    }
+  }
+  if(overviewBottomRow && overviewBottomRow.children.length > 0){
+    const companySection = el('<div class="section-plate section-plate-green"></div>');
+    companySection.appendChild(overviewBottomRow);
+    wrap.appendChild(companySection);
+  }
+
+  // ==== 選択中の企業のサマリー(companiesタブ限定。ntic_adminが企業フィルタで1社に絞っている時だけ表示) ====
+  if(tab === "companies" && scope.isAdmin && dashState.companyFilter.trim()){
     const companyId = dashState.companyFilter.trim();
     const companyLearners = learners.filter(l=>l.company_id === companyId);
     if(companyLearners.length > 0){
@@ -1115,77 +1724,288 @@ function buildSummaryContent(wrap){
       const cAvgProgress = Math.round(companyLearners.reduce((s,l)=>s+l.progressPct,0)/companyLearners.length);
 
       const companyCard = el('<div class="card"></div>');
-      const companyCardTitle = document.createElement("div");
-      companyCardTitle.className = "card-title";
+      const companyCardTitle = el('<div class="card-title"></div>');
       companyCardTitle.textContent = "選択中の企業のサマリー：" + companyName;
       companyCard.appendChild(companyCardTitle);
-      const companyGrid = el('<div class="summary-cardgrid"></div>');
-      companyGrid.appendChild(block(fmtNum(companyLearners.length)+"人", "対象学習者"));
-      companyGrid.appendChild(block(fmtNum(cRegistered)+"人", "NTLP登録済", {sub: pct(cRegistered, companyLearners.length)}));
-      companyGrid.appendChild(block(fmtNum(cStudying)+"人", "学習中"));
-      companyGrid.appendChild(block(fmtNum(cFollowUps)+"人", "要フォロー", {alert: cFollowUps>0}));
-      companyGrid.appendChild(block(cAvgRate+"%", "平均正答率"));
-      companyGrid.appendChild(block(cAvgProgress+"%", "平均進捗"));
+      const companyGrid = el('<div class="kpi-cardgrid"></div>');
+      companyGrid.appendChild(block(fmtNum(companyLearners.length)+"人", "対象学習者", {icon:"users", color:"green", card:true}));
+      companyGrid.appendChild(block(fmtNum(cRegistered)+"人", "NTLP登録済", {sub: pct(cRegistered, companyLearners.length), icon:"userCheck", color:"blue", card:true}));
+      companyGrid.appendChild(block(fmtNum(cStudying)+"人", "学習中", {icon:"book", color:"purple", card:true}));
+      companyGrid.appendChild(block(fmtNum(cFollowUps)+"人", "要フォロー", {alert: cFollowUps>0, icon:"alertTriangle", card:true}));
       companyCard.appendChild(companyGrid);
+      const companySubGrid = el('<div class="kpi-cardgrid cols-2"></div>');
+      companySubGrid.appendChild(block(cAvgRate+"%", "平均正答率", {icon:"target", color:"green", card:true}));
+      companySubGrid.appendChild(block(cAvgProgress+"%", "平均進捗", {icon:"trendingUp", color:"blue", card:true}));
+      companyCard.appendChild(companySubGrid);
+      companyCard.classList.add("dash-sec-company");
       wrap.appendChild(companyCard);
     }
   }
 
-  // ---- 要フォロー学習者 ----
-  if(followUps.length > 0){
-    const fCard = el('<div class="card"></div>');
-    const fTitle = document.createElement("div");
-    fTitle.className = "card-title";
-    fTitle.textContent = "要フォロー学習者（" + followUps.length + "人）";
-    fCard.appendChild(fTitle);
-    followUps.sort((a,b)=>{
-      const at = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
-      const bt = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
-      return at - bt; // 学習が止まっている人を上に
+  // ==== 全体の分野別傾向(learningタブのみ)。左に4分野の概要グラフ、右に15カテゴリの苦手ランキング ====
+  if(tab === "learning"){
+  wrap.appendChild(buildLearningSubNav());
+  const learningWrap = el('<div></div>');
+  learningWrap.classList.add("dash-sec-detail");
+
+  // ==== サブタブ: 学習概要 ====
+  if(dashState.learningSubTab === "overview"){
+    const kpiRow1 = el('<div class="kpi-cardgrid"></div>');
+    kpiRow1.appendChild(block(fmtNum(totalLearners)+"人", "学習対象", {icon:"users", color:"green", card:true}));
+    kpiRow1.appendChild(block(fmtNum(studying.length)+"人", "学習中", {icon:"book", color:"blue", card:true}));
+    kpiRow1.appendChild(block(fmtNum(notStudied.length)+"人", "未学習", {icon:"userOff", color:"gray", card:true, waveSubtle:true}));
+    kpiRow1.appendChild(block(fmtNum(followUps.length)+"人", "要フォロー", {alert: followUps.length>0, icon:"alertTriangle", card:true}));
+    learningWrap.appendChild(kpiRow1);
+    const kpiRow2 = el('<div class="kpi-cardgrid cols-3" style="margin-top:var(--sp-4);"></div>');
+    kpiRow2.appendChild(block(fmtNum(thisWeek.length)+"人", "今週学習", {icon:"calendar", color:"purple", card:true, waveSubtle:true}));
+    kpiRow2.appendChild(block(avgProgress+"%", "平均進捗", {icon:"trendingUp", color:"blue", card:true, waveSubtle:true}));
+    kpiRow2.appendChild(block(avgRate+"%", "平均正答率", {icon:"target", color:"green", card:true, waveSubtle:true}));
+    learningWrap.appendChild(kpiRow2);
+
+    const ov2col = el('<div class="dash-2col" style="margin-top:var(--sp-6);"></div>');
+    const donutCard2 = el('<div class="card"></div>');
+    const donutTitle2 = el('<div class="card-title"></div>'); donutTitle2.textContent = "学習ステータス";
+    donutCard2.appendChild(donutTitle2);
+    const donutBody2 = el('<div class="donut-body"></div>');
+    const donutSegs2 = [
+      {value: studying.length, color: STAT_COLORS.blue.icon, label:"学習中"},
+      {value: Math.max(0, thisWeek.length - studying.length), color: STAT_COLORS.purple.icon, label:"今週学習"},
+      {value: followUps.length, color: STAT_COLORS.orange.icon, label:"要フォロー"},
+      {value: notStudied.length, color: "#d7dade", label:"未学習"}
+    ];
+    donutBody2.appendChild(buildDonutChart(donutSegs2, {centerLabel: "<div class='donut-center-num'>"+fmtNum(totalLearners)+"</div><div class='donut-center-lbl'>学習対象</div>"}));
+    const donutLegend2 = el('<div class="donut-legend"></div>');
+    [{c:STAT_COLORS.blue.icon,lbl:"学習中",n:studying.length},{c:STAT_COLORS.purple.icon,lbl:"今週学習",n:thisWeek.length},
+     {c:STAT_COLORS.orange.icon,lbl:"要フォロー",n:followUps.length},{c:"#b7bcc4",lbl:"未学習",n:notStudied.length}].forEach(it=>{
+      const row = el('<div class="donut-legend-row"></div>');
+      row.innerHTML = "<span class='donut-legend-dot' style='background:"+it.c+";'></span><span class='donut-legend-lbl'>"+it.lbl+"</span>"+
+        "<span class='donut-legend-num'>"+fmtNum(it.n)+"人 <span class='donut-legend-pct'>("+pct(it.n,totalLearners)+")</span></span>";
+      donutLegend2.appendChild(row);
     });
-    followUps.forEach(l=>{
-      const row = el('<div class="followup-row"></div>');
-      const nameDiv = document.createElement("div");
-      const nameLine = document.createElement("div");
-      nameLine.className = "followup-name";
-      nameLine.innerHTML = flagBadge(l.nationality) + escapeHtml((l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）");
-      const reasonLine = document.createElement("div");
-      reasonLine.className = "followup-reason";
-      reasonLine.textContent = l.followUpReasons.join(" / ");
-      nameDiv.appendChild(nameLine); nameDiv.appendChild(reasonLine);
-      const badge = el('<span class="badge low">要フォロー</span>');
-      row.appendChild(nameDiv); row.appendChild(badge);
-      row.onclick = ()=> openKarte(l.company_id, l.learner_id);
-      fCard.appendChild(row);
+    donutBody2.appendChild(donutLegend2);
+    donutCard2.appendChild(donutBody2);
+    ov2col.appendChild(donutCard2);
+
+    const subjChartCard = el('<div class="card"></div>');
+    const subjChartTitle = el('<div class="card-title"></div>'); subjChartTitle.textContent = "分野別正答率";
+    subjChartCard.appendChild(subjChartTitle);
+    const subjDataOv = ["moji","bunpo","dokkai","choukai"].map(subj=>{
+      let n=0,c=0;
+      learners.forEach(l=>{ const st=l.subjStats&&l.subjStats[subj]; if(st){n+=st.n;c+=st.c;} });
+      return { label: SUBJECT_LABEL[subj], value: n>0?Math.round(c/n*100):0 };
     });
-    wrap.appendChild(fCard);
+    subjChartCard.appendChild(buildBarChart(subjDataOv.map(d=>({label:d.label, value:d.value, color:STAT_COLORS.green.icon})), {height:200}));
+    ov2col.appendChild(subjChartCard);
+    learningWrap.appendChild(ov2col);
+
+    // 学習開始者数の推移(直近6ヶ月、daily_summaryの初出日ベース)
+    const trendCardOv = el('<div class="card" style="margin-top:var(--sp-6);"></div>');
+    const trendTitleOv = el('<div class="card-title"></div>'); trendTitleOv.textContent = "学習開始者数の推移（直近6ヶ月）";
+    trendCardOv.appendChild(trendTitleOv);
+    const monthLabelsOv = [], monthEndsOv = [];
+    const nowOv = new Date();
+    for(let i=5;i>=0;i--){ const d=new Date(nowOv.getFullYear(), nowOv.getMonth()-i+1, 0, 23,59,59); monthLabelsOv.push((d.getMonth()+1)+"月"); monthEndsOv.push(d); }
+    const learnerFirstSeenOv = {};
+    dashState.dailySummary.forEach(d=>{
+      if(!d.learner_id || !d.summary_date) return;
+      const t = new Date(d.summary_date).getTime();
+      if(!learnerFirstSeenOv[d.learner_id] || t < learnerFirstSeenOv[d.learner_id]) learnerFirstSeenOv[d.learner_id] = t;
+    });
+    const relevantIdsOv = scope.isAdmin ? null : new Set(learners.map(l=>l.learner_id));
+    const studyByMonthOv = monthEndsOv.map(end => Object.keys(learnerFirstSeenOv).filter(lid=>
+      (!relevantIdsOv || relevantIdsOv.has(lid)) && learnerFirstSeenOv[lid] <= end.getTime()
+    ).length);
+    trendCardOv.appendChild(buildLineChart([{label:"学習開始者数", color:STAT_COLORS.blue.icon, points: monthLabelsOv.map((lbl,i)=>({x_label:lbl, y:studyByMonthOv[i]}))}], {height:180}));
+    learningWrap.appendChild(trendCardOv);
   }
 
-  // ---- 全体の分野別傾向 ----
-  const trendCard = el('<div class="card"></div>');
-  const trendTitle = document.createElement("div");
-  trendTitle.className = "card-title";
-  trendTitle.textContent = "全体の分野別傾向";
-  trendCard.appendChild(trendTitle);
-  ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
-    let n=0,c=0;
-    learners.forEach(l=>{
-      const st = l.subjStats && l.subjStats[subj];
-      if(st){ n+=st.n; c+=st.c; }
+  // ==== サブタブ: 実習生別(検索・フィルターできる一覧。学習管理の中心) ====
+  else if(dashState.learningSubTab === "learners"){
+    const filterDefs = [
+      { id:"all", label:"すべて" },
+      { id:"notstudied", label:"未学習" },
+      { id:"stale", label:"7日以上未学習" },
+      { id:"lowprogress", label:"進捗が低い" },
+      { id:"lowrate", label:"正答率が低い" },
+      { id:"followup", label:"要フォロー" }
+    ];
+    const filterRow = el('<div class="subnav" style="margin-bottom:var(--sp-3);"></div>');
+    filterDefs.forEach(f=>{
+      const btn = el('<button class="subnav-btn"></button>');
+      if(dashState.learningLearnerFilter === f.id) btn.classList.add("active");
+      btn.textContent = f.label;
+      btn.onclick = ()=>{ dashState.learningLearnerFilter = f.id; dashState.learningLearnerPage = 0; render(); };
+      filterRow.appendChild(btn);
     });
-    const rate = n>0 ? Math.round(c/n*100) : 0;
-    const row = el('<div class="subj-trend-row"></div>');
-    const top = el('<div class="subj-trend-top"></div>');
-    top.innerHTML = "<span>"+SUBJECT_LABEL[subj]+"</span><span style='font-weight:700;'>"+(n>0?rate+"%":"データなし")+"</span>";
-    const track = el('<div class="subj-trend-track"></div>');
-    const fill = document.createElement("div");
-    fill.className = "subj-trend-fill";
-    fill.style.width = rate + "%";
-    track.appendChild(fill);
-    row.appendChild(top); row.appendChild(track);
-    trendCard.appendChild(row);
-  });
-  wrap.appendChild(trendCard);
+    learningWrap.appendChild(filterRow);
+
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.placeholder = "氏名で検索";
+    searchInput.value = dashState.learningLearnerSearch;
+    searchInput.style.marginBottom = "var(--sp-4)";
+    searchInput.oninput = ()=>{ dashState.learningLearnerSearch = searchInput.value; dashState.learningLearnerPage = 0; renderLearningLearnersOnly(); };
+    learningWrap.appendChild(searchInput);
+
+    const listCard = el('<div class="card"></div>');
+    const listWrap = el('<div id="learningLearnersWrap"></div>');
+    listCard.appendChild(listWrap);
+    learningWrap.appendChild(listCard);
+    setTimeout(()=> renderLearningLearnersOnly(), 0);
+  }
+
+  // ==== サブタブ: 分野別(4科目のサマリー + 15カテゴリの苦手ランキング) ====
+  else if(dashState.learningSubTab === "subjects"){
+    const totalForRate = learners.length;
+    const subjData = ["moji","bunpo","dokkai","choukai"].map(subj=>{
+      let n=0,c=0,participants=0;
+      learners.forEach(l=>{
+        const st = l.subjStats && l.subjStats[subj];
+        if(st && st.n>0){ n+=st.n; c+=st.c; participants+=1; }
+      });
+      return { subj, label: SUBJECT_LABEL[subj], n, rate: n>0 ? Math.round(c/n*100) : null, participants, notStudied: totalForRate - participants };
+    });
+
+    const subjSummaryGrid = el('<div class="kpi-cardgrid"></div>');
+    const subjSummaryTitle = el('<div class="card-title"></div>'); subjSummaryTitle.textContent = "科目別サマリー";
+    learningWrap.appendChild(subjSummaryTitle);
+    const subjSummaryDesc = el('<div class="card-desc"></div>');
+    subjSummaryDesc.textContent = "上段の％＝その科目の平均正答率、（）内＝その科目を1問以上学習した人数";
+    learningWrap.appendChild(subjSummaryDesc);
+    subjData.forEach(d=>{
+      subjSummaryGrid.appendChild(block(d.rate===null?"データなし":d.rate+"%", d.label,
+        {sub: fmtNum(d.participants)+"人", icon:"book", color:"green", card:true}));
+    });
+    learningWrap.appendChild(subjSummaryGrid);
+
+    const chartCard = el('<div class="card" style="margin-top:var(--sp-6);"></div>');
+    const chartTitle = el('<div class="card-title"></div>'); chartTitle.textContent = "全体の分野別傾向";
+    chartCard.appendChild(chartTitle);
+    chartCard.appendChild(buildBarChart(subjData.map(d=>({label:d.label, value:d.rate||0, color:STAT_COLORS.green.icon})), {height:210}));
+    learningWrap.appendChild(chartCard);
+
+    // 15カテゴリごとに、正答率(全体の解答をまとめて集計)と参加率(1問でも取り組んだ人の割合)を出す。
+    // 参加率が低いカテゴリは「たまたま少人数が解いて高正答率」等の誤解を避けるために必要。
+    const catRanking = Object.keys(CAT_LABEL).map(cat=>{
+      let n=0,c=0,participants=0;
+      learners.forEach(l=>{
+        const st = l.catStats && l.catStats[cat];
+        if(st && st.n > 0){ n += st.n; c += st.c; participants += 1; }
+      });
+      const subj = Object.keys(QID_CATEGORY_MAP).map(k=>QID_CATEGORY_MAP[k]).find(m=>m.cat===cat)?.subj;
+      return { cat, label: CAT_LABEL[cat], subj, rate: n>0 ? Math.round(c/n*100) : null,
+        participationRate: totalForRate>0 ? Math.round(participants/totalForRate*1000)/10 : 0 };
+    }).sort((a,b)=>{
+      if(a.rate === null && b.rate === null) return 0;
+      if(a.rate === null) return 1;
+      if(b.rate === null) return -1;
+      return a.rate - b.rate;
+    });
+
+    // データがある(rate!==null)カテゴリのうち、最も苦手(先頭)・最も得意(末尾)を1つずつハイライトする。
+    const catWithData = catRanking.filter(d=>d.rate !== null);
+    if(catWithData.length > 0){
+      const bestWorstGrid = el('<div class="dash-2col"></div>');
+      const worst = catWithData[0];
+      const best = catWithData[catWithData.length - 1];
+      const highlightCard = (d, kind)=>{
+        const tone = kind === "best" ? STAT_COLORS.green : STAT_COLORS.red;
+        const card = el('<div class="card"></div>');
+        const inner = el('<div class="cat-highlight" style="background:'+tone.bg+';"></div>');
+        inner.innerHTML =
+          "<div class='cat-highlight-lbl'>"+(kind==="best"?"最も得意な分野":"最も苦手な分野")+"</div>"+
+          "<div class='cat-highlight-cat' style='color:"+tone.icon+";'>"+d.label+"<span class='cat-highlight-subj'>"+(SUBJECT_LABEL[d.subj]||"")+"</span></div>"+
+          "<div class='cat-highlight-rate' style='color:"+tone.icon+";'>"+d.rate+"%</div>"+
+          "<div class='cat-highlight-sub'>参加率 "+d.participationRate+"%</div>";
+        card.appendChild(inner);
+        return card;
+      };
+      bestWorstGrid.appendChild(highlightCard(best, "best"));
+      bestWorstGrid.appendChild(highlightCard(worst, "worst"));
+      learningWrap.appendChild(bestWorstGrid);
+    }
+
+    const rankCard = el('<div class="card" style="margin-top:var(--sp-6);"></div>');
+    const rankTitle = el('<div class="card-title"></div>'); rankTitle.textContent = "苦手ランキング（カテゴリ別・正答率が低い順）";
+    rankCard.appendChild(rankTitle);
+    const rankDesc = el('<div class="card-desc"></div>');
+    rankDesc.textContent = "参加率＝対象学習者のうち、1問以上取り組んだ人の割合";
+    rankCard.appendChild(rankDesc);
+    const rankList = el('<div class="cat-rank-list"></div>');
+    catRanking.forEach((d,i)=>{
+      const row = el('<div class="cat-rank-row"></div>');
+      const toneColor = d.rate === null ? STAT_COLORS.gray.icon : d.rate < 40 ? STAT_COLORS.red.icon : d.rate < 70 ? STAT_COLORS.orange.icon : STAT_COLORS.green.icon;
+      const numEl = el('<div class="cat-rank-num"></div>');
+      numEl.textContent = i+1;
+      row.appendChild(numEl);
+      const infoEl = el('<div class="cat-rank-info"></div>');
+      infoEl.innerHTML = "<div class='cat-rank-top'><span class='cat-rank-label'>"+d.label+"</span>"+
+        "<span class='cat-rank-subj'>"+(SUBJECT_LABEL[d.subj]||"")+"</span></div>";
+      row.appendChild(infoEl);
+      // 「取り組み(参加率)」と「正答率」を、縦棒グラフで横並びに見せる。
+      // テキストだけより、2本の棒の高さで直接比べられた方が分かりやすいため。
+      const miniChart = buildBarChart([
+        { label:"参加率", value: d.participationRate, color: STAT_COLORS.blue.icon },
+        { label:"正答率", value: d.rate || 0, color: toneColor }
+      ], { width:150, height:118 });
+      miniChart.classList.add("cat-rank-chart");
+      row.appendChild(miniChart);
+      rankList.appendChild(row);
+    });
+    rankCard.appendChild(rankList);
+    learningWrap.appendChild(rankCard);
+  }
+
+  // ==== サブタブ: 学習履歴(daily_summaryベース。誰が・いつ・何を学習したか) ====
+  else if(dashState.learningSubTab === "history"){
+    const nameByKey = {};
+    learners.forEach(l=>{ nameByKey[l.company_id+"::"+l.learner_id] = l; });
+    const relevantIdsHist = scope.isAdmin ? null : new Set(learners.map(l=>l.learner_id));
+    const historyRows = dashState.dailySummary
+      .filter(d=> d.n_count > 0 && (!relevantIdsHist || relevantIdsHist.has(d.learner_id)))
+      .map(d=>{
+        const key = d.company_id+"::"+d.learner_id;
+        const l = nameByKey[key];
+        return {
+          date: d.summary_date, learnerName: l ? (l.learnerName||d.learner_id) : d.learner_id,
+          companyName: l ? (l.companyName||d.company_id) : d.company_id,
+          subj: d.subj, n: d.n_count, c: d.c_count
+        };
+      })
+      .sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+    const histCard = el('<div class="card"></div>');
+    const histTitle = el('<div class="card-title"></div>'); histTitle.textContent = "学習履歴";
+    histCard.appendChild(histTitle);
+    if(historyRows.length === 0){
+      histCard.appendChild(el('<div class="loading">まだ学習履歴がありません。</div>'));
+    } else {
+      const PAGE_SIZE = 30;
+      const pageIdx = dashState.learningLearnerPage || 0;
+      const totalPages = Math.ceil(historyRows.length / PAGE_SIZE);
+      const pageRows = historyRows.slice(pageIdx*PAGE_SIZE, pageIdx*PAGE_SIZE+PAGE_SIZE);
+      const histList = el('<div class="history-list"></div>');
+      pageRows.forEach(r=>{
+        const row = el('<div class="history-row"></div>');
+        const rateStr = r.n>0 ? Math.round(r.c/r.n*100)+"%" : "-";
+        row.innerHTML =
+          "<div class='history-date'>"+escapeHtml(r.date)+"</div>"+
+          "<div class='history-main'>"+
+            "<div class='history-name'>"+escapeHtml(r.learnerName)+" <span class='history-company'>（"+escapeHtml(r.companyName)+"）</span></div>"+
+            "<div class='history-detail'>"+(SUBJECT_LABEL[r.subj]||r.subj)+"　"+fmtNum(r.n)+"問（正答率 "+rateStr+"）</div>"+
+          "</div>";
+        histList.appendChild(row);
+      });
+      histCard.appendChild(histList);
+      if(totalPages > 1){
+        histCard.appendChild(buildPaginationControl(pageIdx, totalPages, (newPage)=>{ dashState.learningLearnerPage = newPage; render(); }));
+      }
+    }
+    learningWrap.appendChild(histCard);
+  }
+
+  wrap.appendChild(learningWrap);
+  }
 
   return wrap;
 }
@@ -1195,7 +2015,7 @@ function renderSummaryOnly(){
   const summaryWrap = document.getElementById("summaryWrap");
   if(!summaryWrap) return;
   summaryWrap.innerHTML = "";
-  buildSummaryContent(summaryWrap);
+  buildSummaryContent(summaryWrap, dashState.activeTab);
 }
 
 // 事業所フィルタの選択肢を組み立てる(企業フィルタに応じて絞り込む)。
@@ -1227,27 +2047,82 @@ function refreshWorkplaceFilterOptions(){
   if(selectEl) populateWorkplaceFilterOptions(selectEl);
 }
 
+// タブ構成。id=dashState.activeTabに対応する値。adminOnly=trueは企業担当者には出さない
+// (自社の一覧はexistingの実習生タブで十分閲覧できるため、企業マスタ管理・レポートは組合管理者限定)。
+const TAB_DEFS = [
+  { id: "overview", label: "概要", icon: "home" },
+  { id: "learners", label: "実習生", icon: "users" },
+  { id: "learning", label: "学習", icon: "book" },
+  { id: "companies", label: "企業・事業所", icon: "building", adminOnly: true },
+  { id: "reports", label: "レポート", icon: "fileText", adminOnly: true }
+];
+function visibleTabs(scope){
+  return TAB_DEFS.filter(t => !t.adminOnly || scope.isAdmin);
+}
+function switchTab(tabId){
+  dashState.activeTab = tabId;
+  dashState.selectedLearner = null;
+  render();
+  window.scrollTo(0, 0);
+}
+// 学習タブ内のサブナビ構成。「見るだけ」ではなく「概要→実習生別→分野別→履歴」の流れで
+// 管理・分析・フォローまでたどり着けるようにする。
+const LEARNING_SUBTAB_DEFS = [
+  { id: "overview", label: "学習概要" },
+  { id: "learners", label: "実習生別" },
+  { id: "subjects", label: "分野別" },
+  { id: "history", label: "学習履歴" }
+];
+function switchLearningSubTab(id){
+  dashState.learningSubTab = id;
+  render();
+  window.scrollTo(0, 0);
+}
+function buildLearningSubNav(){
+  const nav = el('<div class="subnav"></div>');
+  LEARNING_SUBTAB_DEFS.forEach(t=>{
+    const btn = el('<button class="subnav-btn"></button>');
+    if(t.id === dashState.learningSubTab) btn.classList.add("active");
+    btn.textContent = t.label;
+    btn.onclick = ()=> switchLearningSubTab(t.id);
+    nav.appendChild(btn);
+  });
+  return nav;
+}
+// PC用の上部タブ
+function buildTabNav(scope){
+  const nav = el('<div class="tabnav"></div>');
+  visibleTabs(scope).forEach(t=>{
+    const btn = el('<button class="tabnav-btn"></button>');
+    if(t.id === dashState.activeTab) btn.classList.add("active");
+    btn.innerHTML = "<span class='tabnav-icon'>"+STAT_ICONS[t.icon]+"</span><span>"+t.label+"</span>";
+    btn.onclick = ()=> switchTab(t.id);
+    nav.appendChild(btn);
+  });
+  return nav;
+}
+// スマホ用の下部固定ナビ(CSSでPC幅では非表示にする)
+function buildMobileBottomNav(scope){
+  const nav = el('<div class="mobile-bottomnav"></div>');
+  visibleTabs(scope).forEach(t=>{
+    const btn = el('<button class="mobile-bottomnav-btn"></button>');
+    if(t.id === dashState.activeTab) btn.classList.add("active");
+    btn.innerHTML = "<span class='mobile-bottomnav-icon'>"+STAT_ICONS[t.icon]+"</span><span>"+t.label+"</span>";
+    btn.onclick = ()=> switchTab(t.id);
+    nav.appendChild(btn);
+  });
+  return nav;
+}
+
 function renderDashboard(){
   const wrap = document.createElement("div");
   const scope = sessionScope();
 
-  const topbar = el('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"></div>');
-  const who = document.createElement("div");
-  who.style.fontSize = "13px"; who.style.color = "#556";
-  let whoText = "ログイン中: " + session.email;
-  if(scope.isAdmin) whoText += "（NTIC管理者・全社閲覧）";
-  else if(scope.role === "company_owner") whoText += "（企業代表・自社全事業所閲覧）";
-  else if(scope.role === "workplace_manager") whoText += "（事業所担当者・担当事業所のみ閲覧）";
-  else if(scope.role === "company_user_pending") whoText += "（権限確認中...）";
-  else if(scope.companyId) whoText += "（企業: " + scope.companyId + " の閲覧権限）";
-  else whoText += "（閲覧権限が設定されていません。管理者にご連絡ください）";
-  who.textContent = whoText;
-  topbar.appendChild(who);
-  const logoutBtn = document.createElement("button");
-  logoutBtn.className = "ghost"; logoutBtn.textContent = "ログアウト";
-  logoutBtn.onclick = ()=>{ session = null; dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, expandedCompanies:{}, expandedWorkplaces:{}, studentPageByWorkplace:{}, sortColumn:null, sortDirection:"asc", companyFlatMode:{}, companyPage:0, bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null }; render(); };
-  topbar.appendChild(logoutBtn);
-  wrap.appendChild(topbar);
+  // 企業担当者が管理者限定タブ(companies/reports)を直接踏んでいた場合は概要に戻す
+  // (URLで直接指定されたわけではないが、念のための安全策)。
+  if(!scope.isAdmin && (dashState.activeTab === "companies" || dashState.activeTab === "reports")){
+    dashState.activeTab = "overview";
+  }
 
   // company_users問い合わせがまだの場合、先にそれを解決してから権限判定する
   if(scope.role === "company_user_pending"){
@@ -1302,55 +2177,76 @@ function renderDashboard(){
     return wrap;
   }
 
-  wrap.appendChild(renderOverallSummary());
+  wrap.appendChild(buildTabNav(scope));
 
-  const filters = el('<div class="filters"></div>');
-  if(scope.isAdmin){
-    const companySelect = document.createElement("select");
-    companySelect.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;flex:1;min-width:160px;background:#fff;";
-    const allOpt = document.createElement("option");
-    allOpt.value = ""; allOpt.textContent = "すべての企業";
-    companySelect.appendChild(allOpt);
-    const sortedCompanies = dashState.companies.slice().sort((a,b)=> a.company_name.localeCompare(b.company_name,"ja"));
-    sortedCompanies.forEach(c=>{
-      const opt = document.createElement("option");
-      opt.value = c.company_id;
-      opt.textContent = c.company_name + "（" + c.company_id + "）";
-      if(dashState.companyFilter === c.company_id) opt.selected = true;
-      companySelect.appendChild(opt);
-    });
-    companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; dashState.companyPage = 0; refreshWorkplaceFilterOptions(); renderSummaryOnly(); renderTableOnly(); renderBulkBar(); };
-    filters.appendChild(companySelect);
+  if(dashState.activeTab === "learners"){
+    // ==== 実習生タブ：既存のフィルタ・一覧表・一括発行(機能はそのまま、置き場所だけここに集約) ====
+    const card = el('<div class="card"></div>');
+    const filters = el('<div class="filters"></div>');
+    if(scope.isAdmin){
+      const companySelect = document.createElement("select");
+      companySelect.id = "companyFilterSelect";
+      companySelect.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;flex:1;min-width:160px;background:#fff;";
+      const allOpt = document.createElement("option");
+      allOpt.value = ""; allOpt.textContent = "すべての企業";
+      companySelect.appendChild(allOpt);
+      const sortedCompanies = dashState.companies.slice().sort((a,b)=> a.company_name.localeCompare(b.company_name,"ja"));
+      sortedCompanies.forEach(c=>{
+        const opt = document.createElement("option");
+        opt.value = c.company_id;
+        opt.textContent = c.company_name + "（" + c.company_id + "）";
+        if(dashState.companyFilter === c.company_id) opt.selected = true;
+        companySelect.appendChild(opt);
+      });
+      companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; dashState.companyPage = 0; refreshWorkplaceFilterOptions(); renderSummaryOnly(); renderTableOnly(); renderBulkBar(); };
+      filters.appendChild(companySelect);
+    }
+    // 事業所フィルタ(Phase 3.5): ntic_admin・company_ownerのみ表示。
+    // workplace_managerはRLSで最初から担当事業所だけが返ってくるため、選ぶ意味が無く非表示にする。
+    if(scope.isAdmin || scope.role === "company_owner"){
+      const workplaceSelect = document.createElement("select");
+      workplaceSelect.id = "workplaceFilterSelect";
+      workplaceSelect.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;flex:1;min-width:160px;background:#fff;";
+      populateWorkplaceFilterOptions(workplaceSelect);
+      workplaceSelect.onchange = ()=>{ dashState.workplaceFilter = workplaceSelect.value; renderTableOnly(); renderBulkBar(); };
+      filters.appendChild(workplaceSelect);
+    }
+    const refreshBtn = document.createElement("button");
+    refreshBtn.className = "primary"; refreshBtn.textContent = "更新";
+    refreshBtn.onclick = ()=>{ dashState._fetchTriggered = false; loadDashboardData(); };
+    filters.appendChild(refreshBtn);
+    card.appendChild(filters);
+
+    if(scope.isAdmin){
+      const bulkBarWrap = document.createElement("div");
+      bulkBarWrap.id = "bulkBarWrap";
+      card.appendChild(bulkBarWrap);
+    }
+
+    const tableWrap = document.createElement("div");
+    tableWrap.id = "tableWrap";
+    tableWrap.className = "table-scroll";
+    card.appendChild(tableWrap);
+    wrap.appendChild(card);
+
+    setTimeout(()=>{ renderTableOnly(); renderBulkBar(); }, 0);
+  } else if(dashState.activeTab === "reports"){
+    // ==== レポートタブ：現時点では専用の帳票・集計機能は無いため、正直にその旨を示す ====
+    const repCard = el('<div class="card"></div>');
+    const repTitle = el('<div class="card-title"></div>'); repTitle.textContent = "レポート";
+    repCard.appendChild(repTitle);
+    const repBody = document.createElement("div");
+    repBody.style.cssText = "font-size:13.5px;color:var(--text-sub);line-height:1.7;";
+    repBody.textContent = "帳票・集計出力の専用機能は、現在準備中です。実習生の一括アカウント発行時には、その場でログインID・初期パスワードのCSV出力が可能です（「実習生」タブから発行操作を行ってください）。";
+    repCard.appendChild(repBody);
+    wrap.appendChild(repCard);
+  } else {
+    // 概要／学習／企業・事業所タブは、いずれもbuildSummaryContent側でタブに応じた
+    // セクションだけを出し分けている(renderOverallSummary内でdashState.activeTabを参照)。
+    wrap.appendChild(renderOverallSummary());
   }
-  // 事業所フィルタ(Phase 3.5): ntic_admin・company_ownerのみ表示。
-  // workplace_managerはRLSで最初から担当事業所だけが返ってくるため、選ぶ意味が無く非表示にする。
-  if(scope.isAdmin || scope.role === "company_owner"){
-    const workplaceSelect = document.createElement("select");
-    workplaceSelect.id = "workplaceFilterSelect";
-    workplaceSelect.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;flex:1;min-width:160px;background:#fff;";
-    populateWorkplaceFilterOptions(workplaceSelect);
-    workplaceSelect.onchange = ()=>{ dashState.workplaceFilter = workplaceSelect.value; renderTableOnly(); renderBulkBar(); };
-    filters.appendChild(workplaceSelect);
-  }
-  const refreshBtn = document.createElement("button");
-  refreshBtn.className = "primary"; refreshBtn.textContent = "更新";
-  refreshBtn.onclick = ()=>{ dashState._fetchTriggered = false; loadDashboardData(); };
-  filters.appendChild(refreshBtn);
-  card.appendChild(filters);
 
-  if(scope.isAdmin){
-    const bulkBarWrap = document.createElement("div");
-    bulkBarWrap.id = "bulkBarWrap";
-    card.appendChild(bulkBarWrap);
-  }
-
-  const tableWrap = document.createElement("div");
-  tableWrap.id = "tableWrap";
-  tableWrap.className = "table-scroll";
-  card.appendChild(tableWrap);
-  wrap.appendChild(card);
-
-  setTimeout(()=>{ renderTableOnly(); renderBulkBar(); }, 0);
+  wrap.appendChild(buildMobileBottomNav(scope));
   return wrap;
 }
 
@@ -1448,6 +2344,12 @@ function renderLearnerKarte(){
   const nameEl = document.createElement("div");
   nameEl.style.cssText = "font-size:24px;font-weight:800;color:var(--green);letter-spacing:-.01em;";
   nameEl.textContent = l.learnerName || l.learner_id;
+  if(l.learnerNameKana){
+    const kanaSpan = document.createElement("span");
+    kanaSpan.style.cssText = "font-size:14px;font-weight:600;color:var(--text-sub);margin-left:10px;";
+    kanaSpan.textContent = l.learnerNameKana;
+    nameEl.appendChild(kanaSpan);
+  }
   headCard.appendChild(nameEl);
   const subEl = document.createElement("div");
   subEl.style.cssText = "font-size:13px;color:var(--text-sub);margin-top:6px;font-weight:600;";
@@ -1700,6 +2602,184 @@ const NATIONALITY_FLAG_SVG = {
 };
 
 // 国旗SVGを丸バッジ(円形に切り抜いた枠)で包む。該当が無ければ空文字を返す。
+// KPIカード用のアイコン(自前描画のシンプルな線画SVG。外部フォント・アイコンライブラリに依存しない)。
+const STAT_ICONS = {
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  userCheck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
+  userX: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>',
+  idCard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h4M15 12h4M7 16h10"/></svg>',
+  mapPin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  userOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4c.5 0 .98.08 1.42.23"/><line x1="17" y1="17" x2="22" y2="22"/><line x1="22" y1="17" x2="17" y2="22"/></svg>',
+  alertTriangle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  trendingUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  building: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="7" x2="9" y2="7"/><line x1="15" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="15" y2="12"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+  building2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><line x1="10" y1="6" x2="10" y2="6"/><line x1="14" y1="6" x2="14" y2="6"/><line x1="10" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="14" y2="10"/><line x1="10" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="14" y2="14"/></svg>',
+  usersGroup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  fileText: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>'
+};
+
+// KPIカードの色系統(淡い背景+アイコン色)。過度に色数を増やさず、意味のカテゴリだけに絞る。
+// green=良好・登録系、blue=中立・学習系、purple=構成・組織系、orange=要対応系、red=警告系、gray=中立
+const STAT_COLORS = {
+  green:  { bg:"#eef7f1", icon:"#3d7a52" },
+  blue:   { bg:"#eef3fb", icon:"#2a5db0" },
+  purple: { bg:"#f3f0fa", icon:"#6b4fa0" },
+  orange: { bg:"#fdf3e8", icon:"#c9822a" },
+  red:    { bg:"#fdeeec", icon:"#b5502f" },
+  gray:   { bg:"#f4f5f6", icon:"#8a8f99" }
+};
+
+// ---- 自前描画のグラフ部品(外部ライブラリに依存しない軽量SVG) ----
+
+// ドーナツグラフ。segments = [{value, color, label}, ...]
+function buildDonutChart(segments, opts){
+  opts = opts || {};
+  const size = opts.size || 148;
+  const stroke = opts.stroke || 22;
+  const r = (size - stroke) / 2;
+  const cx = size/2, cy = size/2;
+  const circumference = 2 * Math.PI * r;
+  const total = segments.reduce((s,seg)=>s+seg.value, 0);
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 "+size+" "+size);
+  svg.setAttribute("width", size); svg.setAttribute("height", size);
+
+  const bg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bg.setAttribute("cx", cx); bg.setAttribute("cy", cy); bg.setAttribute("r", r);
+  bg.setAttribute("fill", "none"); bg.setAttribute("stroke", "#eef0f2"); bg.setAttribute("stroke-width", stroke);
+  svg.appendChild(bg);
+
+  if(total > 0){
+    let offset = 0;
+    segments.forEach(seg=>{
+      if(seg.value <= 0) return;
+      const frac = seg.value / total;
+      const dash = frac * circumference;
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", cx); circle.setAttribute("cy", cy); circle.setAttribute("r", r);
+      circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", seg.color);
+      circle.setAttribute("stroke-width", stroke);
+      circle.setAttribute("stroke-dasharray", dash + " " + (circumference - dash));
+      circle.setAttribute("stroke-dashoffset", -offset);
+      circle.setAttribute("transform", "rotate(-90 " + cx + " " + cy + ")");
+      circle.setAttribute("stroke-linecap", segments.length===1 ? "round" : "butt");
+      svg.appendChild(circle);
+      offset += dash;
+    });
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "donut-wrap";
+  wrap.appendChild(svg);
+  if(opts.centerLabel){
+    const center = document.createElement("div");
+    center.className = "donut-center";
+    center.innerHTML = opts.centerLabel;
+    wrap.appendChild(center);
+  }
+  return wrap;
+}
+
+// 折れ線グラフ(複数系列対応)。series = [{label, color, points:[{x_label, y}, ...]}]
+function buildLineChart(series, opts){
+  opts = opts || {};
+  const width = opts.width || 600, height = opts.height || 200;
+  const padL = 34, padR = 12, padT = 14, padB = 26;
+  const plotW = width - padL - padR, plotH = height - padT - padB;
+
+  const allPoints = series.flatMap(s=>s.points);
+  const xLabels = series[0] ? series[0].points.map(p=>p.x_label) : [];
+  const maxY = Math.max(1, ...allPoints.map(p=>p.y));
+  const n = xLabels.length;
+
+  const xPos = (i)=> n<=1 ? padL + plotW/2 : padL + (plotW * i/(n-1));
+  const yPos = (v)=> padT + plotH - (plotH * v/maxY);
+
+  let svg = '<svg viewBox="0 0 '+width+' '+height+'" width="100%" height="'+height+'" preserveAspectRatio="xMidYMid meet">';
+
+  // 横グリッド線(4分割)
+  for(let g=0; g<=4; g++){
+    const y = padT + plotH * g/4;
+    const val = Math.round(maxY * (4-g)/4);
+    svg += '<line x1="'+padL+'" y1="'+y+'" x2="'+(width-padR)+'" y2="'+y+'" stroke="#eef0f2" stroke-width="1"/>';
+    svg += '<text x="'+(padL-8)+'" y="'+(y+3)+'" font-size="10" fill="#8a8f99" text-anchor="end">'+val+'</text>';
+  }
+  // X軸ラベル
+  xLabels.forEach((lbl,i)=>{
+    svg += '<text x="'+xPos(i)+'" y="'+(height-8)+'" font-size="10" fill="#8a8f99" text-anchor="middle">'+escapeHtml(lbl)+'</text>';
+  });
+
+  series.forEach(s=>{
+    if(s.points.length === 0) return;
+    if(s.points.length === 1){
+      // 点が1つしか無い場合は線が引けないので、点だけ大きめに描く
+      const p = s.points[0];
+      svg += '<circle cx="'+xPos(0)+'" cy="'+yPos(p.y)+'" r="4" fill="'+s.color+'"/>';
+      return;
+    }
+    let path = "";
+    s.points.forEach((p,i)=>{
+      const x = xPos(i), y = yPos(p.y);
+      path += (i===0 ? "M" : "L") + x + " " + y + " ";
+    });
+    svg += '<path d="'+path+'" fill="none" stroke="'+s.color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    s.points.forEach((p,i)=>{
+      svg += '<circle cx="'+xPos(i)+'" cy="'+yPos(p.y)+'" r="3" fill="'+s.color+'"/>';
+    });
+  });
+
+  svg += '</svg>';
+  const wrap = document.createElement("div");
+  wrap.className = "linechart-wrap";
+  wrap.innerHTML = svg;
+  return wrap;
+}
+
+// 縦棒グラフ(分野別傾向など、複数の独立した%を横に並べて比較する用途)。
+// items = [{label, value(0-100), color}]
+function buildBarChart(items, opts){
+  opts = opts || {};
+  const width = opts.width || 260, height = opts.height || 200;
+  const padT = 24, padB = 34, padX = 14;
+  const plotH = height - padT - padB;
+  const n = items.length;
+  const gap = 14;
+  const barW = (width - padX*2 - gap*(n-1)) / n;
+
+  let svg = '<svg viewBox="0 0 '+width+' '+height+'" width="100%" height="'+height+'" preserveAspectRatio="xMidYMid meet">';
+  // 横グリッド線(0/50/100)
+  [0,50,100].forEach(v=>{
+    const y = padT + plotH - (plotH * v/100);
+    svg += '<line x1="'+padX+'" y1="'+y+'" x2="'+(width-padX)+'" y2="'+y+'" stroke="#eef0f2" stroke-width="1"/>';
+  });
+  items.forEach((it,i)=>{
+    const x = padX + i*(barW+gap);
+    const barH = plotH * Math.max(0, Math.min(100, it.value)) / 100;
+    const displayH = it.value > 0 ? Math.max(barH, 4) : 0; // 見やすさのための最低高さ(4px)
+    const y = padT + plotH - displayH; // Y座標は「実際に描画する高さ」から計算する(最低高さ適用前の値で計算すると、
+                                        // 小さな値の時にバーの下端が背景トラックからはみ出すため)
+    svg += '<rect x="'+x+'" y="'+padT+'" width="'+barW+'" height="'+plotH+'" rx="6" fill="#f3f4f6"/>';
+    if(it.value > 0){
+      svg += '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+displayH+'" rx="6" fill="'+it.color+'"/>';
+      svg += '<text x="'+(x+barW/2)+'" y="'+(y-8)+'" font-size="13" font-weight="700" fill="#1a1f29" text-anchor="middle">'+it.value+'%</text>';
+    } else {
+      svg += '<text x="'+(x+barW/2)+'" y="'+(padT+plotH-8)+'" font-size="10.5" fill="#8a8f99" text-anchor="middle">-</text>';
+    }
+    svg += '<text x="'+(x+barW/2)+'" y="'+(height-12)+'" font-size="12" fill="#8a8f99" text-anchor="middle">'+escapeHtml(it.label)+'</text>';
+  });
+  svg += '</svg>';
+  const wrap = document.createElement("div");
+  wrap.className = "barchart-wrap";
+  wrap.innerHTML = svg;
+  return wrap;
+}
+
 function flagBadge(nationality){
   const svg = NATIONALITY_FLAG_SVG[nationality];
   if(!svg) return "";
@@ -1730,7 +2810,8 @@ function buildLearnerRow(l, scopeForTable){
   let learnerCell = escapeHtml(l.learner_id);
   const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
   if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
-  let nameCell = flagBadge(l.nationality) + (l.learnerName ? escapeHtml(l.learnerName) : "-");
+  let nameCell = flagBadge(l.nationality) + (l.learnerName ? escapeHtml(l.learnerName) : "-") +
+    (l.learnerNameKana ? "<div style='font-size:10.5px;color:var(--text-sub);font-weight:400;margin-top:1px;'>"+escapeHtml(l.learnerNameKana)+"</div>" : "");
 
   let ntlpCell;
   if(l.ntlpRegistered){
@@ -2006,6 +3087,119 @@ function renderStudentTableBlock(learners, pageKey, scopeForTable){
     body.appendChild(countLabel);
   }
   return body;
+}
+
+// 学習タブ「実習生別」の一覧を再構築する(フィルタ・検索・ページ変更のたびに呼ばれる)。
+function renderLearningLearnersOnly(){
+  const wrapEl = document.getElementById("learningLearnersWrap");
+  if(!wrapEl) return;
+  const scope = sessionScope();
+  let learners = buildLearnerSummary().filter(l=>!l.isFinished);
+
+  const filterId = dashState.learningLearnerFilter;
+  if(filterId === "notstudied") learners = learners.filter(l=>l.questionsStudied===0);
+  else if(filterId === "stale") learners = learners.filter(l=>!l.lastSeen || (Date.now()-new Date(l.lastSeen).getTime())/86400000 >= 7);
+  else if(filterId === "lowprogress") learners = learners.filter(l=>l.questionsStudied>0 && l.progressPct < 20);
+  else if(filterId === "lowrate") learners = learners.filter(l=>l.n>0 && l.rate < 40);
+  else if(filterId === "followup") learners = learners.filter(l=>l.needsFollowUp);
+
+  const search = (dashState.learningLearnerSearch||"").trim().toLowerCase();
+  if(search) learners = learners.filter(l=>
+    (l.learnerName||l.learner_id||"").toLowerCase().includes(search) ||
+    (l.learnerNameKana||"").toLowerCase().includes(search)
+  );
+
+  // ソート(ヘッダーをクリックして切り替え可能。既定は最終学習が古い順=対応が必要な人を上に)
+  const sortCol = dashState.learningLearnerSortCol;
+  const sortDir = dashState.learningLearnerSortDir === "asc" ? 1 : -1;
+  const sortGetters = {
+    name: l => (l.learnerName || l.learner_id || ""),
+    kana: l => (l.learnerNameKana || ""),
+    progress: l => l.progressPct || 0,
+    rate: l => l.n > 0 ? l.rate : -1,
+    lastSeen: l => l.lastSeen ? new Date(l.lastSeen).getTime() : 0
+  };
+  const getter = sortGetters[sortCol] || sortGetters.lastSeen;
+  learners.sort((a,b)=>{
+    const av = getter(a), bv = getter(b);
+    // 文字列ソートで、値が無い(空文字)人は昇順・降順どちらでも常に末尾に回す。
+    // (何も指定せず比較すると、空文字は昇順で先頭に来てしまい、「よみがな未登録の人だけが
+    // 上に固まって、名前が消えたように見える」という紛らわしい表示になるため)
+    if(typeof av === "string" || typeof bv === "string"){
+      const aEmpty = !av, bEmpty = !bv;
+      if(aEmpty && bEmpty) return 0;
+      if(aEmpty) return 1;
+      if(bEmpty) return -1;
+      return av.localeCompare(bv, "ja") * sortDir;
+    }
+    return (av - bv) * sortDir;
+  });
+
+  wrapEl.innerHTML = "";
+  if(learners.length === 0){
+    wrapEl.appendChild(el('<div class="loading">該当する実習生がいません。</div>'));
+    return;
+  }
+
+  // ソート見出し行(クリックで並び替え。同じ列を再クリックすると昇順/降順を反転)
+  const sortHeaderDefs = [
+    { col:"name", label:"氏名" },
+    { col:"kana", label:"よみがな" },
+    { col:"progress", label:"進捗" },
+    { col:"rate", label:"正答率" },
+    { col:"lastSeen", label:"最終学習" }
+  ];
+  const sortHeaderRow = el('<div class="learner-mgmt-sortheader"></div>');
+  sortHeaderDefs.forEach(h=>{
+    const btn = el('<button class="learner-mgmt-sortbtn"></button>');
+    const isActive = sortCol === h.col;
+    if(isActive) btn.classList.add("active");
+    btn.innerHTML = h.label + "<span class='learner-mgmt-sortarrow'>"+(isActive ? (dashState.learningLearnerSortDir==="asc"?"↑":"↓") : "")+"</span>";
+    btn.onclick = ()=>{
+      if(dashState.learningLearnerSortCol === h.col){
+        dashState.learningLearnerSortDir = dashState.learningLearnerSortDir === "asc" ? "desc" : "asc";
+      } else {
+        dashState.learningLearnerSortCol = h.col;
+        dashState.learningLearnerSortDir = "asc";
+      }
+      dashState.learningLearnerPage = 0;
+      renderLearningLearnersOnly();
+    };
+    sortHeaderRow.appendChild(btn);
+  });
+  wrapEl.appendChild(sortHeaderRow);
+
+  const PAGE_SIZE = 20;
+  const pageIdx = dashState.learningLearnerPage || 0;
+  const totalPages = Math.ceil(learners.length / PAGE_SIZE);
+  const pageLearners = learners.slice(pageIdx*PAGE_SIZE, pageIdx*PAGE_SIZE+PAGE_SIZE);
+
+  const listEl = el('<div class="learner-mgmt-list"></div>');
+  pageLearners.forEach(l=>{
+    const row = el('<div class="learner-mgmt-row"></div>');
+    const statusTone = l.needsFollowUp ? "red" : l.questionsStudied===0 ? "gray" : "green";
+    const statusLabel = l.needsFollowUp ? "要フォロー" : l.questionsStudied===0 ? "未学習" : "良好";
+    row.innerHTML =
+      "<div class='learner-mgmt-main'>"+
+        "<div class='learner-mgmt-name'>"+flagBadge(l.nationality)+escapeHtml(l.learnerName||l.learner_id)+
+          (l.learnerNameKana ? " <span style='font-weight:400;color:var(--text-sub);font-size:0.85em;'>"+escapeHtml(l.learnerNameKana)+"</span>" : "")+"</div>"+
+        "<div class='learner-mgmt-company'>"+escapeHtml(l.companyName||l.company_id)+
+          (l.workplaces&&l.workplaces.length? "　／　"+escapeHtml(l.workplaces.map(w=>w.workplace_name).join("・")) : "")+"</div>"+
+      "</div>"+
+      "<div class='learner-mgmt-metrics'>"+
+        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>進捗</span><span class='learner-mgmt-metric-val'>"+l.progressPct+"%</span></div>"+
+        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>正答率</span><span class='learner-mgmt-metric-val'>"+(l.n>0?l.rate+"%":"-")+"</span></div>"+
+        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>最終学習</span><span class='learner-mgmt-metric-val'>"+(l.lastSeen?relTime(l.lastSeen):"-")+"</span></div>"+
+      "</div>"+
+      "<span class='badge-pill' style='background:"+STAT_COLORS[statusTone].bg+";color:"+STAT_COLORS[statusTone].icon+";'>"+statusLabel+"</span>";
+    row.onclick = ()=> openKarte(l.company_id, l.learner_id);
+    listEl.appendChild(row);
+  });
+  wrapEl.appendChild(listEl);
+
+  if(totalPages > 1){
+    wrapEl.appendChild(buildPaginationControl(pageIdx, totalPages, (newPage)=>{ dashState.learningLearnerPage = newPage; renderLearningLearnersOnly(); }));
+  }
 }
 
 function renderTableOnly(){
