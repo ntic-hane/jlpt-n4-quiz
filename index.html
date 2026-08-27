@@ -84,9 +84,9 @@ button.ghost{background:transparent;border:none;color:var(--sub);font-size:12px;
 .catchip.sel{background:var(--navy);color:#fff;border-color:var(--navy);}
 .qcard{background:#fff;border-radius:6px;padding:20px;border:1px solid var(--line);}
 .passage{background:#fafafa;border-radius:4px;padding:12px;font-size:14px;line-height:1.7;margin-bottom:12px;white-space:pre-wrap;}
-ruby rt{font-size:10px;color:var(--sub);user-select:none;}
-.qtext{font-size:16px;font-weight:600;line-height:1.6;margin-bottom:14px;}
-.opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:4px;padding:13px 15px;margin-bottom:9px;font-size:14px;cursor:pointer;line-height:1.5;}
+ruby rt{font-size:11px;color:var(--sub);user-select:none;}
+.qtext{font-size:18px;font-weight:600;line-height:1.65;margin-bottom:16px;}
+.opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 15px;margin-bottom:9px;font-size:17px;cursor:pointer;line-height:1.5;}
 .opt.sel{border-color:var(--navy);border-width:1.5px;}
 .opt.correct{border-color:#3d7a52;border-width:1.5px;background:#f4f9f5;}
 .opt.wrong{border-color:var(--accent);border-width:1.5px;background:#fbf3f0;}
@@ -2396,6 +2396,36 @@ const SPEECH_RUBY_KEYS = RUBY_KEYS.filter(k => !k.includes("話"));
 function escapeHtml(s){
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
+function isHiraganaChar(ch){
+  return ch >= "\u3040" && ch <= "\u309F";
+}
+// 辞書のキーには「お願い」→「おねがい」のように、漢字だけでなく前後の送り仮名まで
+// 含んだ形で登録されているものが4割ほどある(動詞の活用形などをそのまま登録しているため)。
+// そのまま<ruby>で囲むと、送り仮名の上にまでふりがなが乗っているように見えてしまうので、
+// 表示直前に「前後の送り仮名」と「対応する読みの前後」を機械的に切り離し、
+// ルビは漢字部分だけに絞る(送り仮名部分はそのまま平仮名として出力する)。
+function buildRubyHtml(word, reading){
+  let start = 0, end = word.length, rStart = 0, rEnd = reading.length;
+  // 先頭の送り仮名を読みの先頭と突き合わせて剥がす
+  while(start < end && isHiraganaChar(word[start]) &&
+        rStart < rEnd && reading[rStart] === word[start]){
+    start += 1; rStart += 1;
+  }
+  // 末尾の送り仮名を読みの末尾と突き合わせて剥がす
+  while(end > start && isHiraganaChar(word[end-1]) &&
+        rEnd > rStart && reading[rEnd-1] === word[end-1]){
+    end -= 1; rEnd -= 1;
+  }
+  const prefix = word.slice(0, start);
+  const core = word.slice(start, end);
+  const suffix = word.slice(end);
+  const coreReading = reading.slice(rStart, rEnd);
+  if(!core){
+    // 全部ひらがなだった場合(通常は起きないが念のため)、ルビ無しでそのまま返す
+    return escapeHtml(word);
+  }
+  return escapeHtml(prefix) + "<ruby>"+escapeHtml(core)+"<rt>"+escapeHtml(coreReading)+"</rt></ruby>" + escapeHtml(suffix);
+}
 function applyRubyToSegment(text){
   let out = "";
   let i = 0;
@@ -2403,7 +2433,7 @@ function applyRubyToSegment(text){
     let matched = false;
     for(const key of RUBY_KEYS){
       if(text.startsWith(key, i)){
-        out += "<ruby>"+escapeHtml(key)+"<rt>"+escapeHtml(RUBY_DICT[key])+"</rt></ruby>";
+        out += buildRubyHtml(key, RUBY_DICT[key]);
         i += key.length;
         matched = true;
         break;
