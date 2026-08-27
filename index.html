@@ -3945,10 +3945,20 @@ function renderQuestion(){
       render();
       // 回答直後は、フィードバックや「次へ」ボタンが画面外(下)に隠れていることが多く、
       // 毎回手動でスクロールしないと押せなかったため、自動で見える位置まで動かす。
-      // (画面に既に収まっている場合は動かさない = block:"nearest")
+      // scrollIntoView(block:"nearest")はスマホ実機(特にiOSのアドレスバー収縮で
+      // 表示領域が変わる場合)だと「ギリギリ画面端」までしか動かず、実際にはまだ
+      // ボタンの下端が隠れて見えることがあったため、可視領域の高さを自前で計算し、
+      // ボタンの下に余白を残した上で確実にスクロールする方式に変更する。
       requestAnimationFrame(()=>{
         const navEl = document.querySelector("#app .rowbtns");
-        if(navEl) navEl.scrollIntoView({behavior:"smooth", block:"nearest"});
+        if(!navEl) return;
+        const rect = navEl.getBoundingClientRect();
+        const viewportH = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        const margin = 20; // ボタンの下に少し余白を残す
+        const overflow = rect.bottom - viewportH + margin;
+        if(overflow > 0){
+          window.scrollBy({ top: overflow, behavior: "smooth" });
+        }
       });
     };
     card.appendChild(optBtn);
