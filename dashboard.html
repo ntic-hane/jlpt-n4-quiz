@@ -734,6 +734,35 @@ async function resetStudentPassword(learner){
   return Array.isArray(data) ? data[0] : data;
 }
 
+// ---- 企業代表・事業所担当者アカウントの発行(NTIC管理者のみ)。
+// ログインIDは会社名・連番等から推測できないよう、role別prefix+ランダム6文字にしている。 ----
+async function issueCompanyUserAccount(companyId, role, workplaceIds){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/create_company_user_account", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({
+      p_company_id: companyId,
+      p_role: role,
+      p_workplace_ids: workplaceIds && workplaceIds.length ? workplaceIds : null
+    })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    const msg = (data && (data.message || data.error_description)) || "アカウント発行に失敗しました。";
+    throw new Error(msg);
+  }
+  return Array.isArray(data) ? data[0] : data;
+}
+
+// ---- 指定企業の既存company_users一覧を取得する(RLSはntic_adminなら全件見える) ----
+async function fetchCompanyUsersForCompany(companyId){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/company_users?company_id=eq." + encodeURIComponent(companyId) + "&status=eq.active&select=id,role,created_at,company_user_workplaces(workplace_id)", {
+    headers: await getAuthHeaders()
+  });
+  if(!res.ok) return [];
+  return res.json();
+}
+
 // ---- 発行結果の一度限りの表示モーダル(初期パスワードはここでしか見られない)。
 // アカウント発行・パスワードリセットの両方から共通で使う。 ----
 function showIssueResultModal(loginId, initialPassword, opts){
@@ -1849,6 +1878,123 @@ function buildSummaryContent(wrap, tab){
       companyCard.appendChild(companySubGrid);
       companyCard.classList.add("dash-sec-company");
       wrap.appendChild(companyCard);
+
+      // ==== 企業代表・事業所担当者アカウントの発行(この企業限定) ====
+      const issueCard = el('<div class="card dash-sec-company"></div>');
+      const issueTitle = el('<div class="card-title"></div>');
+      issueTitle.textContent = "企業代表・事業所担当者アカウント発行：" + companyName;
+      issueCard.appendChild(issueTitle);
+      const issueDesc = el('<div class="card-desc"></div>');
+      issueDesc.textContent = "ログインIDは会社名や連番から推測できないよう、ランダムな文字列で発行されます。";
+      issueCard.appendChild(issueDesc);
+
+      const existingWrap = el('<div id="companyUsersExistingWrap" style="margin:var(--sp-3) 0;"></div>');
+      issueCard.appendChild(existingWrap);
+
+      const roleRow = el('<div style="margin-bottom:var(--sp-3);"></div>');
+      const roleLabel = document.createElement("label");
+      roleLabel.textContent = "発行するアカウント種別　";
+      roleLabel.style.cssText = "font-size:13px;font-weight:600;margin-right:8px;";
+      const roleSelect = document.createElement("select");
+      [["company_owner","企業代表(自社全事業所を閲覧)"],["workplace_manager","事業所担当者(担当事業所のみ閲覧)"]].forEach(([v,label])=>{
+        const opt = document.createElement("option"); opt.value = v; opt.textContent = label;
+        roleSelect.appendChild(opt);
+      });
+      roleRow.appendChild(roleLabel); roleRow.appendChild(roleSelect);
+      issueCard.appendChild(roleRow);
+
+      // 事業所担当者を選んだ時だけ、この企業の事業所一覧をチェックボックスで表示(複数選択可)
+      const wpWrap = el('<div style="margin-bottom:var(--sp-3);display:none;"></div>');
+      const wpLabel = document.createElement("div");
+      wpLabel.textContent = "担当事業所を選択(複数選択可)";
+      wpLabel.style.cssText = "font-size:13px;font-weight:600;margin-bottom:6px;";
+      wpWrap.appendChild(wpLabel);
+      const companyWorkplaces = dashState.workplaces.filter(w=>w.company_id === companyId);
+      companyWorkplaces.forEach(w=>{
+        const line = document.createElement("label");
+        line.style.cssText = "display:block;font-size:13px;margin-bottom:4px;";
+        const cb = document.createElement("input");
+        cb.type = "checkbox"; cb.value = w.id; cb.className = "wp-issue-checkbox";
+        // 汎用input{}ルール(テキスト入力欄向けにwidth:100%等が設定されている)がチェックボックスにも
+        // 適用されて表示が崩れるため、ここで明示的に打ち消す
+        cb.style.cssText = "width:auto;max-width:none;padding:0;margin:0 6px 0 0;border:1px solid var(--border);vertical-align:middle;";
+        line.appendChild(cb);
+        line.appendChild(document.createTextNode(w.workplace_name));
+        wpWrap.appendChild(line);
+      });
+      if(companyWorkplaces.length === 0){
+        wpWrap.appendChild(el('<div style="font-size:12.5px;color:var(--text-sub);">この企業には事業所が登録されていません。</div>'));
+      }
+      issueCard.appendChild(wpWrap);
+      roleSelect.onchange = ()=>{ wpWrap.style.display = roleSelect.value === "workplace_manager" ? "block" : "none"; };
+
+      const issueBtn = document.createElement("button");
+      issueBtn.className = "primary";
+      issueBtn.textContent = "アカウントを発行";
+      issueBtn.onclick = ()=>{
+        const role = roleSelect.value;
+        const roleLabelText = role === "company_owner" ? "企業代表" : "事業所担当者";
+        let workplaceIds = [];
+        if(role === "workplace_manager"){
+          workplaceIds = Array.from(wpWrap.querySelectorAll(".wp-issue-checkbox:checked")).map(cb=>cb.value);
+          if(workplaceIds.length === 0){
+            const errBox = el('<div class="errormsg"></div>');
+            errBox.textContent = "事業所担当者を発行するには、担当事業所を1つ以上選択してください。";
+            issueCard.appendChild(errBox);
+            setTimeout(()=>errBox.remove(), 4000);
+            return;
+          }
+        }
+        ask(companyName + "に「" + roleLabelText + "」アカウントを新規発行します。よろしいですか？", async ()=>{
+          issueBtn.disabled = true; issueBtn.textContent = "発行中...";
+          try{
+            const result = await issueCompanyUserAccount(companyId, role, workplaceIds);
+            issueBtn.disabled = false; issueBtn.textContent = "アカウントを発行";
+            showIssueResultModal(result.login_id, result.initial_password, {
+              title: roleLabelText + "アカウントを発行しました",
+              desc: "この情報は今だけ表示されます。担当者様へ控えていただくか、紙等で案内してください。"
+            });
+            loadCompanyUsersList();
+          }catch(e){
+            issueBtn.disabled = false; issueBtn.textContent = "アカウントを発行";
+            const errBox = el('<div class="errormsg"></div>');
+            errBox.textContent = e.message || "発行に失敗しました。時間をおいて再度お試しください。";
+            issueCard.appendChild(errBox);
+          }
+        }, null, "はい、発行する");
+      };
+      issueCard.appendChild(issueBtn);
+      wrap.appendChild(issueCard);
+
+      // 既存アカウント一覧を非同期で読み込む(発行後も再読込する)
+      async function loadCompanyUsersList(){
+        existingWrap.innerHTML = "読み込み中...";
+        try{
+          const rows = await fetchCompanyUsersForCompany(companyId);
+          if(rows.length === 0){
+            existingWrap.innerHTML = "<div style='font-size:12.5px;color:var(--text-sub);'>この企業には、まだ企業代表・事業所担当者アカウントがありません。</div>";
+            return;
+          }
+          const wpNameById = {};
+          dashState.workplaces.forEach(w=>{ wpNameById[w.id] = w.workplace_name; });
+          existingWrap.innerHTML = "";
+          const listTitle = document.createElement("div");
+          listTitle.textContent = "発行済みアカウント（" + rows.length + "件）";
+          listTitle.style.cssText = "font-size:12.5px;font-weight:600;color:var(--text-sub);margin-bottom:6px;";
+          existingWrap.appendChild(listTitle);
+          rows.forEach(r=>{
+            const roleLabelText = r.role === "company_owner" ? "企業代表" : "事業所担当者";
+            const wpNames = (r.company_user_workplaces||[]).map(x=>wpNameById[x.workplace_id]).filter(Boolean).join("・");
+            const line = document.createElement("div");
+            line.style.cssText = "font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);";
+            line.textContent = roleLabelText + (wpNames ? "（" + wpNames + "）" : "");
+            existingWrap.appendChild(line);
+          });
+        }catch(e){
+          existingWrap.innerHTML = "<div class='errormsg'>読み込みに失敗しました。</div>";
+        }
+      }
+      loadCompanyUsersList();
     }
   }
 
