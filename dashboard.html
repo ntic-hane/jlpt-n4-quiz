@@ -562,7 +562,7 @@ function renderHeaderUserInfo(){
   avatar.onclick = ()=>{
     if(!confirm("ログアウトしますか？")) return;
     session = null;
-    dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, expandedCompanies:{}, expandedWorkplaces:{}, studentPageByWorkplace:{}, sortColumn:null, sortDirection:"asc", companyFlatMode:{}, companyPage:0, activeTab:"overview", learningSubTab:"overview", learningLearnerFilter:"all", learningLearnerSearch:"", learningLearnerPage:0, learningLearnerSortCol:"lastSeen", learningLearnerSortDir:"asc", bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null };
+    dashState = { loading:true, error:null, progress:[], exams:[], activity:[], companies:[], roster:[], students:[], dailySummary:[], workplaces:[], studentWorkplaces:[], studentPeriods:[], companyUserInfo: undefined, companyFilter:"", workplaceFilter:"", selectedLearner:null, expandedCompanies:{}, expandedWorkplaces:{}, studentPageByWorkplace:{}, sortColumn:null, sortDirection:"asc", companyFlatMode:{}, companyPage:0, activeTab:"overview", learningSubTab:"overview", learningLearnerFilter:"all", learningLearnerSearch:"", learningLearnerPage:0, learningLearnerSortCol:"lastSeen", learningLearnerSortDir:"asc", bulkSelected:{}, bulkInProgress:false, bulkDone:0, bulkTotal:0, bulkResults:null, companyBulkResults:null, companyBulkInProgress:false };
     render();
   };
   box.appendChild(avatar);
@@ -917,6 +917,57 @@ async function resetCompanyUserPassword(companyUserId){
   return Array.isArray(data) ? data[0] : data;
 }
 
+// ---- 企業代表・事業所担当者アカウントの無効化(NTIC管理者のみ)。
+// 物理削除ではなく status='inactive' への更新(論理削除)。実習生側(students.status)と同じ考え方。
+// 無効化するとダッシュボードの問い合わせ(status=eq.active)から外れ、ログインしても
+// 閲覧できるデータが無い状態になる。auth.usersは残るので、必要なら後から復活できる。 ----
+async function deactivateCompanyUser(companyUserId){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/deactivate_company_user", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ p_company_user_id: companyUserId })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    const msg = (data && (data.message || data.error_description)) || "無効化に失敗しました。";
+    throw new Error(msg);
+  }
+  return Array.isArray(data) ? data[0] : data;
+}
+
+// ---- 一括発行の事前プレビュー。何も変更せず「今実行すると何件発行されるか」だけを返す。 ----
+async function previewBulkCompanyUsers(){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/preview_bulk_company_user_accounts", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({})
+  });
+  const data = await res.json();
+  if(!res.ok){
+    const msg = (data && (data.message || data.error_description)) || "件数の取得に失敗しました。";
+    throw new Error(msg);
+  }
+  return Array.isArray(data) ? data[0] : data;
+}
+
+// ---- 全社一括発行(NTIC管理者のみ)。
+// 未発行の企業に企業代表1件、未発行の事業所に事業所担当者1件を作成する。
+// すでにactiveなアカウントがある企業・事業所はDB関数側でスキップされるため、
+// 何度実行しても重複しない(途中で失敗しても再実行すれば続きから埋まる)。 ----
+async function bulkCreateCompanyUsers(){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/bulk_create_company_user_accounts", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({})
+  });
+  const data = await res.json();
+  if(!res.ok){
+    const msg = (data && (data.message || data.error_description)) || "一括発行に失敗しました。";
+    throw new Error(msg);
+  }
+  return Array.isArray(data) ? data : [];
+}
+
 // ---- 発行結果の一度限りの表示モーダル(初期パスワードはここでしか見られない)。
 // アカウント発行・パスワードリセットの両方から共通で使う。 ----
 function showIssueResultModal(loginId, initialPassword, opts){
@@ -1048,6 +1099,150 @@ function renderBulkResultPanelInPlace(){
   if(!container){ render(); return; }
   container.innerHTML = "";
   container.appendChild(buildBulkResultContent());
+}
+
+// ---- 企業代表・事業所担当者の一括発行 結果パネル ----
+// 初期パスワードはこの画面でしか見られないため、CSVと配布用ツリーの両方を用意する。
+function renderCompanyBulkResultPanel(){
+  const wrap = document.createElement("div");
+  const card = el('<div class="card"></div>');
+
+  if(dashState.companyBulkInProgress){
+    const t = el('<div class="card-title"></div>');
+    t.textContent = "一括発行中";
+    card.appendChild(t);
+    card.appendChild(el('<div class="loading">アカウントを発行しています。この処理には時間がかかることがあります。画面を閉じずにお待ちください...</div>'));
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  const rows = dashState.companyBulkResults || [];
+  const title = el('<div class="card-title"></div>');
+  title.textContent = "一括発行結果";
+  card.appendChild(title);
+
+  const ownerCount = rows.filter(r=>r.account_type === "企業代表").length;
+  const mgrCount = rows.filter(r=>r.account_type === "事業所担当者").length;
+  const summary = document.createElement("div");
+  summary.style.cssText = "font-size:14px;margin-bottom:14px;font-weight:600;";
+  summary.textContent = "企業代表：" + fmtNum(ownerCount) + "件　事業所担当者：" + fmtNum(mgrCount) + "件　合計：" + fmtNum(rows.length) + "件";
+  card.appendChild(summary);
+
+  if(rows.length === 0){
+    card.appendChild(el('<div class="loading">発行対象がありませんでした（すべて発行済みです）。</div>'));
+    const backBtn0 = document.createElement("button");
+    backBtn0.className = "primary";
+    backBtn0.textContent = "戻る";
+    backBtn0.onclick = ()=>{ dashState.companyBulkResults = null; render(); };
+    card.appendChild(backBtn0);
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  const warn = document.createElement("div");
+  warn.style.cssText = "font-size:12.5px;color:var(--red);margin-bottom:12px;line-height:1.6;";
+  warn.textContent = "⚠️ 初期パスワードはこの画面でしか確認できません。閉じる前に必ずCSVをダウンロードするか、コピーして保管してください。配布が終わったら速やかに削除してください。";
+  card.appendChild(warn);
+
+  // 配布用ツリー(企業ごとにまとめる。企業支援担当者やメールでの案内にそのまま使える形)
+  const treeTitle = el('<div class="card-title" style="margin-top:18px;"></div>');
+  treeTitle.textContent = "企業ごとの配布用リスト（コピペ用）";
+  card.appendChild(treeTitle);
+
+  const byCompany = {};
+  rows.forEach(r=>{
+    const cname = r.company_name || r.company_id;
+    if(!byCompany[cname]) byCompany[cname] = { owner: [], mgr: [] };
+    if(r.account_type === "企業代表") byCompany[cname].owner.push(r);
+    else byCompany[cname].mgr.push(r);
+  });
+  const lines = [];
+  Object.keys(byCompany).forEach(cname=>{
+    lines.push("■ " + cname);
+    byCompany[cname].owner.forEach(r=>{
+      lines.push("　【企業代表】　ID: " + r.login_id + "　初期PW: " + r.initial_password);
+    });
+    byCompany[cname].mgr.forEach(r=>{
+      lines.push("　【事業所担当者】" + (r.workplace_name||"") + "　ID: " + r.login_id + "　初期PW: " + r.initial_password);
+    });
+    lines.push("");
+  });
+  const treeText = lines.join("\n").trim();
+
+  const treeArea = document.createElement("textarea");
+  treeArea.readOnly = true;
+  treeArea.value = treeText;
+  treeArea.style.cssText = "width:100%;min-height:260px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.7;padding:12px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;margin-bottom:10px;white-space:pre;";
+  card.appendChild(treeArea);
+
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "secondary";
+  copyBtn.textContent = "クリップボードにコピー";
+  copyBtn.style.marginBottom = "16px";
+  copyBtn.onclick = async ()=>{
+    try{
+      await navigator.clipboard.writeText(treeText);
+      copyBtn.textContent = "コピーしました ✓";
+      setTimeout(()=>{ copyBtn.textContent = "クリップボードにコピー"; }, 2000);
+    }catch(e){
+      treeArea.focus(); treeArea.select();
+      copyBtn.textContent = "選択したので Ctrl+C でコピーしてください";
+    }
+  };
+  card.appendChild(copyBtn);
+
+  const btnRow = el('<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>');
+  const csvBtn = document.createElement("button");
+  csvBtn.className = "secondary";
+  csvBtn.textContent = "CSVをダウンロード";
+  csvBtn.onclick = ()=>{
+    const header = ["アカウント種別","企業ID","企業名","事業所名","ログインID","初期パスワード"];
+    const body = rows.map(r=>[r.account_type, r.company_id, r.company_name||"", r.workplace_name||"", r.login_id, r.initial_password]);
+    const esc = (v)=>{ const s = String(v==null?"":v); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+    const csv = "\uFEFF" + [header, ...body].map(row=>row.map(esc).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "company_user_accounts_" + new Date().toISOString().replace(/[:.]/g,"-") + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  btnRow.appendChild(csvBtn);
+  const backBtn = document.createElement("button");
+  backBtn.className = "primary";
+  backBtn.textContent = "閉じる";
+  backBtn.onclick = ()=>{
+    ask("この画面を閉じると、初期パスワードは二度と確認できません。CSVのダウンロードまたはコピーは済みましたか？", ()=>{
+      dashState.companyBulkResults = null;
+      render();
+    }, null, "はい、閉じる");
+  };
+  btnRow.appendChild(backBtn);
+  card.appendChild(btnRow);
+
+  // 一覧表
+  const tableWrap = document.createElement("div");
+  tableWrap.className = "table-scroll";
+  const table = document.createElement("table");
+  table.innerHTML = "<thead><tr><th>種別</th><th>企業名</th><th>事業所名</th><th>ログインID</th><th>初期パスワード</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  rows.forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td>"+escapeHtml(r.account_type)+"</td>"+
+      "<td>"+escapeHtml(r.company_name||r.company_id)+"</td>"+
+      "<td>"+escapeHtml(r.workplace_name||"-")+"</td>"+
+      "<td>"+escapeHtml(r.login_id)+"</td>"+
+      "<td>"+escapeHtml(r.initial_password)+"</td>";
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  card.appendChild(tableWrap);
+
+  wrap.appendChild(card);
+  return wrap;
 }
 
 function renderBulkResultPanel(){
@@ -1317,7 +1512,8 @@ let dashState = { loading: true, error: null, progress: [], exams: [], activity:
   learningLearnerPage: 0,
   learningLearnerSortCol: "lastSeen", learningLearnerSortDir: "asc", // 実習生別一覧のソート状態
   bulkSelected: {}, // key(company_id::learner_id) -> true の形で選択状態を保持
-  bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null // 一括発行の進捗・結果
+  bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null, // 実習生一括発行の進捗・結果
+  companyBulkResults: null, companyBulkInProgress: false // 企業担当者の一括発行結果
 };
 
 const CAT_LABEL = {
@@ -2003,6 +2199,77 @@ function buildSummaryContent(wrap, tab){
     wrap.appendChild(companySection);
   }
 
+  // ==== 全社一括発行カード(companiesタブ専用、2026/8/30新設) ====
+  // 118社・243事業所を1件ずつ手作業で発行するのは現実的ではないため、
+  // 「まだアカウントが無い企業・事業所」だけを対象に一括発行する。
+  // 押す前に対象件数を表示し、確認してから実行する2段構えにしている。
+  if(tab === "companies" && scope.isAdmin){
+    const bulkCard = el('<div class="card dash-sec-company"></div>');
+    const bulkTitle = el('<div class="card-title"></div>');
+    bulkTitle.textContent = "企業代表・事業所担当者アカウントの一括発行";
+    bulkCard.appendChild(bulkTitle);
+    const bulkDesc = el('<div class="card-desc"></div>');
+    bulkDesc.textContent = "1企業につき企業代表1件、1事業所につき事業所担当者1件を発行します。すでにアカウントがある企業・事業所は自動的にスキップされるため、何度実行しても重複しません。";
+    bulkCard.appendChild(bulkDesc);
+
+    const previewWrap = el('<div id="companyBulkPreviewWrap" style="font-size:13px;color:var(--text-sub);margin-bottom:var(--sp-3);"></div>');
+    previewWrap.textContent = "対象件数を確認しています...";
+    bulkCard.appendChild(previewWrap);
+
+    const bulkBtn = document.createElement("button");
+    bulkBtn.className = "primary";
+    bulkBtn.textContent = "対象件数を確認中...";
+    bulkBtn.disabled = true;
+    bulkCard.appendChild(bulkBtn);
+    wrap.appendChild(bulkCard);
+
+    // 対象件数を非同期で取得してボタンを有効化する
+    (async ()=>{
+      try{
+        const p = await previewBulkCompanyUsers();
+        const total = p.total_count || 0;
+        if(total === 0){
+          previewWrap.textContent = "未発行の企業・事業所はありません（すべて発行済みです）。";
+          bulkBtn.textContent = "発行対象なし";
+          bulkBtn.disabled = true;
+          return;
+        }
+        previewWrap.innerHTML = "発行対象：<b>企業代表 " + fmtNum(p.owner_count) + "件</b>／<b>事業所担当者 " +
+          fmtNum(p.manager_count) + "件</b>　合計 <b>" + fmtNum(total) + "件</b>";
+        bulkBtn.textContent = fmtNum(total) + "件を一括発行";
+        bulkBtn.disabled = false;
+        bulkBtn.onclick = ()=>{
+          ask("未発行の企業・事業所に、合計" + fmtNum(total) + "件のアカウントを発行します。\n\n" +
+              "発行後に表示されるログインID・初期パスワードは、その画面でしか確認できません。" +
+              "必ずCSVのダウンロードまたはコピーで控えてから閉じてください。よろしいですか？", async ()=>{
+            dashState.companyBulkInProgress = true;
+            render();
+            try{
+              const rows = await bulkCreateCompanyUsers();
+              dashState.companyBulkResults = rows;
+            }catch(e){
+              dashState.companyBulkResults = null;
+              dashState.companyBulkInProgress = false;
+              render();
+              const errBox = el('<div class="errormsg"></div>');
+              errBox.textContent = e.message || "一括発行に失敗しました。";
+              const c = document.getElementById("companyBulkPreviewWrap");
+              if(c) c.after(errBox);
+              return;
+            }
+            dashState.companyBulkInProgress = false;
+            dashState._fetchTriggered = false;
+            await loadDashboardData();
+          }, null, fmtNum(total) + "件を発行する");
+        };
+      }catch(e){
+        previewWrap.innerHTML = "<span class='errormsg'>" + escapeHtml(e.message || "対象件数の取得に失敗しました。") + "</span>";
+        bulkBtn.textContent = "一括発行";
+        bulkBtn.disabled = true;
+      }
+    })();
+  }
+
   // ==== 企業選択プルダウン(companiesタブ専用、2026/8/30新設) ====
   // このタブの「選択中の企業のサマリー」「企業代表・事業所担当者アカウント発行」は、
   // dashState.companyFilter に企業が入っている時だけ表示される。しかし以前は、その値を
@@ -2201,9 +2468,46 @@ function buildSummaryContent(wrap, tab){
             const wpNames = (r.company_user_workplaces||[]).map(x=>wpNameById[x.workplace_id]).filter(Boolean).join("・");
             const line = document.createElement("div");
             line.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);";
-            const labelSpan = document.createElement("span");
-            labelSpan.textContent = roleLabelText + (wpNames ? "（" + wpNames + "）" : "");
+            // 同じ企業に複数のアカウントがある場合、種別名だけでは「どれを操作しているのか」が
+            // 区別できない(実際に企業代表が2件並んで見分けられない事象が起きた)。
+            // 発行日を併記して識別できるようにする。
+            // ※ログインIDはauth.usersにしか無くRESTからは取得できないため、ここでは出せない。
+            const labelSpan = document.createElement("div");
+            let issuedAt = "";
+            if(r.created_at){
+              const d = new Date(r.created_at);
+              issuedAt = d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+
+                String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+            }
+            labelSpan.innerHTML = escapeHtml(roleLabelText + (wpNames ? "（" + wpNames + "）" : "")) +
+              (issuedAt ? "<div style='font-size:11px;color:var(--text-sub);margin-top:2px;'>発行日: "+escapeHtml(issuedAt)+"</div>" : "");
             line.appendChild(labelSpan);
+
+            const btnWrap = document.createElement("div");
+            btnWrap.style.cssText = "display:flex;gap:6px;flex:0 0 auto;";
+
+            // 無効化(論理削除)ボタン
+            const deactBtn = document.createElement("button");
+            deactBtn.className = "danger";
+            deactBtn.style.cssText = "font-size:11.5px;padding:5px 10px;flex:0 0 auto;";
+            deactBtn.textContent = "無効化";
+            deactBtn.onclick = ()=>{
+              ask("「" + roleLabelText + (wpNames ? "（" + wpNames + "）" : "") + "」アカウントを無効化します。" +
+                  "このアカウントではログインできなくなります（学習データは削除されません）。よろしいですか？", async ()=>{
+                deactBtn.disabled = true; deactBtn.textContent = "処理中...";
+                try{
+                  await deactivateCompanyUser(r.id);
+                  loadCompanyUsersList();
+                }catch(e){
+                  deactBtn.disabled = false; deactBtn.textContent = "無効化";
+                  const errBox = el('<div class="errormsg" style="margin-top:4px;"></div>');
+                  errBox.textContent = e.message || "無効化に失敗しました。時間をおいて再度お試しください。";
+                  line.after(errBox);
+                  setTimeout(()=>errBox.remove(), 4000);
+                }
+              }, null, "はい、無効化する");
+            };
+
             const resetBtn = document.createElement("button");
             resetBtn.className = "secondary";
             resetBtn.style.cssText = "font-size:11.5px;padding:5px 10px;flex:0 0 auto;";
@@ -2227,7 +2531,9 @@ function buildSummaryContent(wrap, tab){
                 }
               }, null, "はい、リセットする");
             };
-            line.appendChild(resetBtn);
+            btnWrap.appendChild(resetBtn);
+            btnWrap.appendChild(deactBtn);
+            line.appendChild(btnWrap);
             existingWrap.appendChild(line);
           });
         }catch(e){
@@ -2670,6 +2976,13 @@ function renderDashboard(){
 
   if(dashState.bulkResults !== null){
     wrap.appendChild(renderBulkResultPanel());
+    return wrap;
+  }
+
+  // 企業担当者の一括発行中／発行結果は、他の画面を隠して専用パネルを出す
+  // (初期パスワードはこの画面でしか見られないため、誤って他タブへ移動しないようにする)
+  if(dashState.companyBulkInProgress || dashState.companyBulkResults !== null){
+    wrap.appendChild(renderCompanyBulkResultPanel());
     return wrap;
   }
 
