@@ -976,10 +976,16 @@ async function bulkCreateCompanyUsers(){
 // 実習生は毎月のように入国してくるが、取込が手作業で止まっていたため、
 // 新規実習生がダッシュボードに現れず、アカウントを発行できない状態だった。
 //
-// 【判定ルール】(2026/8/30に実データを検証して確定)
+// 【判定ルール】(2026/8/30に実データとDekisugi画面を確認して確定)
 //   アカウント発行対象 = 在籍フラグ「在籍」 かつ 入国日が入力済み
 //   Dekisugiの在籍フラグは入国前でも「在籍」になるため、入国日の確認が要る。
 //   実習期間の日付は前後関係が矛盾する行が多く、終了判定には使えない。
+//
+// 【事業所IDについて】
+//   「実習事業所(雇入れ直後)ID」には "235・236" のように複数のIDが入ることが
+//   ある。これは異動履歴ではなく実習可能な事業所の列挙で、実際の所属は先頭の
+//   1件（Dekisugi画面で確認済み）。分解はサーバー側のjn_normalize_importが
+//   行うため、ここではCSVの値をそのまま送る。
 
 // CSVから抜き出す列。Dekisugiの列順が変わっても動くよう、列名で探す。
 const DEKISUGI_COLUMNS = {
@@ -3050,6 +3056,7 @@ function buildImportCard(){
   note.style.cssText = "font-size:12px;color:var(--text-sub);line-height:1.7;margin-bottom:var(--sp-3);";
   note.innerHTML =
     "・アカウント発行の対象は「在籍フラグ＝在籍」かつ「入国日が入力済み」の実習生です。入国前の方は取り込んでも発行対象になりません。<br>" +
+    "・所属事業所は、Dekisugiの「実習事業所(雇入れ直後)」に複数登録されている場合、先頭の1件を現在の所属として扱います。<br>" +
     "・CSVから消えた実習生は削除されません（学習履歴を保持するため）。<br>" +
     "・手動で「終了済み」に設定した実習生の判定は、取込で上書きされません。";
   card.appendChild(note);
@@ -3152,7 +3159,11 @@ function buildImportPreview(rows, preview, resultWrap, statusEl){
           "新しく追加された事業所：<b>"+fmtNum(r.new_workplaces)+"事業所</b><br>"+
           "新しく登録された実習生：<b>"+fmtNum(r.new_students)+"名</b><br>"+
           "在籍状況を更新した実習生：<b>"+fmtNum(r.updated_status)+"名</b><br>"+
-          "氏名を更新した実習生：<b>"+fmtNum(r.updated_name)+"名</b>";
+          "氏名を更新した実習生：<b>"+fmtNum(r.updated_name)+"名</b>"+
+          (r.skipped_workplaces > 0
+            ? "<br><span style='color:var(--text-sub);font-size:12.5px;'>名称を確定できず登録しなかった事業所："
+              + fmtNum(r.skipped_workplaces) + "件（実習生は所属先が未設定になります）</span>"
+            : "");
         done.appendChild(dl);
         resultWrap.appendChild(done);
         statusEl.textContent = "";
