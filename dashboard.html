@@ -2003,12 +2003,69 @@ function buildSummaryContent(wrap, tab){
     wrap.appendChild(companySection);
   }
 
+  // ==== 企業選択プルダウン(companiesタブ専用、2026/8/30新設) ====
+  // このタブの「選択中の企業のサマリー」「企業代表・事業所担当者アカウント発行」は、
+  // dashState.companyFilter に企業が入っている時だけ表示される。しかし以前は、その値を
+  // 設定するプルダウンが「実習生」タブの中にしか無かったため、企業・事業所タブを開いても
+  // 企業を選ぶ手段が無く、発行フォームに永久にたどり着けない状態だった。
+  // タブ単体で操作が完結するよう、このタブにも同じ選択UIを置く(状態は共有のまま)。
+  if(tab === "companies" && scope.isAdmin){
+    const selCard = el('<div class="card dash-sec-company"></div>');
+    const selTitle = el('<div class="card-title"></div>');
+    selTitle.textContent = "企業を選択";
+    selCard.appendChild(selTitle);
+    const selDesc = el('<div class="card-desc"></div>');
+    selDesc.textContent = "企業を選ぶと、その企業のサマリーと、企業代表・事業所担当者アカウントの発行フォームが表示されます。";
+    selCard.appendChild(selDesc);
+
+    const companySelectC = document.createElement("select");
+    companySelectC.id = "companyFilterSelectCompaniesTab";
+    companySelectC.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;width:100%;max-width:420px;background:#fff;";
+    const allOptC = document.createElement("option");
+    allOptC.value = ""; allOptC.textContent = "企業を選択してください";
+    companySelectC.appendChild(allOptC);
+    dashState.companies.slice()
+      .sort((a,b)=> a.company_name.localeCompare(b.company_name,"ja"))
+      .forEach(c=>{
+        const opt = document.createElement("option");
+        opt.value = c.company_id;
+        opt.textContent = c.company_name + "（" + c.company_id + "）";
+        if(dashState.companyFilter === c.company_id) opt.selected = true;
+        companySelectC.appendChild(opt);
+      });
+    companySelectC.onchange = ()=>{
+      dashState.companyFilter = companySelectC.value;
+      // 企業が変わったら事業所フィルタ・ページャーは実習生タブ側と同じくリセットしておく
+      dashState.workplaceFilter = "";
+      dashState.companyPage = 0;
+      render();
+    };
+    selCard.appendChild(companySelectC);
+    wrap.appendChild(selCard);
+  }
+
   // ==== 選択中の企業のサマリー(companiesタブ限定。ntic_adminが企業フィルタで1社に絞っている時だけ表示) ====
   if(tab === "companies" && scope.isAdmin && dashState.companyFilter.trim()){
     const companyId = dashState.companyFilter.trim();
     const companyLearners = learners.filter(l=>l.company_id === companyId);
-    if(companyLearners.length > 0){
-      const companyName = companyLearners[0].companyName || companyId;
+    // 在籍中の実習生が0人の企業(全員実習終了済み等)を選んだ場合、以前はサマリーも発行フォームも
+    // 何も表示されず「選んでも反応が無い」ように見えていた。企業マスタに存在する企業なら、
+    // 学習者が0人でもアカウント発行はできる必要があるため、その旨を案内する。
+    if(companyLearners.length === 0){
+      const emptyCard = el('<div class="card dash-sec-company"></div>');
+      const emptyCompany = dashState.companies.find(c=>c.company_id === companyId);
+      const emptyTitle = el('<div class="card-title"></div>');
+      emptyTitle.textContent = (emptyCompany ? emptyCompany.company_name : companyId) + "：現在学習中の実習生はいません";
+      emptyCard.appendChild(emptyTitle);
+      const emptyDesc = el('<div class="card-desc"></div>');
+      emptyDesc.textContent = "この企業には、在籍中の実習生が登録されていません（全員が実習終了済みの可能性があります）。アカウント発行は下のフォームから行えます。";
+      emptyCard.appendChild(emptyDesc);
+      wrap.appendChild(emptyCard);
+    }
+    if(companyLearners.length >= 0){
+      const companyName = (companyLearners.length > 0 ? companyLearners[0].companyName : null)
+        || (dashState.companies.find(c=>c.company_id === companyId)||{}).company_name
+        || companyId;
       const cRegistered = companyLearners.filter(l=>l.ntlpRegistered).length;
       const cStudying = companyLearners.filter(l=>l.questionsStudied > 0).length;
       const cFollowUps = companyLearners.filter(l=>l.needsFollowUp).length;
@@ -2016,6 +2073,8 @@ function buildSummaryContent(wrap, tab){
       const cAvgRate = cWithRate.length ? Math.round(cWithRate.reduce((s,l)=>s+l.rate,0)/cWithRate.length) : 0;
       const cAvgProgress = Math.round(companyLearners.reduce((s,l)=>s+l.progressPct,0)/companyLearners.length);
 
+      // 学習者が0人の企業では平均値が計算できない(0除算)ため、サマリーKPI自体を出さない。
+      if(companyLearners.length > 0){
       const companyCard = el('<div class="card"></div>');
       const companyCardTitle = el('<div class="card-title"></div>');
       companyCardTitle.textContent = "選択中の企業のサマリー：" + companyName;
@@ -2032,6 +2091,7 @@ function buildSummaryContent(wrap, tab){
       companyCard.appendChild(companySubGrid);
       companyCard.classList.add("dash-sec-company");
       wrap.appendChild(companyCard);
+      } // ← サマリーKPIここまで(学習者0人の企業では出さない)
 
       // ==== 企業代表・事業所担当者アカウントの発行(この企業限定) ====
       const issueCard = el('<div class="card dash-sec-company"></div>');
