@@ -492,7 +492,7 @@ function el(html){ const d=document.createElement("div"); d.innerHTML=html; retu
 
 // ==== ログインID→メールアドレスの自動判定変換(2026/8/30新設) ====
 // このダッシュボードには2種類の利用者がログインしてくる。
-//   ・NTIC管理者(ntic_admin)  : 本物のメールアドレス(例: hane@ntic.jp)でログインする
+//   ・NTIC管理者(ntic_admin)  : 組合で発行された実際のメールアドレスでログインする
 //   ・企業代表/事業所担当者    : create_company_user_account() が発行する
 //                               NTIC-OWNER-xxxxxx / NTIC-MGR-xxxxxx 形式のログインID
 // Supabase Authは常にメールアドレスでの認証しか受け付けないため、後者は内部専用の
@@ -619,7 +619,7 @@ function renderLogin(){
   card.appendChild(idLabel);
   const loginIdInput = document.createElement("input");
   loginIdInput.type = "text"; loginIdInput.autocomplete = "username";
-  loginIdInput.placeholder = "例: hane@ntic.jp / NTIC-OWNER-xxxxxx";
+  loginIdInput.placeholder = "メールアドレス または NTIC-OWNER-xxxxxx";
   card.appendChild(loginIdInput);
 
   const pwLabel = document.createElement("div");
@@ -966,6 +966,123 @@ async function bulkCreateCompanyUsers(){
     throw new Error(msg);
   }
   return Array.isArray(data) ? data : [];
+}
+
+// ==== Dekisugi CSV 取込 ====
+// Dekisugiからエクスポートした実習生CSVを取り込み、roster/student_periods/
+// student_workplaces/companies/workplaces を最新化する。
+//
+// 【なぜ必要か】
+// 実習生は毎月のように入国してくるが、取込が手作業で止まっていたため、
+// 新規実習生がダッシュボードに現れず、アカウントを発行できない状態だった。
+//
+// 【判定ルール】(2026/8/30に実データを検証して確定)
+//   アカウント発行対象 = 在籍フラグ「在籍」 かつ 入国日が入力済み
+//   Dekisugiの在籍フラグは入国前でも「在籍」になるため、入国日の確認が要る。
+//   実習期間の日付は前後関係が矛盾する行が多く、終了判定には使えない。
+
+// CSVから抜き出す列。Dekisugiの列順が変わっても動くよう、列名で探す。
+const DEKISUGI_COLUMNS = {
+  student_id:            "実習生ID",
+  name:                  "実習生名(ローマ字)",
+  kana:                  "実習生名(よみがな)",
+  nationality:           "国籍",
+  language:              "母国語（〇〇語と記載）",
+  status:                "在籍フラグ名",
+  dekisugi_company_id:   "実施者ID",
+  company_name:          "実施者名",
+  dekisugi_workplace_id: "実習事業所(雇入れ直後)ID",
+  workplace_name:        "事業所名",
+  kisei:                 "所属グループ名称",
+  go:                    "実習生区分（〇号でも可）",
+  entry_date:            "入国日",
+  entry_planned_date:    "入国予定日"
+};
+
+// 1行分のCSVを配列に分解する(ダブルクォート内のカンマ・改行に対応)
+function parseCsv(text){
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for(let i = 0; i < text.length; i++){
+    const ch = text[i];
+    if(inQuotes){
+      if(ch === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += ch;
+    } else {
+      if(ch === '"') inQuotes = true;
+      else if(ch === ","){ row.push(field); field = ""; }
+      else if(ch === "\r"){ /* 無視 */ }
+      else if(ch === "\n"){ row.push(field); rows.push(row); row = []; field = ""; }
+      else field += ch;
+    }
+  }
+  if(field !== "" || row.length > 0){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+// CSVテキスト → サーバーへ送るJSON配列。実習生IDで重複排除する。
+// (企業に代表取締役が複数登録されていると、同じ実習生が複数行に現れるため)
+function extractDekisugiRows(text){
+  const rows = parseCsv(text);
+  if(rows.length < 2) throw new Error("CSVにデータ行がありません。");
+  const header = rows[0].map(h => (h||"").replace(/^\uFEFF/, "").trim());
+
+  // 列名 → 列番号 の対応を作る。見つからない列があれば中断する。
+  const colIdx = {};
+  const missing = [];
+  Object.keys(DEKISUGI_COLUMNS).forEach(key=>{
+    const label = DEKISUGI_COLUMNS[key];
+    const i = header.indexOf(label);
+    if(i < 0) missing.push(label); else colIdx[key] = i;
+  });
+  if(missing.length){
+    throw new Error("CSVに次の列が見つかりません：" + missing.join(" / ") +
+      "\nDekisugiのエクスポート形式が変わった可能性があります。");
+  }
+
+  const seen = new Set();
+  const out = [];
+  for(let r = 1; r < rows.length; r++){
+    const cells = rows[r];
+    if(!cells || cells.length < 2) continue;
+    const sid = (cells[colIdx.student_id] || "").trim();
+    if(!sid || seen.has(sid)) continue;
+    seen.add(sid);
+    const rec = {};
+    Object.keys(colIdx).forEach(key=>{
+      rec[key] = (cells[colIdx[key]] || "").trim();
+    });
+    out.push(rec);
+  }
+  return out;
+}
+
+async function previewDekisugiImport(rows){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/preview_dekisugi_import", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ p_rows: rows })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    throw new Error((data && (data.message || data.error_description)) || "プレビューに失敗しました。");
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+async function applyDekisugiImport(rows){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/apply_dekisugi_import", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ p_rows: rows })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    throw new Error((data && (data.message || data.error_description)) || "取込に失敗しました。");
+  }
+  return Array.isArray(data) ? data[0] : data;
 }
 
 // ---- 発行結果の一度限りの表示モーダル(初期パスワードはここでしか見られない)。
@@ -1513,7 +1630,8 @@ let dashState = { loading: true, error: null, progress: [], exams: [], activity:
   learningLearnerSortCol: "lastSeen", learningLearnerSortDir: "asc", // 実習生別一覧のソート状態
   bulkSelected: {}, // key(company_id::learner_id) -> true の形で選択状態を保持
   bulkInProgress: false, bulkDone: 0, bulkTotal: 0, bulkResults: null, // 実習生一括発行の進捗・結果
-  companyBulkResults: null, companyBulkInProgress: false // 企業担当者の一括発行結果
+  companyBulkResults: null, companyBulkInProgress: false, // 企業担当者の一括発行結果
+  importRows: null, importPreview: null, importBusy: false, importDone: null, importError: null // Dekisugi CSV取込
 };
 
 const CAT_LABEL = {
@@ -2916,6 +3034,151 @@ function buildMobileBottomNav(scope){
   return nav;
 }
 
+// ---- Dekisugi CSV取込カード ----
+// ファイル選択 → ブラウザ内で解析 → プレビュー(差分表示) → 確認して取込、の流れ。
+// いきなり書き込まないのは、想定外のデータが混ざっていた場合に気づけるようにするため。
+function buildImportCard(){
+  const card = el('<div class="card" style="margin-top:var(--sp-6);"></div>');
+  const title = el('<div class="card-title"></div>');
+  title.textContent = "Dekisugi CSV取込";
+  card.appendChild(title);
+  const desc = el('<div class="card-desc"></div>');
+  desc.textContent = "Dekisugiからエクスポートした実習生CSVを読み込み、実習生・企業・事業所の情報を最新化します。取り込む前に必ず差分が表示されるので、内容を確認してから実行してください。";
+  card.appendChild(desc);
+
+  const note = document.createElement("div");
+  note.style.cssText = "font-size:12px;color:var(--text-sub);line-height:1.7;margin-bottom:var(--sp-3);";
+  note.innerHTML =
+    "・アカウント発行の対象は「在籍フラグ＝在籍」かつ「入国日が入力済み」の実習生です。入国前の方は取り込んでも発行対象になりません。<br>" +
+    "・CSVから消えた実習生は削除されません（学習履歴を保持するため）。<br>" +
+    "・手動で「終了済み」に設定した実習生の判定は、取込で上書きされません。";
+  card.appendChild(note);
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = ".csv,text/csv";
+  fileInput.style.cssText = "border:none;padding:8px 0;margin-bottom:8px;";
+  card.appendChild(fileInput);
+
+  const statusEl = document.createElement("div");
+  statusEl.style.cssText = "font-size:13px;color:var(--text-sub);margin-bottom:var(--sp-3);";
+  card.appendChild(statusEl);
+
+  const resultWrap = document.createElement("div");
+  card.appendChild(resultWrap);
+
+  fileInput.onchange = async ()=>{
+    const file = fileInput.files && fileInput.files[0];
+    if(!file) return;
+    resultWrap.innerHTML = "";
+    statusEl.textContent = "CSVを読み込んでいます...";
+    let rows;
+    try{
+      const text = await file.text();
+      rows = extractDekisugiRows(text);
+    }catch(e){
+      statusEl.textContent = "";
+      const err = el('<div class="errormsg"></div>');
+      err.textContent = e.message || "CSVの読み込みに失敗しました。";
+      resultWrap.appendChild(err);
+      return;
+    }
+
+    statusEl.textContent = "読み込み完了：" + fmtNum(rows.length) + "名分（重複行を除く）。差分を確認しています...";
+
+    let preview;
+    try{
+      preview = await previewDekisugiImport(rows);
+    }catch(e){
+      statusEl.textContent = "";
+      const err = el('<div class="errormsg"></div>');
+      err.textContent = e.message || "差分の確認に失敗しました。";
+      resultWrap.appendChild(err);
+      return;
+    }
+
+    statusEl.textContent = "読み込み完了：" + fmtNum(rows.length) + "名分（重複行を除く）";
+    resultWrap.appendChild(buildImportPreview(rows, preview, resultWrap, statusEl));
+  };
+
+  return card;
+}
+
+// プレビュー結果(差分の表)と「取り込む」ボタンを組み立てる
+function buildImportPreview(rows, preview, resultWrap, statusEl){
+  const box = document.createElement("div");
+
+  const t = el('<div class="card-title" style="margin-top:var(--sp-4);"></div>');
+  t.textContent = "取込内容の確認";
+  box.appendChild(t);
+
+  const tableWrap = document.createElement("div");
+  tableWrap.className = "table-scroll";
+  const table = document.createElement("table");
+  table.innerHTML = "<thead><tr><th>区分</th><th>内容</th><th>件数</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  preview.forEach(p=>{
+    const tr = document.createElement("tr");
+    const isWarn = p.category === "注意";
+    tr.innerHTML =
+      "<td>"+escapeHtml(p.category)+"</td>"+
+      "<td>"+escapeHtml(p.detail)+"</td>"+
+      "<td"+(isWarn?" style='color:var(--red);font-weight:700;'":" style='font-weight:700;'")+">"+fmtNum(p.cnt)+"</td>";
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  box.appendChild(tableWrap);
+
+  const btnRow = el('<div style="display:flex;gap:10px;margin-top:var(--sp-4);flex-wrap:wrap;"></div>');
+  const applyBtn = document.createElement("button");
+  applyBtn.className = "primary";
+  applyBtn.textContent = "この内容で取り込む";
+  applyBtn.onclick = ()=>{
+    ask("上記の内容でDekisugiのデータを取り込みます。実習生・企業・事業所の情報が更新されます。よろしいですか？", async ()=>{
+      applyBtn.disabled = true; applyBtn.textContent = "取込中...";
+      statusEl.textContent = "取り込んでいます。件数が多いと時間がかかります...";
+      try{
+        const r = await applyDekisugiImport(rows);
+        resultWrap.innerHTML = "";
+        const done = el('<div class="card" style="background:#eef7f1;border-color:#cfe4d7;"></div>');
+        const dt = el('<div class="card-title"></div>');
+        dt.textContent = "取込が完了しました";
+        done.appendChild(dt);
+        const dl = document.createElement("div");
+        dl.style.cssText = "font-size:13.5px;line-height:2;";
+        dl.innerHTML =
+          "新しく追加された企業：<b>"+fmtNum(r.new_companies)+"社</b><br>"+
+          "新しく追加された事業所：<b>"+fmtNum(r.new_workplaces)+"事業所</b><br>"+
+          "新しく登録された実習生：<b>"+fmtNum(r.new_students)+"名</b><br>"+
+          "在籍状況を更新した実習生：<b>"+fmtNum(r.updated_status)+"名</b><br>"+
+          "氏名を更新した実習生：<b>"+fmtNum(r.updated_name)+"名</b>";
+        done.appendChild(dl);
+        resultWrap.appendChild(done);
+        statusEl.textContent = "";
+        dashState._fetchTriggered = false;
+        await loadDashboardData();
+      }catch(e){
+        applyBtn.disabled = false; applyBtn.textContent = "この内容で取り込む";
+        statusEl.textContent = "";
+        const err = el('<div class="errormsg"></div>');
+        err.textContent = e.message || "取込に失敗しました。";
+        box.appendChild(err);
+      }
+    }, null, "はい、取り込む");
+  };
+  btnRow.appendChild(applyBtn);
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "secondary";
+  cancelBtn.textContent = "やめる";
+  cancelBtn.onclick = ()=>{ resultWrap.innerHTML = ""; statusEl.textContent = ""; };
+  btnRow.appendChild(cancelBtn);
+
+  box.appendChild(btnRow);
+  return box;
+}
+
 function renderDashboard(){
   const wrap = document.createElement("div");
   const scope = sessionScope();
@@ -3030,6 +3293,11 @@ function renderDashboard(){
       const bulkBarWrap = document.createElement("div");
       bulkBarWrap.id = "bulkBarWrap";
       card.appendChild(bulkBarWrap);
+    }
+
+    // ==== Dekisugi CSV取込カード(NTIC管理者のみ、2026/8/30新設) ====
+    if(scope.isAdmin){
+      wrap.appendChild(buildImportCard());
     }
 
     const tableWrap = document.createElement("div");
