@@ -968,6 +968,37 @@ async function bulkCreateCompanyUsers(){
   return Array.isArray(data) ? data : [];
 }
 
+// ==== 所属事業所の変更 ====
+// 店舗異動（軽微変更）はよく起こるため、Dekisugiの取込を待たずに画面から直せるようにする。
+// 実習生は1人1事業所とし、変更すると既存の紐付けは置き換わる。
+// 選べるのは同じ企業の事業所のみ（DB関数側でも企業の一致を検証している）。
+
+async function listWorkplacesForStudent(studentCode){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/list_workplaces_for_student", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ p_student_code: studentCode })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    throw new Error((data && (data.message || data.error_description)) || "事業所の一覧を取得できませんでした。");
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+async function setStudentWorkplace(studentCode, workplaceId){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/set_student_workplace", {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ p_student_code: studentCode, p_workplace_id: workplaceId })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    throw new Error((data && (data.message || data.error_description)) || "所属事業所の変更に失敗しました。");
+  }
+  return Array.isArray(data) ? data[0] : data;
+}
+
 // ==== Dekisugi CSV 取込 ====
 // Dekisugiからエクスポートした実習生CSVを取り込み、roster/student_periods/
 // student_workplaces/companies/workplaces を最新化する。
@@ -3040,6 +3071,95 @@ function buildMobileBottomNav(scope){
   return nav;
 }
 
+// ---- 所属事業所の変更モーダル ----
+// 同じ企業の事業所を一覧で出し、1つ選んで変更する。
+// 現在の所属には印を付け、各事業所の在籍人数も出して選びやすくする。
+function openWorkplaceChange(learner, valueEl){
+  const bg = el('<div class="modal-bg"></div>');
+  const box = el('<div class="modal-box" style="max-width:460px;"></div>');
+
+  const title = document.createElement("div");
+  title.className = "card-title";
+  title.textContent = "所属事業所の変更";
+  box.appendChild(title);
+
+  const who = document.createElement("div");
+  who.style.cssText = "font-size:13px;color:var(--text-sub);margin-bottom:14px;";
+  who.textContent = (learner.learnerName || learner.learner_id) + "（" + (learner.companyName || learner.company_id) + "）";
+  box.appendChild(who);
+
+  const listWrap = document.createElement("div");
+  listWrap.style.cssText = "max-height:320px;overflow-y:auto;margin-bottom:14px;";
+  listWrap.innerHTML = '<div class="loading">読み込んでいます...</div>';
+  box.appendChild(listWrap);
+
+  const btnRow = el('<div style="display:flex;gap:10px;justify-content:flex-end;"></div>');
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "secondary";
+  cancelBtn.textContent = "閉じる";
+  cancelBtn.onclick = ()=> document.body.removeChild(bg);
+  btnRow.appendChild(cancelBtn);
+  box.appendChild(btnRow);
+
+  bg.appendChild(box);
+  document.body.appendChild(bg);
+
+  listWorkplacesForStudent(learner.learner_id).then(rows=>{
+    listWrap.innerHTML = "";
+    if(rows.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "loading";
+      empty.textContent = "この企業には事業所が登録されていません。";
+      listWrap.appendChild(empty);
+      return;
+    }
+    rows.forEach(w=>{
+      const item = document.createElement("button");
+      item.style.cssText = "display:block;width:100%;text-align:left;background:" +
+        (w.is_current ? "#eef7f1" : "#fff") + ";border:1px solid " +
+        (w.is_current ? "var(--green)" : "var(--line)") +
+        ";border-radius:8px;padding:11px 13px;margin-bottom:7px;cursor:pointer;font-size:13.5px;";
+      item.innerHTML =
+        "<div style='font-weight:700;color:var(--text-main);'>" + escapeHtml(w.workplace_name) +
+          (w.is_current ? " <span style='font-size:11px;color:var(--green);font-weight:600;'>（現在）</span>" : "") + "</div>" +
+        "<div style='font-size:11.5px;color:var(--text-sub);margin-top:2px;'>" +
+          "在籍 " + fmtNum(w.learner_count) + "人" +
+          (w.dekisugi_workplace_id ? "" : "　※Dekisugi未登録") +
+        "</div>";
+      if(w.is_current){
+        item.disabled = true;
+        item.style.cursor = "default";
+      } else {
+        item.onclick = ()=>{
+          ask("所属事業所を「" + w.workplace_name + "」に変更します。よろしいですか？", async ()=>{
+            item.disabled = true;
+            try{
+              await setStudentWorkplace(learner.learner_id, w.workplace_id);
+              document.body.removeChild(bg);
+              if(valueEl) valueEl.textContent = w.workplace_name;
+              dashState._fetchTriggered = false;
+              await loadDashboardData();
+            }catch(e){
+              item.disabled = false;
+              const errBox = document.createElement("div");
+              errBox.className = "errormsg";
+              errBox.textContent = e.message || "変更に失敗しました。";
+              listWrap.appendChild(errBox);
+            }
+          }, null, "はい、変更する");
+        };
+      }
+      listWrap.appendChild(item);
+    });
+  }).catch(e=>{
+    listWrap.innerHTML = "";
+    const errBox = document.createElement("div");
+    errBox.className = "errormsg";
+    errBox.textContent = e.message || "事業所の一覧を取得できませんでした。";
+    listWrap.appendChild(errBox);
+  });
+}
+
 // ---- Dekisugi CSV取込カード ----
 // ファイル選択 → ブラウザ内で解析 → プレビュー(差分表示) → 確認して取込、の流れ。
 // いきなり書き込まないのは、想定外のデータが混ざっていた場合に気づけるようにするため。
@@ -3486,6 +3606,34 @@ function renderLearnerKarte(){
   stats.appendChild(statBox(rate + "%", "通算正答率", jaOnlyExtra));
   stats.appendChild(statBox(l.lastSeen ? relTime(l.lastSeen) : "-", "最終学習"));
   headCard.appendChild(stats);
+
+  // ---- 所属事業所（NTIC管理者のみ変更可能） ----
+  // 店舗異動があったときに、Dekisugiの取込を待たずにここで直せるようにする。
+  const wpRow = el('<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);"></div>');
+  const wpLabel = document.createElement("div");
+  wpLabel.style.cssText = "font-size:12px;color:var(--text-sub);font-weight:600;margin-bottom:4px;";
+  wpLabel.textContent = "所属事業所";
+  wpRow.appendChild(wpLabel);
+
+  const wpValueRow = el('<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"></div>');
+  const wpValue = document.createElement("div");
+  wpValue.style.cssText = "font-size:15px;font-weight:700;color:var(--text-main);";
+  wpValue.textContent = (l.workplaces && l.workplaces.length)
+    ? l.workplaces.map(w=>w.workplace_name).join("・")
+    : "未設定";
+  wpValueRow.appendChild(wpValue);
+
+  if(karteScope.isAdmin){
+    const wpEditBtn = document.createElement("button");
+    wpEditBtn.className = "secondary";
+    wpEditBtn.style.cssText = "padding:6px 14px;font-size:12.5px;";
+    wpEditBtn.textContent = "変更";
+    wpEditBtn.onclick = ()=> openWorkplaceChange(l, wpValue);
+    wpValueRow.appendChild(wpEditBtn);
+  }
+  wpRow.appendChild(wpValueRow);
+  headCard.appendChild(wpRow);
+
   wrap.appendChild(headCard);
 
   // 分野別正答率カード
