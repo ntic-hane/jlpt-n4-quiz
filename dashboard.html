@@ -134,6 +134,12 @@ footer{text-align:center;font-size:11px;color:var(--text-sub);padding:18px 20px 
   border-left:none;padding-left:0;letter-spacing:0;text-transform:none;}
 .card-desc{font-size:var(--fs-body);font-weight:var(--fw-body);color:var(--text-sub);
   margin-top:calc(var(--sp-1) * -1);margin-bottom:var(--sp-4);line-height:1.5;}
+/* ==== 入力欄の常時表示ラベル(2026/8/30新設) ====
+   以前はplaceholderだけで項目名を示していたが、入力するとラベルが消えてしまい、
+   「何を入れる欄なのか」が分からなくなっていた。実習生側(index.html)のログイン画面と
+   同じく、入力中も常に見えるラベルを使う。 */
+.field-label{font-size:13px;font-weight:700;margin:14px 0 4px;color:var(--text-main);}
+.field-label:first-of-type{margin-top:0;}
 input{padding:11px 0;border:none;border-bottom:1px solid var(--border);border-radius:0;font-size:14px;
   width:100%;max-width:100%;box-sizing:border-box;margin-bottom:10px;background:transparent;transition:border-color .15s;}
 input:focus{outline:none;border-color:var(--green);}
@@ -480,9 +486,28 @@ const QID_CATEGORY_MAP = {"Q1":{"cat":"kanji","subj":"moji"},"Q2":{"cat":"kanji"
 (function(){
 "use strict";
 
-let session = null; // {access_token, email}
+let session = null; // {access_token, refresh_token, expires_at, loginId, email}
 
 function el(html){ const d=document.createElement("div"); d.innerHTML=html; return d.firstElementChild; }
+
+// ==== ログインID→メールアドレスの自動判定変換(2026/8/30新設) ====
+// このダッシュボードには2種類の利用者がログインしてくる。
+//   ・NTIC管理者(ntic_admin)  : 本物のメールアドレス(例: hane@ntic.jp)でログインする
+//   ・企業代表/事業所担当者    : create_company_user_account() が発行する
+//                               NTIC-OWNER-xxxxxx / NTIC-MGR-xxxxxx 形式のログインID
+// Supabase Authは常にメールアドレスでの認証しか受け付けないため、後者は内部専用の
+// 疑似メールアドレスへ変換してから送る必要がある。「@を含むかどうか」で自動判定し、
+// 1つの入力欄で両方を受け付ける。
+// ドメイン("@ntic-academy.internal")と小文字化のルールは、実習生側(index.html)の
+// loginIdToEmail()、およびDB関数 create_company_user_account() / create_student_account()
+// (どちらも lower(v_login_id) || '@ntic-academy.internal' でauth.usersを作成している)と
+// 完全に一致させること。ここがズレると発行したIDでログインできなくなる。
+const AUTH_EMAIL_DOMAIN = "@ntic-academy.internal";
+function loginIdToEmail(rawInput){
+  const trimmed = (rawInput || "").trim();
+  if(trimmed.includes("@")) return trimmed.toLowerCase(); // 実メールアドレス(NTIC管理者)はそのまま
+  return trimmed.toLowerCase() + AUTH_EMAIL_DOMAIN;       // ログインID(企業担当者)は内部ドメインを付与
+}
 
 function render(){
   const app = document.getElementById("app");
@@ -521,15 +546,19 @@ function renderHeaderUserInfo(){
   else if(scope.companyId) roleText = "企業: " + scope.companyId + " の閲覧権限";
   else roleText = "閲覧権限が設定されていません";
 
+  // 企業担当者は内部用の疑似メールアドレス(NTIC-OWNER-xxxxxx@ntic-academy.internal)で
+  // 認証しているため、そのまま表示すると本人には見慣れない文字列になる。
+  // 実際に入力してもらったログインIDの方を優先して表示する。
+  const displayId = session.loginId || session.email;
   const text = document.createElement("div");
   text.className = "huiText";
-  text.innerHTML = "<div class='huiEmail'>"+escapeHtml(session.email)+"</div><div class='huiRole'>"+escapeHtml(roleText)+"</div>";
+  text.innerHTML = "<div class='huiEmail'>"+escapeHtml(displayId)+"</div><div class='huiRole'>"+escapeHtml(roleText)+"</div>";
   box.appendChild(text);
 
   const avatar = document.createElement("div");
   avatar.className = "huiAvatar";
-  avatar.textContent = (session.email||"?").charAt(0).toUpperCase();
-  avatar.title = session.email + "（" + roleText + "）タップでログアウト";
+  avatar.textContent = (displayId||"?").charAt(0).toUpperCase();
+  avatar.title = displayId + "（" + roleText + "）タップでログアウト";
   avatar.onclick = ()=>{
     if(!confirm("ログアウトしますか？")) return;
     session = null;
@@ -581,34 +610,48 @@ function renderLogin(){
   err.className = "errormsg"; err.style.display = "none";
   card.appendChild(err);
 
-  const email = document.createElement("input");
-  email.type = "email"; email.placeholder = "メールアドレス";
-  card.appendChild(email);
+  // 入力欄は「ログインID」に一本化する。NTIC管理者は今まで通り本物のメールアドレスを、
+  // 企業担当者は発行されたログインID(NTIC-OWNER-xxxxxx等)を、同じ欄に入力する。
+  // 実際の変換・判定は loginIdToEmail() が行う。
+  const idLabel = document.createElement("div");
+  idLabel.className = "field-label";
+  idLabel.textContent = "ログインID";
+  card.appendChild(idLabel);
+  const loginIdInput = document.createElement("input");
+  loginIdInput.type = "text"; loginIdInput.autocomplete = "username";
+  loginIdInput.placeholder = "例: hane@ntic.jp / NTIC-OWNER-xxxxxx";
+  card.appendChild(loginIdInput);
 
+  const pwLabel = document.createElement("div");
+  pwLabel.className = "field-label";
+  pwLabel.textContent = "パスワード";
+  card.appendChild(pwLabel);
   const pw = document.createElement("input");
-  pw.type = "password"; pw.placeholder = "パスワード";
+  pw.type = "password"; pw.autocomplete = "current-password";
   card.appendChild(pw);
 
   const btn = document.createElement("button");
   btn.className = "primary"; btn.style.width="100%"; btn.textContent = "ログイン";
-  btn.onclick = async ()=>{
+  const doLogin = async ()=>{
     btn.disabled = true; btn.textContent = "ログイン中...";
     err.style.display = "none";
+    const rawInput = loginIdInput.value;
     try{
       const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
         method: "POST",
         headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.value, password: pw.value })
+        body: JSON.stringify({ email: loginIdToEmail(rawInput), password: pw.value })
       });
       const data = await res.json();
       if(!res.ok || !data.access_token){
-        err.textContent = "ログインに失敗しました。メールアドレス・パスワードを確認してください。";
+        err.textContent = "ログインに失敗しました。ログインID・パスワードを確認してください。";
         err.style.display = "block";
         btn.disabled = false; btn.textContent = "ログイン";
         return;
       }
       session = { access_token: data.access_token, refresh_token: data.refresh_token,
-        expires_at: Date.now() + (data.expires_in || 3600) * 1000, email: email.value };
+        expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+        loginId: rawInput.trim(), email: loginIdToEmail(rawInput) };
       // 初回ログイン等でパスワード変更が必須なアカウントかどうかをJWTから読み取っておく
       // (JWTのuser_metadataに、発行・リセット時に立てたmust_change_passwordフラグが入っている)
       const loginPayload = decodeJwt(session.access_token);
@@ -620,6 +663,9 @@ function renderLogin(){
       btn.disabled = false; btn.textContent = "ログイン";
     }
   };
+  btn.onclick = doLogin;
+  // パスワード欄でEnterキーを押してもログインできるようにする(index.html側と同じ挙動)
+  pw.onkeydown = (e)=>{ if(e.key === "Enter") doLogin(); };
   card.appendChild(btn);
   wrap.appendChild(card);
   return wrap;
