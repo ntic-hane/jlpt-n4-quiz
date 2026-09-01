@@ -2034,6 +2034,14 @@ const STORAGE_KEY_BASE = "ntic_jlpt_v1";
 // (認証導入前は端末内で1人分のデータしか想定していなかったため、
 //  同じ端末で複数の実習生アカウントを使い分けると、実習生を切り替えても
 //  前の人のキャッシュ表示が残ってしまう不具合があったための対応)
+// 動作確認用のアカウントかどうか。
+// 実習生IDが "TEST" で始まるものを動作確認用として扱う（例: TEST01）。
+// Dekisugiの実習生IDは数字なので、実在の実習生と衝突しない。
+function isTestAccount(){
+  const code = AUTH.student && AUTH.student.dekisugi_student_code;
+  return !!code && /^TEST/i.test(code);
+}
+
 function storageKey(){
   return AUTH.student ? (STORAGE_KEY_BASE + "__" + AUTH.student.id) : STORAGE_KEY_BASE;
 }
@@ -2244,7 +2252,7 @@ function authedHeaders(extra){
 
 // ログイン中の本人のstudentsレコードを取得する
 async function fetchOwnStudent(){
-  const res = await fetch(SUPABASE_URL + "/rest/v1/students?select=id,name,company_id,language,status", {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/students?select=id,name,company_id,language,status,dekisugi_student_code", {
     headers: authedHeaders()
   });
   if(!res.ok) throw new Error("student_fetch_failed");
@@ -3409,6 +3417,24 @@ function renderHomeView(){
     ST.view = "login";
     render();
   };
+  // 学習記録の消去は動作確認用アカウントのみ。実習生の画面には出さない。
+  if(isTestAccount()){
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "ghost";
+    clearBtn.textContent = tr(T.clearData);
+    clearBtn.onclick = ()=>{
+      ask(tr(T.confirmClear), ()=>{
+        // この端末に保存された学習記録だけを消す。
+        // クラウド側(progress/exam_log等)は組合の管理データなので消さない。
+        try{ localStorage.removeItem(storageKey()); }catch(e){ /* noop */ }
+        memoryFallback = null;
+        ST.view = "home";
+        render();
+      });
+    };
+    footerBtnRow.appendChild(clearBtn);
+  }
+
   footerBtnRow.appendChild(logoutBtn);
   footer.appendChild(footerBtnRow);
   wrap.appendChild(footer);
