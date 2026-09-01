@@ -2213,7 +2213,20 @@ async function authChangePassword(newPassword){
   });
   if(!res.ok){
     const data = await res.json().catch(()=>({}));
+    // 画面には利用者向けの短いメッセージしか出さないため、
+    // 原因調査ができるようコンソールにはサーバーの生の理由を残す。
+    console.warn("[auth] パスワード変更に失敗", res.status, data);
     throw new Error(data.error_description || data.msg || "password_change_failed");
+  }
+
+  // アクセストークンにはログイン時点のuser_metadataが埋め込まれており、
+  // パスワードを変えただけでは must_change_password が true のまま残る。
+  // トークンを取り直さないと、リロード時にまた変更画面へ戻されてしまう。
+  try{
+    await authRefresh(AUTH.session.refresh_token);
+  }catch(e){
+    // 取り直しに失敗しても、今のセッションは有効期限まで使えるので続行する。
+    console.warn("[auth] パスワード変更後のトークン更新に失敗", e);
   }
   AUTH.mustChangePassword = false;
 }
