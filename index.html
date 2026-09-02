@@ -360,7 +360,7 @@ const RUBY_DICT = {
   "多かった":"おおかった","新人":"しんじん","指導":"しどう","対策":"たいさく","嫌いだ":"きらいだ","並べる":"ならべる",
   "片付ける":"かたづける","お金":"おかね","悪い":"わるい","興味":"きょうみ","外":"そと","喫茶店":"きっさてん",
   "会計":"かいけい","寝る":"ねる","1階":"いっかい","応接室":"おうせつしつ","飛行機":"ひこうき","配る":"くばる",
-  "手伝う":"てつだう","乗る":"のる","質問":"しつもん","赤":"あか","8名":"はちめい","ラーメン屋":"らーめんや",
+  "手伝う":"てつだう","乗る":"のる","質問":"しつもん","赤":"あか","8名":"はちめい","ラーメン屋":"ラーメンや",
   "座って":"すわって",
   // ---- 2026/9/1 追加問題(第5弾)で新しく出てくる語 ----
   // 辞書は最長一致で走査されるため、長い語（活用形を含む形）を先に置く。
@@ -552,7 +552,7 @@ const RUBY_DICT = {
   "新聞":"しんぶん","前":"まえ","文":"ぶん","今週":"こんしゅう","語":"ご",
   "行きます":"いきます","読んだ":"よんだ","見ても":"みても","（木）":"（もく）",
   "前に":"まえに","飼える":"かえる","出した":"だした","踊った":"おどった",
-  "ゴミ出し":"ごみだし","出して":"だして","出す":"だす","週に":"しゅうに",
+  "ゴミ出し":"ゴミだし","出して":"だして","出す":"だす","週に":"しゅうに",
   "3日間":"みっかかん","新しい月":"あたらしいつき","思って":"おもって","入れて":"いれて",
   "日の翌々日":"ひのよくよくじつ","当日":"とうじつ","書けば":"かけば","頑張り":"がんばり",
   "届きます":"とどきます",
@@ -570,7 +570,7 @@ const RUBY_DICT = {
   "商品":"しょうひん","棚":"たな","整理":"せいり","レジ":"れじ","手伝って":"てつだって",
   "駅員":"えきいん","乗客":"じょうきゃく","次の電車":"つぎのでんしゃ","番線":"ばんせん",
   "部長":"ぶちょう","新入社員":"しんにゅうしゃいん","書類":"しょるい","サイン":"さいん",
-  "総務部":"そうむぶ","届けて":"とどけて","夫":"おっと","妻":"つま","燃えるゴミ":"もえるごみ",
+  "総務部":"そうむぶ","届けて":"とどけて","夫":"おっと","妻":"つま","燃えるゴミ":"もえるゴミ",
   "郵便受け":"ゆうびんうけ","教科書":"きょうかしょ","章":"しょう","復習":"ふくしゅう",
   "派手":"はで","青":"あお","白":"しろ","両方":"りょうほう","予約":"よやく","件":"けん",
   "増えて":"ふえて","名様":"めいさま","重さ":"おもさ","重そう":"おもそう","キロ":"きろ",
@@ -2652,27 +2652,68 @@ function isHiraganaChar(ch){
 // そのまま<ruby>で囲むと、送り仮名の上にまでふりがなが乗っているように見えてしまうので、
 // 表示直前に「前後の送り仮名」と「対応する読みの前後」を機械的に切り離し、
 // ルビは漢字部分だけに絞る(送り仮名部分はそのまま平仮名として出力する)。
+function isKanjiChar(ch){
+  // 漢字と、繰り返し記号「々」を漢字として扱う
+  return (ch >= "\u4e00" && ch <= "\u9fff") || ch === "\u3005";
+}
 function buildRubyHtml(word, reading){
-  let start = 0, end = word.length, rStart = 0, rEnd = reading.length;
-  // 先頭の送り仮名を読みの先頭と突き合わせて剥がす
-  while(start < end && isHiraganaChar(word[start]) &&
-        rStart < rEnd && reading[rStart] === word[start]){
-    start += 1; rStart += 1;
+  // 漢字を含まない語(カタカナ語など)にルビは不要。
+  // 「アルバイト(あるばいと)」のような、読み方の助けにならない表示を避ける。
+  let hasKanji = false;
+  for(const ch of word){ if(isKanjiChar(ch)){ hasKanji = true; break; } }
+  if(!hasKanji) return escapeHtml(word);
+
+  // 語を「漢字のかたまり」と「かな(ひらがな・カタカナ)のかたまり」に分け、
+  // かなの位置を手がかりに読みを区切って、漢字部分にだけルビを振る。
+  //
+  // 以前は語の前後の送り仮名しか剥がせず、「読み方(よみかた)」のように
+  // 語の途中に送り仮名がある場合、語全体に読みが乗ってしまい
+  // 「み」の上にまでふりがなが表示されていた。
+  // 期待: 読(よ)み 方(かた)  ／ 誤り: 読み方(よみかた)
+  const segs = [];
+  let cur = "", curIsKanji = null;
+  for(const ch of word){
+    const k = isKanjiChar(ch);
+    if(curIsKanji === null || k === curIsKanji){ cur += ch; curIsKanji = k; }
+    else { segs.push({ text: cur, kanji: curIsKanji }); cur = ch; curIsKanji = k; }
   }
-  // 末尾の送り仮名を読みの末尾と突き合わせて剥がす
-  while(end > start && isHiraganaChar(word[end-1]) &&
-        rEnd > rStart && reading[rEnd-1] === word[end-1]){
-    end -= 1; rEnd -= 1;
+  if(cur) segs.push({ text: cur, kanji: curIsKanji });
+
+  const parts = [];
+  let pos = 0;
+  for(let i = 0; i < segs.length; i++){
+    const seg = segs[i];
+    if(!seg.kanji){
+      // かな部分。読みの中の同じ位置まで進める
+      const idx = reading.indexOf(seg.text, pos);
+      if(idx < 0){
+        // 読みと文字列が対応しない(カタカナ表記の違い等)。
+        // 無理に分割せず、語全体に読みを振る従来の形に戻す。
+        return "<ruby>"+escapeHtml(word)+"<rt>"+escapeHtml(reading)+"</rt></ruby>";
+      }
+      parts.push({ text: seg.text, reading: null });
+      pos = idx + seg.text.length;
+      continue;
+    }
+    // 漢字部分。次のかなが現れる直前までが、この漢字の読み
+    const next = (i+1 < segs.length && !segs[i+1].kanji) ? segs[i+1].text : null;
+    if(next){
+      const idx = reading.indexOf(next, pos);
+      if(idx < 0){
+        return "<ruby>"+escapeHtml(word)+"<rt>"+escapeHtml(reading)+"</rt></ruby>";
+      }
+      parts.push({ text: seg.text, reading: reading.slice(pos, idx) });
+      pos = idx;
+    } else {
+      parts.push({ text: seg.text, reading: reading.slice(pos) });
+      pos = reading.length;
+    }
   }
-  const prefix = word.slice(0, start);
-  const core = word.slice(start, end);
-  const suffix = word.slice(end);
-  const coreReading = reading.slice(rStart, rEnd);
-  if(!core){
-    // 全部ひらがなだった場合(通常は起きないが念のため)、ルビ無しでそのまま返す
-    return escapeHtml(word);
-  }
-  return escapeHtml(prefix) + "<ruby>"+escapeHtml(core)+"<rt>"+escapeHtml(coreReading)+"</rt></ruby>" + escapeHtml(suffix);
+
+  return parts.map(pt=>{
+    if(pt.reading === null || pt.reading === "") return escapeHtml(pt.text);
+    return "<ruby>"+escapeHtml(pt.text)+"<rt>"+escapeHtml(pt.reading)+"</rt></ruby>";
+  }).join("");
 }
 function applyRubyToSegment(text){
   let out = "";
