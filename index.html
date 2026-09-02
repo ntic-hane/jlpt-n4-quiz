@@ -362,6 +362,56 @@ const RUBY_DICT = {
   "会計":"かいけい","寝る":"ねる","1階":"いっかい","応接室":"おうせつしつ","飛行機":"ひこうき","配る":"くばる",
   "手伝う":"てつだう","乗る":"のる","質問":"しつもん","赤":"あか","8名":"はちめい","ラーメン屋":"らーめんや",
   "座って":"すわって",
+  // ---- 2026/9/1 追加問題(第5弾)で新しく出てくる語 ----
+  // 辞書は最長一致で走査されるため、長い語（活用形を含む形）を先に置く。
+  // 助詞まで含めた形は登録しない（「駅が」ではなく「駅」）。
+  "自然です":"しぜんです","自然":"しぜん","逆接":"ぎゃくせつ","逆":"ぎゃく",
+  "順序":"じゅんじょ","航空":"こうくう","空港":"くうこう",
+  "夕方":"ゆうがた","込みます":"こみます","込む":"こむ",
+  "片付けます":"かたづけます","片付ける":"かたづける","片付け":"かたづけ",
+  "電気":"でんき","部屋":"へや","暗い":"くらい",
+  "賛成":"さんせい","反対":"はんたい","計画":"けいかく",
+  "知りません":"しりません","知る":"しる",
+  "入る":"はいる","入れる":"いれる","入れると":"いれると",
+  "前":"まえ","後":"あと","後ろ":"うしろ",
+  "動詞":"どうし","形":"かたち","受身形":"うけみけい","受身":"うけみ",
+  "動作":"どうさ","示します":"しめします","示す":"しめす",
+  "試合":"しあい","続きました":"つづきました","続いた":"ついた","続く":"つづく",
+  "走っています":"はしっています","出るため":"でるため",
+  "木村":"きむら","大学":"だいがく","経済":"けいざい",
+  "授業":"じゅぎょう","本屋":"ほんや","将来":"しょうらい","希望":"きぼう",
+  "映画":"えいが","一度":"いちど","家族":"かぞく",
+  "先月":"せんげつ","自転車":"じてんしゃ","通勤":"つうきん",
+  "歩く":"あるく","時間":"じかん","着く":"つく","早く":"はやく",
+  "運動":"うんどう","調子":"ちょうし","体":"からだ","気":"き",
+  "図書館":"としょかん","受付":"うけつけ","名前":"なまえ","住所":"じゅうしょ",
+  "無料":"むりょう","場合":"ばあい","作る":"つくる","作れる":"つくれる",
+  "借りられません":"かりられません","借りる":"かりる",
+  "市民":"しみん","以下":"いか","歳":"さい","回数券":"かいすうけん","回分":"かいぶん",
+  "書類":"しょるい","何枚":"なんまい","枚":"まい","会議室":"かいぎしつ",
+  "会議":"かいぎ","会社":"かいしゃ","山田":"やまだ",
+  "売り切れ":"うりきれ","売り切れです":"うりきれです","申し訳":"もうしわけ",
+  "黒":"くろ","白":"しろ","青":"あお","色":"いろ","何色":"なにいろ",
+  "金曜日":"きんようび","土曜日":"どようび","日曜日":"にちようび","木曜日":"もくようび",
+  "何曜日":"なんようび","来週":"らいしゅう","変わりました":"かわりました",
+  "試験":"しけん","合格しました":"ごうかくしました","合格":"ごうかく",
+  "資料":"しりょう","許可":"きょか","求められた":"もとめられた","求める":"もとめる",
+  "言葉":"ことば","言う":"いう","言っています":"いっています",
+  "渡す":"わたす","側":"がわ","加えて":"くわえて","得られた":"えられた",
+  "良い":"よい","点":"てん","理由":"りゆう","意味":"いみ","流れ":"ながれ",
+  "答えます":"こたえます","聞かれました":"きかれました","探しています":"さがしています",
+  "探し":"さがし","買います":"かいます","買わない":"かわない",
+  "銀行":"ぎんこう","駅前":"えきまえ","遠い":"とおい","雨":"あめ",
+  "電車":"でんしゃ","使っています":"つかっています","使う":"つかう",
+  "毎日":"まいにち","漢字":"かんじ","濁って":"にごって","濁る":"にごる",
+  "最後":"さいご","必要":"ひつよう","注意しましょう":"ちゅういしましょう",
+  "私":"わたし","彼":"かれ","女":"おんな","男":"おとこ","客":"きゃく","店員":"てんいん",
+  "店":"みせ","本":"ほん","日":"ひ","方":"ほう","分":"ふん",
+  "使っていました":"つかっていました","借りられない":"かりられない",
+  "行けば":"いけば","行けばいい":"いけばいい","見たいです":"みたいです","見たい":"みたい",
+  "言います":"いいます",
+  "一度見たい":"いちどみたい","借りられなくなる":"かりられなくなる",
+  "見ました":"みました",
   "毎朝":"まいあさ","毎日":"まいにち","毎週":"まいしゅう",
   "読みます":"よみます","読んだり":"よんだり","読みやすい":"よみやすい","読めません":"よめません",
   "読解":"どっかい","読む":"よむ",
@@ -2024,6 +2074,177 @@ const DATA_CHOUKAI_4 = [
   }
 ];
 
+
+// =====================================================================
+// 追加問題 第5弾（2026年9月1日）
+// 題材はJLPT本試験に寄せた汎用的なもの。
+// 既存問題と同じ形式:
+//   c=カテゴリ / q=問題文[5言語] / o=選択肢[[5言語]×4] / a=正解index / e=解説[5言語]
+//   読解は p=長文[5言語] を追加、聴解は script=読み上げ原稿(日本語のみ) を追加
+// 言語順: [日本語, English, Bahasa Indonesia, Tagalog, ภาษาไทย]
+// =====================================================================
+
+const DATA_MOJI_5 = [
+  {
+    "c": "kanji",
+    "q": ["この店は【夕方】から込みます。「夕方」の読み方はどれですか。","This shop gets crowded from the evening. How do you read '夕方'?","Toko ini ramai mulai sore. Bagaimana cara membaca '夕方'?","Nagsisikip ang tindahang ito mula hapon. Paano bibigkasin ang '夕方'?","ร้านนี้คนแน่นตั้งแต่ตอนเย็น อ่านคำว่า「夕方」อย่างไร"],
+    "o": [["ゆうがた","yuugata","yuugata","yuugata","yuugata"],["ゆうほう","yuuhou","yuuhou","yuuhou","yuuhou"],["せきがた","sekigata","sekigata","sekigata","sekigata"],["ゆうかた","yuukata","yuukata","yuukata","yuukata"]],
+    "a": 0,
+    "e": ["「夕方」は「ゆうがた」と読みます。「方」は「かた」が濁って「がた」になります。","'夕方' (evening) is read 'yuugata'. The 'kata' in '方' becomes voiced as 'gata'.","'夕方' (sore) dibaca 'yuugata'. 'Kata' pada '方' menjadi 'gata'.","Ang '夕方' (hapon) ay binabasang 'yuugata'. Ang 'kata' sa '方' ay nagiging 'gata'.","'夕方' (ตอนเย็น) อ่านว่า 'yuugata' โดย 'kata' ใน '方' เปลี่ยนเป็นเสียงก้อง 'gata'"],
+  },
+  {
+    "c": "kanji",
+    "q": ["【空港】まで電車で行きます。「空港」の読み方はどれですか。","I'll go to the airport by train. How do you read '空港'?","Saya pergi ke bandara dengan kereta. Bagaimana cara membaca '空港'?","Pupunta ako sa paliparan sakay ng tren. Paano bibigkasin ang '空港'?","จะไปสนามบินด้วยรถไฟ อ่านคำว่า「空港」อย่างไร"],
+    "o": [["くうこう","kuukou","kuukou","kuukou","kuukou"],["そらこう","sorakou","sorakou","sorakou","sorakou"],["くうみなと","kuuminato","kuuminato","kuuminato","kuuminato"],["こうくう","koukuu","koukuu","koukuu","koukuu"]],
+    "a": 0,
+    "e": ["「空港」は「くうこう」と読みます。「航空(こうくう)」とは順序が逆なので注意しましょう。","'空港' (airport) is read 'kuukou'. Note that '航空' (koukuu, aviation) has the opposite order.","'空港' (bandara) dibaca 'kuukou'. Perhatikan bahwa '航空' (koukuu, penerbangan) urutannya terbalik.","Ang '空港' (paliparan) ay binabasang 'kuukou'. Tandaan na baliktad ang pagkakasunod sa '航空' (koukuu, abyasyon).","'空港' (สนามบิน) อ่านว่า 'kuukou' ระวังสับสนกับ '航空' (koukuu การบิน) ที่สลับลำดับกัน"],
+  },
+  {
+    "c": "hyoki",
+    "q": ["「へやを　かたづけます」の「かたづけます」を漢字で書くとどれですか。","How do you write 'katazukemasu' in 'heya wo katazukemasu' in kanji?","Bagaimana menulis 'katazukemasu' dalam 'heya wo katazukemasu' dalam kanji?","Paano isusulat ang 'katazukemasu' sa 'heya wo katazukemasu' sa kanji?","「へやを　かたづけます」ของคำว่า 'かたづけます' เขียนเป็นคันจิอย่างไร"],
+    "o": [["片付けます","片付けます","片付けます","片付けます","片付けます"],["方付けます","方付けます","方付けます","方付けます","方付けます"],["片附けます","片附けます","片附けます","片附けます","片附けます"],["形付けます","形付けます","形付けます","形付けます","形付けます"]],
+    "a": 0,
+    "e": ["「かたづけます」は「片付けます」と書きます。","'katazukemasu' (to tidy up) is written as '片付けます'.","'katazukemasu' (merapikan) ditulis '片付けます'.","Ang 'katazukemasu' (mag-ayos) ay isinusulat na '片付けます'.","'katazukemasu' (จัดเก็บ) เขียนเป็น '片付けます'"],
+  },
+  {
+    "c": "bunmyaku",
+    "q": ["部屋が暗いので、電気を（　　）ください。","The room is dark, so please (　　) the light.","Ruangan gelap, jadi tolong (　　) lampunya.","Madilim ang kwarto, kaya paki-(　　) ang ilaw.","ห้องมืด กรุณา (　　) ไฟด้วย"],
+    "o": [["つけて","turn on","nyalakan","buksan","เปิด"],["けして","turn off","matikan","patayin","ปิด"],["しめて","close","tutup","isara","ปิด (ประตู)"],["あけて","open","buka","buksan (pinto)","เปิด (ประตู)"]],
+    "a": 0,
+    "e": ["暗いので電気を「つけて」ください、という流れが自然です。「けして」は逆の意味になります。","Since it's dark, 'turn on' the light fits naturally. 'Turn off' would mean the opposite.","Karena gelap, 'nyalakan' lampu cocok secara alami. 'Matikan' berarti sebaliknya.","Dahil madilim, natural na bagay ang 'buksan' ang ilaw. Kabaligtaran ang ibig sabihin ng 'patayin'.","เพราะมืด จึงควร 'เปิด' ไฟ ส่วน 'ปิด' มีความหมายตรงข้าม"],
+  },
+  {
+    "c": "ruigi",
+    "q": ["「この計画に賛成です。」と近い意味の文はどれですか。","Which sentence has a similar meaning to 'I agree with this plan.'?","Kalimat mana yang memiliki arti mirip dengan 'Saya setuju dengan rencana ini.'?","Aling pangungusap ang may kahulugang katulad ng 'Sang-ayon ako sa planong ito.'?","ประโยคใดมีความหมายใกล้เคียงกับ 'เห็นด้วยกับแผนนี้'"],
+    "o": [["この計画でいいと思います。","I think this plan is fine.","Saya pikir rencana ini baik.","Sa tingin ko, maayos ang planong ito.","คิดว่าแผนนี้ดีแล้ว"],["この計画に反対です。","I am against this plan.","Saya menentang rencana ini.","Tutol ako sa planong ito.","ไม่เห็นด้วยกับแผนนี้"],["この計画は難しいです。","This plan is difficult.","Rencana ini sulit.","Mahirap ang planong ito.","แผนนี้ยาก"],["この計画を知りません。","I don't know this plan.","Saya tidak tahu rencana ini.","Hindi ko alam ang planong ito.","ไม่รู้จักแผนนี้"]],
+    "a": 0,
+    "e": ["「賛成です」と「〜でいいと思います」は近い意味です。","'I agree' and 'I think it's fine' are close in meaning.","'Setuju' dan 'saya pikir baik' memiliki arti yang mirip.","Magkalapit ang kahulugan ng 'sang-ayon' at 'sa tingin ko maayos'.","'เห็นด้วย' และ 'คิดว่าดีแล้ว' มีความหมายใกล้เคียงกัน"],
+  }
+];
+
+const DATA_BUNPO_5 = [
+  {
+    "c": "bunpo1",
+    "q": ["部屋に入る（　　）、くつをぬいでください。","(　　) entering the room, please take off your shoes.","(　　) masuk ke ruangan, silakan lepas sepatu.","(　　) pumasok sa kwarto, pakitanggal ang sapatos.","(　　) เข้าห้อง กรุณาถอดรองเท้า"],
+    "o": [["前に","before","sebelum","bago","ก่อน"],["後で","after","setelah","pagkatapos","หลังจาก"],["ながら","while","sambil","habang","ขณะที่"],["まで","until","sampai","hanggang","จนถึง"]],
+    "a": 0,
+    "e": ["「〜る前に」で「〜より先に」という意味になります。くつをぬぐのは部屋に入る前です。","'~ru mae ni' means 'before ~'. You take off your shoes before entering the room.","'~ru mae ni' berarti 'sebelum ~'. Anda melepas sepatu sebelum masuk ruangan.","Ang '~ru mae ni' ay nangangahulugang 'bago ~'. Tinatanggal ang sapatos bago pumasok.","'〜る前に' หมายถึง 'ก่อนที่จะ〜' ถอดรองเท้าก่อนเข้าห้อง"],
+  },
+  {
+    "c": "bunpo1",
+    "q": ["さいふを（　　）しまいました。どこにもありません。","I've (　　) my wallet. It's nowhere to be found.","Dompet saya (　　). Tidak ada di mana pun.","(　　) ko ang pitaka ko. Wala ito kahit saan.","ทำกระเป๋าสตางค์ (　　) หาไม่เจอที่ไหนเลย"],
+    "o": [["なくして","lost","hilang","nawala","หาย"],["なくす","lose","kehilangan","mawala","ทำหาย"],["なくした","lost (past)","sudah hilang","nawala (nakaraan)","หายแล้ว"],["なくさない","not lose","tidak hilang","hindi mawawala","ไม่ทำหาย"]],
+    "a": 0,
+    "e": ["「〜てしまいました」の前は動詞のて形です。「なくす」のて形は「なくして」です。","Before '~te shimaimashita', the te-form is used. The te-form of 'nakusu' is 'nakushite'.","Sebelum '~te shimaimashita', digunakan bentuk-te. Bentuk-te dari 'nakusu' adalah 'nakushite'.","Bago ang '~te shimaimashita', ginagamit ang te-form. Ang te-form ng 'nakusu' ay 'nakushite'.","ก่อน '〜てしまいました' ใช้รูป te ส่วนรูป te ของ 'なくす' คือ 'なくして'"],
+  },
+  {
+    "c": "bunpo2",
+    "q": ["先生（　　）ほめられて、とてもうれしかったです。","I was praised (　　) my teacher, and I was very happy.","Saya dipuji (　　) guru, dan sangat senang.","Pinuri ako (　　) guro, at masaya ako.","ได้รับคำชม (　　) อาจารย์ ดีใจมาก"],
+    "o": [["に","by","oleh","ng","จาก (ผู้กระทำ)"],["を","(object marker)","(penanda objek)","(pananda ng bagay)","(เครื่องหมายกรรม)"],["で","at/by (means)","dengan","gamit","ด้วย"],["が","(subject marker)","(penanda subjek)","(pananda ng paksa)","(เครื่องหมายประธาน)"]],
+    "a": 0,
+    "e": ["受身形では、動作をする人を「に」で示します。「先生にほめられる」となります。","In the passive form, the doer is marked with 'ni'. It becomes 'sensei ni homerareru'.","Dalam bentuk pasif, pelaku ditandai dengan 'ni'. Menjadi 'sensei ni homerareru'.","Sa passive form, ang gumagawa ay minamarkahan ng 'ni'. Nagiging 'sensei ni homerareru'.","ในรูป passive จะใช้ 'に' บอกผู้กระทำ กลายเป็น 'せんせいにほめられる'"],
+  },
+  {
+    "c": "bunpo2",
+    "q": ["雨が降っている（　　）、試合は続きました。","(　　) it was raining, the game continued.","(　　) hujan, pertandingan tetap berlanjut.","(　　) umuulan, nagpatuloy ang laro.","(　　) ฝนตก การแข่งขันก็ดำเนินต่อ"],
+    "o": [["にもかかわらず","in spite of","meskipun demikian","sa kabila ng","ทั้งๆ ที่"],["おかげで","thanks to","berkat","dahil sa (mabuti)","ด้วยความช่วยเหลือของ"],["ために","for the sake of","demi","para sa","เพื่อ"],["によって","by means of","melalui","sa pamamagitan ng","โดย"]],
+    "a": 0,
+    "e": ["雨なのに試合が続いた、という逆接なので「にもかかわらず」が自然です。","'It rained, yet the game continued' is a contrast, so 'nimokakawarazu' fits.","'Hujan, tapi pertandingan berlanjut' adalah kontras, jadi 'nimokakawarazu' cocok.","'Umuulan, pero nagpatuloy ang laro' ay kaibahan, kaya bagay ang 'nimokakawarazu'.","ฝนตกแต่การแข่งขันดำเนินต่อ = การขัดแย้ง 'にもかかわらず' จึงเป็นธรรมชาติ"],
+  },
+  {
+    "c": "bunsho",
+    "q": ["彼は毎日走っています。（　　）、マラソンに出るためです。","He runs every day. (　　), it is to run a marathon.","Dia berlari setiap hari. (　　), untuk ikut maraton.","Tumatakbo siya araw-araw. (　　), para sa marathon.","เขาวิ่งทุกวัน (　　) เพื่อลงแข่งมาราธอน"],
+    "o": [["なぜなら","because","karena","dahil","เพราะว่า"],["しかし","however","namun","gayunpaman","แต่ทว่า"],["たとえば","for example","misalnya","halimbawa","ตัวอย่างเช่น"],["それでは","well then","kalau begitu","kung ganoon","ถ้าเช่นนั้น"]],
+    "a": 0,
+    "e": ["後ろに理由が続くので「なぜなら」が自然です。","Since a reason follows, 'nazenara' fits naturally.","Karena alasan mengikuti, 'nazenara' cocok secara alami.","Dahil sumusunod ang dahilan, natural na bagay ang 'nazenara'.","เพราะประโยคถัดไปอธิบายเหตุผล 'なぜなら' จึงเป็นธรรมชาติ"],
+  }
+];
+
+const DATA_DOKKAI_5 = [
+  {
+    "c": "tanbun",
+    "p": ["木村さんは大学で経済を勉強しています。授業のない日は、駅前の本屋でアルバイトをしています。将来は銀行で働きたいと思っています。","Mr. Kimura studies economics at university. On days without classes, he works part-time at a bookstore in front of the station. He hopes to work at a bank in the future.","Pak Kimura belajar ekonomi di universitas. Pada hari tanpa kuliah, dia bekerja paruh waktu di toko buku depan stasiun. Dia ingin bekerja di bank di masa depan.","Nag-aaral si Kimura ng ekonomiya sa unibersidad. Sa mga araw na walang klase, nagpa-part-time siya sa bookstore sa harap ng istasyon. Gusto niyang magtrabaho sa bangko sa hinaharap.","คุณคิมูระเรียนเศรษฐศาสตร์ที่มหาวิทยาลัย วันที่ไม่มีเรียนจะทำงานพาร์ตไทม์ที่ร้านหนังสือหน้าสถานี อนาคตอยากทำงานที่ธนาคาร"],
+    "q": ["木村さんはアルバイトをどこでしていますか。","Where does Mr. Kimura work part-time?","Di mana Pak Kimura bekerja paruh waktu?","Saan nagpa-part-time si Kimura?","คุณคิมูระทำงานพาร์ตไทม์ที่ไหน"],
+    "o": [["駅前の本屋","A bookstore in front of the station","Toko buku depan stasiun","Bookstore sa harap ng istasyon","ร้านหนังสือหน้าสถานี"],["大学","The university","Universitas","Unibersidad","มหาวิทยาลัย"],["銀行","A bank","Bank","Bangko","ธนาคาร"],["駅","The station","Stasiun","Istasyon","สถานี"]],
+    "a": 0,
+    "e": ["「駅前の本屋でアルバイトをしています」とあります。銀行は将来の希望です。","The text says he works part-time at a bookstore in front of the station. The bank is his future hope.","Teks menyebutkan dia bekerja paruh waktu di toko buku depan stasiun. Bank adalah harapan masa depan.","Sinasabi sa teksto na nagpa-part-time siya sa bookstore sa harap ng istasyon. Ang bangko ay pangarap niya sa hinaharap.","มีเขียนว่า 'ทำงานพาร์ตไทม์ที่ร้านหนังสือหน้าสถานี' ส่วนธนาคารเป็นความหวังในอนาคต"],
+  },
+  {
+    "c": "tanbun",
+    "p": ["きのう友達と映画を見に行きました。とてもおもしろかったので、今度は家族と一緒にもう一度見たいです。","Yesterday I went to see a movie with a friend. It was very interesting, so next time I want to see it again with my family.","Kemarin saya menonton film bersama teman. Sangat menarik, jadi lain kali saya ingin menontonnya lagi bersama keluarga.","Kahapon, nanood ako ng sine kasama ang kaibigan. Napaka-interesting, kaya sa susunod gusto kong panoorin ulit kasama ang pamilya.","เมื่อวานไปดูหนังกับเพื่อน สนุกมาก ครั้งหน้าจึงอยากไปดูอีกครั้งกับครอบครัว"],
+    "q": ["この人は今度、だれと映画を見たいですか。","Who does this person want to see the movie with next time?","Dengan siapa orang ini ingin menonton film lain kali?","Sino ang gusto niyang kasama sa panonood sa susunod?","คนนี้ครั้งหน้าอยากดูหนังกับใคร"],
+    "o": [["家族","Family","Keluarga","Pamilya","ครอบครัว"],["友達","A friend","Teman","Kaibigan","เพื่อน"],["ひとりで","Alone","Sendirian","Mag-isa","คนเดียว"],["会社の人","People from work","Orang kantor","Katrabaho","คนที่ทำงาน"]],
+    "a": 0,
+    "e": ["「今度は家族と一緒にもう一度見たい」とあります。友達とはきのう見ました。","The text says 'next time I want to see it with my family'. He saw it with a friend yesterday.","Teks menyebutkan 'lain kali ingin menonton bersama keluarga'. Kemarin menonton dengan teman.","Sinasabi sa teksto na 'sa susunod gusto kong panoorin kasama ang pamilya'. Kahapon ay kasama ang kaibigan.","มีเขียนว่า 'ครั้งหน้าอยากดูอีกครั้งกับครอบครัว' ส่วนเมื่อวานดูกับเพื่อน"],
+  },
+  {
+    "c": "chubun",
+    "p": ["私は先月から自転車で通勤しています。前は電車を使っていましたが、駅まで歩く時間を入れると、自転車の方が早く着くことがわかりました。運動にもなるので、体の調子もよくなった気がします。雨の日だけは電車を使っています。","Since last month I've been commuting by bicycle. I used to take the train, but I found that including the time to walk to the station, the bicycle gets me there faster. It's also exercise, so I feel my health has improved. Only on rainy days do I take the train.","Sejak bulan lalu saya berangkat kerja dengan sepeda. Dulu naik kereta, tapi saya sadar bahwa termasuk waktu berjalan ke stasiun, sepeda lebih cepat. Juga jadi olahraga, jadi kondisi tubuh terasa membaik. Hanya saat hujan saya naik kereta.","Mula noong nakaraang buwan, nagbibisikleta ako papasok. Dati ay tren ang sinasakyan ko, pero napansin kong kasama ang lakad papuntang istasyon, mas mabilis ang bisikleta. Ehersisyo rin ito, kaya pakiramdam ko ay gumanda ang kalusugan ko. Sa maulan na araw lang ako sumasakay ng tren.","ตั้งแต่เดือนที่แล้วฉันไปทำงานด้วยจักรยาน เมื่อก่อนใช้รถไฟ แต่พบว่าถ้ารวมเวลาเดินไปสถานีแล้ว จักรยานถึงเร็วกว่า แถมได้ออกกำลังกาย รู้สึกว่าสุขภาพดีขึ้นด้วย เฉพาะวันฝนตกเท่านั้นที่ใช้รถไฟ"],
+    "q": ["この人が自転車で通勤する理由はどれですか。","What is this person's reason for commuting by bicycle?","Apa alasan orang ini berangkat kerja dengan sepeda?","Ano ang dahilan ng pagbibisikleta niya papasok?","เหตุผลที่คนนี้ไปทำงานด้วยจักรยานคืออะไร"],
+    "o": [["電車より早く着くから","Because it's faster than the train","Karena lebih cepat dari kereta","Dahil mas mabilis kaysa tren","เพราะถึงเร็วกว่ารถไฟ"],["電車がきらいだから","Because he dislikes trains","Karena tidak suka kereta","Dahil ayaw niya ng tren","เพราะไม่ชอบรถไฟ"],["お金がないから","Because he has no money","Karena tidak punya uang","Dahil walang pera","เพราะไม่มีเงิน"],["駅が遠いから","Because the station is far","Karena stasiun jauh","Dahil malayo ang istasyon","เพราะสถานีไกล"]],
+    "a": 0,
+    "e": ["「駅まで歩く時間を入れると、自転車の方が早く着く」とあります。運動になるのは理由に加えて得られた良い点です。","The text says 'including the walk to the station, the bicycle is faster'. Exercise is an added benefit, not the main reason.","Teks menyebutkan 'termasuk waktu berjalan ke stasiun, sepeda lebih cepat'. Olahraga adalah manfaat tambahan.","Sinasabi sa teksto na 'kasama ang lakad papuntang istasyon, mas mabilis ang bisikleta'. Ang ehersisyo ay karagdagang benepisyo.","มีเขียนว่า 'ถ้ารวมเวลาเดินไปสถานี จักรยานถึงเร็วกว่า' ส่วนการได้ออกกำลังกายเป็นข้อดีที่ได้เพิ่ม"],
+  },
+  {
+    "c": "chubun",
+    "p": ["この図書館では、本を借りるときにカードが必要です。カードは受付で作ることができます。作るときは、名前と住所がわかるものを持ってきてください。カードは無料ですが、なくした場合は300円かかります。","At this library, you need a card to borrow books. You can make a card at the reception. When making one, please bring something that shows your name and address. The card is free, but if you lose it, it costs 300 yen.","Di perpustakaan ini, Anda perlu kartu untuk meminjam buku. Kartu dapat dibuat di resepsionis. Saat membuat, bawalah sesuatu yang menunjukkan nama dan alamat. Kartu gratis, tapi jika hilang biayanya 300 yen.","Sa aklatang ito, kailangan ng card para humiram ng libro. Maaaring gumawa ng card sa reception. Kapag gagawa, magdala ng may pangalan at address. Libre ang card, pero kung mawala, 300 yen ang bayad.","ที่ห้องสมุดนี้ ต้องมีบัตรเมื่อยืมหนังสือ ทำบัตรได้ที่แผนกต้อนรับ ตอนทำกรุณานำสิ่งที่ระบุชื่อและที่อยู่มาด้วย บัตรฟรี แต่ถ้าทำหายจะเสีย 300 เยน"],
+    "q": ["カードをなくしたとき、どうなりますか。","What happens if you lose the card?","Apa yang terjadi jika kartu hilang?","Ano ang mangyayari kung mawala ang card?","ถ้าทำบัตรหายจะเป็นอย่างไร"],
+    "o": [["300円かかる","It costs 300 yen","Dikenakan biaya 300 yen","Magbabayad ng 300 yen","เสีย 300 เยน"],["無料で作れる","You can make one for free","Bisa dibuat gratis","Libreng gumawa ulit","ทำใหม่ได้ฟรี"],["本が借りられなくなる","You can never borrow books again","Tidak bisa meminjam buku lagi","Hindi na makakahiram ng libro","ยืมหนังสือไม่ได้อีกเลย"],["受付に行けばいい","You just go to the reception","Cukup pergi ke resepsionis","Pumunta lang sa reception","แค่ไปที่แผนกต้อนรับ"]],
+    "a": 0,
+    "e": ["「カードは無料ですが、なくした場合は300円かかります」とあります。","The text says 'the card is free, but if you lose it, it costs 300 yen'.","Teks menyebutkan 'kartu gratis, tapi jika hilang biayanya 300 yen'.","Sinasabi sa teksto na 'libre ang card, pero kung mawala, 300 yen ang bayad'.","มีเขียนว่า 'บัตรฟรี แต่ถ้าทำหายจะเสีย 300 เยน'"],
+  },
+  {
+    "c": "kensaku",
+    "p": ["市民プール　利用案内／おとな 400円　こども 200円／6歳以下は無料（おとなと一緒に入ってください）／回数券（11回分）おとな 4,000円　こども 2,000円","City Pool Guide: Adults 400 yen / Children 200 yen / Free for age 6 and under (must enter with an adult) / Coupon book (11 uses): Adults 4,000 yen, Children 2,000 yen","Panduan Kolam Renang Kota: Dewasa 400 yen / Anak 200 yen / Gratis untuk usia 6 tahun ke bawah (harus masuk bersama orang dewasa) / Kupon (11 kali): Dewasa 4.000 yen, Anak 2.000 yen","Gabay sa City Pool: Matanda 400 yen / Bata 200 yen / Libre ang 6 taong gulang pababa (dapat kasama ang matanda) / Coupon book (11 beses): Matanda 4,000 yen, Bata 2,000 yen","คู่มือสระว่ายน้ำเทศบาล: ผู้ใหญ่ 400 เยน เด็ก 200 เยน / อายุ 6 ปีลงไปฟรี (ต้องเข้ากับผู้ใหญ่) / บัตรรวม (11 ครั้ง) ผู้ใหญ่ 4,000 เยน เด็ก 2,000 เยน"],
+    "q": ["おとな1人とこども1人で行くと、いくらかかりますか。","How much does it cost for one adult and one child?","Berapa biaya untuk satu dewasa dan satu anak?","Magkano para sa isang matanda at isang bata?","ผู้ใหญ่ 1 คนกับเด็ก 1 คน เสียเงินเท่าไหร่"],
+    "o": [["600円","600 yen","600 yen","600 yen","600 เยน"],["400円","400 yen","400 yen","400 yen","400 เยน"],["800円","800 yen","800 yen","800 yen","800 เยน"],["200円","200 yen","200 yen","200 yen","200 เยน"]],
+    "a": 0,
+    "e": ["おとな400円＋こども200円＝600円です。","Adult 400 yen + child 200 yen = 600 yen.","Dewasa 400 yen + anak 200 yen = 600 yen.","Matanda 400 yen + bata 200 yen = 600 yen.","ผู้ใหญ่ 400 เยน + เด็ก 200 เยน = 600 เยน"],
+  }
+];
+
+const DATA_CHOUKAI_5 = [
+  {
+    "c": "kadai",
+    "script": "会社で、女の人と男の人が話しています。男の人はこれから何をしますか。女：山田さん、この書類をコピーしてもらえますか。男：はい、何枚ですか。女：5枚お願いします。それから、コピーが終わったら、会議室に持っていってください。男：分かりました。",
+    "q": ["男の人はコピーの後、何をしますか。","What will the man do after copying?","Apa yang akan dilakukan pria itu setelah menyalin?","Ano ang gagawin ng lalaki pagkatapos mag-kopya?","ผู้ชายจะทำอะไรหลังถ่ายเอกสาร"],
+    "o": [["会議室に持っていく","Take them to the meeting room","Membawanya ke ruang rapat","Dalhin sa meeting room","นำไปที่ห้องประชุม"],["女の人に渡す","Hand them to the woman","Menyerahkan pada wanita itu","Ibigay sa babae","ส่งให้ผู้หญิง"],["もう5枚コピーする","Copy 5 more","Menyalin 5 lembar lagi","Mag-kopya ulit ng 5","ถ่ายเอกสารอีก 5 แผ่น"],["書類を作る","Create the document","Membuat dokumen","Gumawa ng dokumento","จัดทำเอกสาร"]],
+    "a": 0,
+    "e": ["「コピーが終わったら、会議室に持っていってください」と言っています。","She says 'after you finish copying, please take them to the meeting room'.","Dia berkata 'setelah selesai menyalin, tolong bawa ke ruang rapat'.","Sinabi niyang 'pagkatapos mag-kopya, dalhin sa meeting room'.","เธอพูดว่า 'พอถ่ายเอกสารเสร็จ ช่วยนำไปที่ห้องประชุมด้วย'"],
+  },
+  {
+    "c": "kadai",
+    "script": "店で、店員と客が話しています。客は何を買いますか。店員：いらっしゃいませ。何をお探しですか。客：かさを探しています。青いのはありますか。店員：申し訳ありません、青は売り切れです。黒と白ならございます。客：じゃあ、黒をください。",
+    "q": ["客は何色のかさを買いますか。","What color umbrella does the customer buy?","Payung warna apa yang dibeli pelanggan?","Anong kulay ng payong ang bibilhin ng customer?","ลูกค้าซื้อร่มสีอะไร"],
+    "o": [["黒","Black","Hitam","Itim","สีดำ"],["青","Blue","Biru","Bughaw","สีน้ำเงิน"],["白","White","Putih","Puti","สีขาว"],["買わない","Doesn't buy one","Tidak membeli","Hindi bibili","ไม่ซื้อ"]],
+    "a": 0,
+    "e": ["青は売り切れで、最後に「黒をください」と言っています。","Blue was sold out, and at the end the customer says 'I'll take the black one'.","Biru habis, dan di akhir pelanggan berkata 'saya ambil yang hitam'.","Ubos na ang bughaw, at sa huli sinabi ng customer na 'yung itim na lang'.","สีน้ำเงินหมด และในตอนท้ายลูกค้าพูดว่า 'ขอสีดำ'"],
+  },
+  {
+    "c": "point",
+    "script": "女の人と男の人が話しています。パーティーは何曜日になりましたか。女：来週のパーティー、金曜日でしたよね。男：それが、金曜日は会議が入ってしまって、土曜日に変わりました。女：分かりました、土曜日ですね。",
+    "q": ["パーティーは何曜日になりましたか。","What day did the party change to?","Pesta diubah ke hari apa?","Anong araw na ang party?","งานเลี้ยงเปลี่ยนเป็นวันไหน"],
+    "o": [["土曜日","Saturday","Sabtu","Sabado","วันเสาร์"],["金曜日","Friday","Jumat","Biyernes","วันศุกร์"],["日曜日","Sunday","Minggu","Linggo","วันอาทิตย์"],["木曜日","Thursday","Kamis","Huwebes","วันพฤหัสบดี"]],
+    "a": 0,
+    "e": ["「金曜日は会議が入って、土曜日に変わりました」とあります。","It says 'a meeting came up on Friday, so it changed to Saturday'.","Dikatakan 'ada rapat hari Jumat, jadi diubah ke Sabtu'.","Sinasabing 'may meeting sa Biyernes, kaya naging Sabado'.","มีพูดว่า 'วันศุกร์มีประชุม เลยเปลี่ยนเป็นวันเสาร์'"],
+  },
+  {
+    "c": "hatsuwa",
+    "script": "友達が試験に合格しました。何と言いますか。",
+    "q": ["友達が試験に合格しました。何と言いますか。","Your friend passed an exam. What do you say?","Teman Anda lulus ujian. Apa yang Anda katakan?","Pumasa ang kaibigan mo sa exam. Ano ang sasabihin mo?","เพื่อนสอบผ่าน จะพูดอะไร"],
+    "o": [["おめでとうございます。","Congratulations.","Selamat.","Congratulations.","ยินดีด้วยครับ/ค่ะ"],["お大事に。","Take care (get well).","Semoga cepat sembuh.","Gumaling ka agad.","ดูแลสุขภาพด้วยนะ"],["おじゃまします。","Excuse me for intruding.","Permisi masuk.","Makikiraan po.","ขอรบกวนนะครับ/ค่ะ"],["いってきます。","I'm off.","Saya berangkat.","Aalis na ako.","ไปแล้วนะ"]],
+    "a": 0,
+    "e": ["よいことがあった人には「おめでとうございます」と言います。","When something good happens to someone, you say 'congratulations'.","Saat sesuatu yang baik terjadi pada seseorang, Anda mengatakan 'selamat'.","Kapag may mabuting nangyari sa isang tao, sinasabi mong 'congratulations'.","เมื่อมีเรื่องดีเกิดขึ้นกับใคร จะพูดว่า 'ยินดีด้วย'"],
+  },
+  {
+    "c": "sokuji",
+    "script": "「この資料、もらってもいいですか。」と聞かれました。何と答えますか。",
+    "q": ["「この資料、もらってもいいですか。」と聞かれました。何と答えますか。","Someone asked you, 'May I have this document?' What do you reply?","Seseorang bertanya, 'Boleh saya ambil dokumen ini?' Apa jawaban Anda?","May nagtanong sa iyo, 'Pwede ko bang kunin ang dokumentong ito?' Ano ang isasagot mo?","มีคนถามว่า 'ขอเอกสารนี้ได้ไหม' จะตอบว่าอย่างไร"],
+    "o": [["はい、どうぞ。","Yes, go ahead.","Ya, silakan.","Oo, sige lang.","ได้ครับ/ค่ะ เชิญเลย"],["はい、いただきます。","Yes, I'll take it (odd here).","Ya, saya terima (aneh di sini).","Oo, kukunin ko (kakaiba dito).","ค่ะ/ครับ ขอรับไว้ (แปลก)"],["いいえ、こちらこそ。","No, likewise.","Tidak, sama-sama.","Hindi, ako rin.","ไม่ครับ/ค่ะ เช่นกัน"],["おかげさまで。","Thanks to you.","Berkat Anda.","Salamat sa iyo.","ขอบคุณครับ/ค่ะ"]],
+    "a": 0,
+    "e": ["許可を求められたら「はい、どうぞ」と答えます。「いただきます」はもらう側が言う言葉です。","When asked for permission, you reply 'yes, go ahead'. 'Itadakimasu' is said by the person receiving.","Saat diminta izin, jawab 'ya, silakan'. 'Itadakimasu' diucapkan oleh yang menerima.","Kapag hiningian ng permiso, sagutin ng 'oo, sige lang'. Ang 'itadakimasu' ay sinasabi ng tumatanggap.","เมื่อถูกขออนุญาต ตอบว่า 'ได้ครับ/ค่ะ เชิญเลย' ส่วน 'いただきます' เป็นคำที่ผู้รับพูด"],
+  }
+];
 </script>
 <script>
 (function(){
@@ -2059,10 +2280,10 @@ function saveSettings(s){
 }
 
 const ALL_DATA = {
-  moji: DATA_MOJI.concat(DATA_MOJI_2, DATA_MOJI_3, DATA_MOJI_4),
-  bunpo: DATA_BUNPO.concat(DATA_BUNPO_2, DATA_BUNPO_3, DATA_BUNPO_4),
-  dokkai: DATA_DOKKAI.concat(DATA_DOKKAI_2, DATA_DOKKAI_3, DATA_DOKKAI_4),
-  choukai: DATA_CHOUKAI.concat(DATA_CHOUKAI_2, DATA_CHOUKAI_3, DATA_CHOUKAI_4)
+  moji: DATA_MOJI.concat(DATA_MOJI_2, DATA_MOJI_3, DATA_MOJI_4, DATA_MOJI_5),
+  bunpo: DATA_BUNPO.concat(DATA_BUNPO_2, DATA_BUNPO_3, DATA_BUNPO_4, DATA_BUNPO_5),
+  dokkai: DATA_DOKKAI.concat(DATA_DOKKAI_2, DATA_DOKKAI_3, DATA_DOKKAI_4, DATA_DOKKAI_5),
+  choukai: DATA_CHOUKAI.concat(DATA_CHOUKAI_2, DATA_CHOUKAI_3, DATA_CHOUKAI_4, DATA_CHOUKAI_5)
 };
 // カテゴリ→科目グループの対応(公式試験区分に準拠)
 const CAT_TO_EXAMGROUP = {
