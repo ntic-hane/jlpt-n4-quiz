@@ -4244,6 +4244,26 @@ function applyRubyToSegment(text){
 // 誤読しやすい語を長い順に並べておく（最長一致で置き換えるため）
 const SPEECH_FIX_KEYS = Object.keys(SPEECH_FIX).sort((a,b)=> b.length - a.length);
 
+// 読み上げ用に文を整える。
+//
+// 音声エンジンは句点「。」を見ると文の終わりと判断して息継ぎする。
+// そのため『「今日はいい天気ですね。」と言われました』のような文では、
+// かっこの中の句点で切れてしまい「〜です／ね」のように不自然に聞こえる。
+// かっこの中の句点を取り除いて、ひと息で読めるようにする。
+//
+// かぎかっこ自体も読み上げの区切りとして働くことがあるため、
+// 読み上げるテキストからは外す（画面表示は元のまま）。
+function cleanForSpeech(text){
+  return text
+    // 「…。」→「…」 かっこ内の末尾の句点を落とす
+    .replace(/。」/g, "」")
+    // かぎかっこは読み上げ時の区切りになるので外す
+    .replace(/[「」『』]/g, "")
+    // 全角スペースの連続を1つにまとめる
+    .replace(/　+/g, "　")
+    .trim();
+}
+
 function toSpeechText(text){
   // 【方針】原則は漢字のまま音声エンジンに渡す。
   //
@@ -4335,10 +4355,16 @@ function pickGenderVoices(voices){
   const jaVoices = voices.filter(v=>v.lang && v.lang.startsWith("ja"));
   if(jaVoices.length === 0) return { female:null, male:null };
   // 名前のヒントから女性/男性らしい音声を探す(端末やOSによって命名が異なるため複数パターンに対応)
+  //
+  // 【注意】"male" は "female" の一部でもある。単純に /male/ で判定すると
+  // 「Kyoko (Female)」のような女性音声まで男性として選ばれ、
+  // 男女が同じ声になってしまう。単語の区切りを見て判定する。
   const femaleHints = /female|woman|女性|kyoko|o-ren|ava|samantha/i;
-  const maleHints = /male|man|男性|otoya|daniel|alex/i;
+  const maleHints = /(^|[^f])male\b|\bman\b|男性|otoya|daniel|alex/i;
   let female = jaVoices.find(v=>femaleHints.test(v.name));
-  let male = jaVoices.find(v=>maleHints.test(v.name) && v !== female);
+  // 男性は「女性ヒントに当たらない」ことも条件にする
+  let male = jaVoices.find(v=>
+    maleHints.test(v.name) && !femaleHints.test(v.name) && v !== female);
   // ヒントで見つからなくても、2種類以上あれば単純に別の音声を割り当てる
   if(!female) female = jaVoices[0];
   if(!male) male = jaVoices.find(v=>v !== female) || female;
@@ -4402,11 +4428,15 @@ function speak(script, rate, onState){
       if(m){
         const label = m[1];
         spokenText = part.slice(m[0].length); // 話者ラベル自体は読み上げず、発言内容だけを話す
-        if(label === "女"){ pitch = 1.25; voice = female || neutralVoice; }
-        else if(label === "男"){ pitch = 0.82; voice = male || neutralVoice; }
+        // ピッチは控えめにする。極端に上げ下げすると人の声から離れ、
+        // かえって機械的でぎこちなく聞こえる。
+        // 実際の男女の高さの違いは、この程度の幅に収まる。
+        if(label === "女"){ pitch = 1.12; voice = female || neutralVoice; }
+        else if(label === "男"){ pitch = 0.92; voice = male || neutralVoice; }
         else {
+          // 「店員」「客」などのラベル。登場順に交互の声を割り当てる
           if(label !== lastLabel){ toggle = !toggle; lastLabel = label; }
-          pitch = toggle ? 1.35 : 0.7;
+          pitch = toggle ? 1.10 : 0.93;
           voice = toggle ? (female || neutralVoice) : (male || neutralVoice);
         }
       }
@@ -4417,9 +4447,11 @@ function speak(script, rate, onState){
       // SpeechSynthesisには「無音を入れる」機能がないため、
       // 読み上げるテキストの末尾に句点と全角スペースを足して間を作る。
       // (読点「、」より句点「。」のほうが長く止まる)
-      const u = new SpeechSynthesisUtterance(toSpeechText(spokenText).trim());
+      const u = new SpeechSynthesisUtterance(cleanForSpeech(toSpeechText(spokenText)));
       u.lang = "ja-JP";
-      u.rate = rate || 1.0;
+      // 状況説明・質問はナレーションなので、会話より少しゆっくり読む。
+      // 本試験でも状況説明は落ち着いた速さで読まれる。
+      u.rate = (rate || 1.0) * (m ? 1.0 : 0.92);
       u.pitch = pitch;
       if(voice) u.voice = voice;
       return u;
@@ -4439,8 +4471,8 @@ function speak(script, rate, onState){
     //
     // 状況説明と会話のあいだは長め、会話中の話者交代は短めにする。
     // 本試験も同じように、状況説明のあとにしっかり間を置いてから会話が始まる。
-    const GAP_AFTER_NARRATION = 900;   // 状況説明・質問のあと(ミリ秒)
-    const GAP_BETWEEN_SPEAKERS = 350;  // 会話中に話者が代わるとき
+    const GAP_AFTER_NARRATION = 1100;  // 状況説明・質問のあと(ミリ秒)
+    const GAP_BETWEEN_SPEAKERS = 450;  // 会話中に話者が代わるとき
 
     speakSeqToken += 1;
     const myToken = speakSeqToken;
@@ -5718,7 +5750,7 @@ function renderQuestion(){
     speedLabel.style.cssText = "font-size:11px;color:var(--sub);";
     speedLabel.textContent = tr(T.audioSpeed);
     speedWrap.appendChild(speedLabel);
-    [1.0, 0.8, 0.65].forEach(rate=>{
+    [1.0, 0.9, 0.8, 0.65].forEach(rate=>{
       const sb = document.createElement("button");
       sb.className = "ratebtn" + (ST.audioRate === rate ? " active" : "");
       sb.textContent = rate + "x";
