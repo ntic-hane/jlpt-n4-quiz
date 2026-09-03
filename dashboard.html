@@ -1706,7 +1706,7 @@ async function fetchAllPaged(table, params){
   return all;
 }
 
-let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", selectedLearner: null, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc", companyFlatMode: {}, companyPage: 0, activeTab: "overview",
+let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", onlyUnregistered: false, selectedLearner: null, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc", companyFlatMode: {}, companyPage: 0, activeTab: "overview",
   learningSubTab: "overview", // 学習タブのサブナビ: overview/learners/subjects/history
   learningLearnerFilter: "all", // 実習生別一覧の絞り込みプリセット: all/notstudied/stale/lowprogress/lowrate/followup
   learningLearnerSearch: "", // 実習生別一覧の氏名検索
@@ -2149,7 +2149,19 @@ function buildSummaryContent(wrap, tab){
   kpiRow.appendChild(block(fmtNum(totalLearners)+"人", scope.isAdmin ? "対象実習生" : "対象学習者", {icon:"users", color:"green", card:true}));
   if(scope.isAdmin){
     kpiRow.appendChild(block(fmtNum(ntlpRegistered.length)+"人", "NTLP登録済", {sub: pct(ntlpRegistered.length, totalLearners), icon:"userCheck", color:"blue", card:true}));
-    kpiRow.appendChild(block(fmtNum(ntlpUnregistered.length)+"人", "NTLP未登録", {sub: pct(ntlpUnregistered.length, totalLearners), icon:"userX", color:"purple", card:true, waveSubtle:true}));
+    // 未登録の人を押したら、実習生タブでその人たちだけを表示する。
+    // 「誰が未登録なのか」をすぐ確認できるようにするため。
+    const goUnregistered = ()=>{
+      dashState.onlyUnregistered = true;
+      dashState.companyFilter = "";
+      dashState.workplaceFilter = "";
+      dashState.activeTab = "learners";
+      render();
+    };
+    kpiRow.appendChild(block(fmtNum(ntlpUnregistered.length)+"人", "NTLP未登録", {
+      sub: pct(ntlpUnregistered.length, totalLearners), icon:"userX", color:"purple",
+      card:true, waveSubtle:true,
+      onclick: ntlpUnregistered.length > 0 ? goUnregistered : null}));
   } else {
     kpiRow.appendChild(block(fmtNum(studying.length)+"人", "学習中", {icon:"book", color:"blue", card:true}));
     kpiRow.appendChild(block(fmtNum(notStudied.length)+"人", "未学習", {icon:"userOff", color:"purple", card:true, waveSubtle:true}));
@@ -3066,6 +3078,9 @@ function visibleTabs(scope){
 function switchTab(tabId){
   dashState.activeTab = tabId;
   dashState.selectedLearner = null;
+  // タブを自分で切り替えたときは、概要から持ち込んだ絞り込みを解除する。
+  // 残っていると「実習生が減った」と誤解されるため。
+  dashState.onlyUnregistered = false;
   render();  // 先頭へのスクロールはrender()側で一律に行う
 }
 // 学習タブ内のサブナビ構成。「見るだけ」ではなく「概要→実習生別→分野別→履歴」の流れで
@@ -3465,6 +3480,23 @@ function renderDashboard(){
     filters.appendChild(refreshBtn);
     card.appendChild(filters);
 
+    // 概要から「NTLP未登録」で飛んできたときは、絞り込み中だと分かるように示し、
+    // その場で解除できるようにする。絞り込まれたままだと
+    // 「実習生が減った」と誤解されるため。
+    if(dashState.onlyUnregistered){
+      const note = el('<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
+        + 'margin:0 0 12px;padding:10px 12px;border-radius:8px;'
+        + 'background:#F3F0F9;border:1px solid #D9CFEA;font-size:13px;color:#4A3B66;"></div>');
+      note.appendChild(el('<span>NTLP未登録の実習生だけを表示しています</span>'));
+      const clr = document.createElement("button");
+      clr.textContent = "すべて表示";
+      clr.style.cssText = "padding:5px 12px;border:1px solid #B9A7D6;border-radius:6px;"
+        + "background:#fff;color:#4A3B66;font-size:12px;cursor:pointer;";
+      clr.onclick = ()=>{ dashState.onlyUnregistered = false; render(); };
+      note.appendChild(clr);
+      card.appendChild(note);
+    }
+
     if(scope.isAdmin){
       const bulkBarWrap = document.createElement("div");
       bulkBarWrap.id = "bulkBarWrap";
@@ -3854,6 +3886,11 @@ function renderLearnerKarte(){
 // renderTableOnlyとrenderBulkBar(全選択の対象範囲)の両方から使う共通ロジック。
 function getFilteredLearners(){
   let learners = buildLearnerSummary();
+  // 概要の「NTLP未登録」カードから飛んできたときは、未登録の人だけを表示する。
+  // アカウントをまだ発行していない人を探す用途。
+  if(dashState.onlyUnregistered){
+    learners = learners.filter(l=> !l.ntlpRegistered);
+  }
   if(dashState.companyFilter.trim()){
     const f = dashState.companyFilter.trim().toLowerCase();
     learners = learners.filter(l=>l.company_id.toLowerCase().includes(f) || (l.companyName||"").toLowerCase().includes(f));
