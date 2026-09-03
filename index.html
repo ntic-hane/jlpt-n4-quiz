@@ -4873,6 +4873,9 @@ function renderHeader(){
   bar.appendChild(wrap);
 }
 
+// 直前に描画していた画面。画面が変わったときだけ先頭へ戻すために覚えておく。
+let lastRenderedView = null;
+
 function render(){
   // 画面が再描画されるたびに、再生中の音声があれば止める(問題を移動しても鳴り続けるのを防ぐ)
   if("speechSynthesis" in window){
@@ -4901,6 +4904,17 @@ function render(){
   else if(ST.view === "select") app.appendChild(renderSelect());
   else if(ST.view === "question") app.appendChild(renderQuestion());
   else if(ST.view === "result") app.appendChild(renderResult());
+
+  // 別の画面へ移ったときは、必ず先頭から見せる。
+  // 問題を解いて下までスクロールした状態でホームへ戻ると、
+  // ダッシュボードが途中から表示されてしまうため。
+  //
+  // 同じ画面のまま再描画するとき(答えを選んだ直後など)は動かさない。
+  // ここで動かすと、解説へのスクロールと打ち消し合ってしまう。
+  if(ST.view !== lastRenderedView){
+    lastRenderedView = ST.view;
+    requestAnimationFrame(()=>{ window.scrollTo({ top: 0, behavior: "auto" }); });
+  }
 }
 
 function buildTabBar(){
@@ -5734,7 +5748,7 @@ function renderQuestion(){
       b.textContent = i+1;
       if(ST.answers[i] !== undefined) b.className = "done";
       if(i === ST.idx) b.className = "current";
-      b.onclick = ()=>{ ST.idx = i; render(); };
+      b.onclick = ()=>{ goToQuestion(i); };
       grid.appendChild(b);
     });
     wrap.appendChild(grid);
@@ -5902,13 +5916,19 @@ function renderQuestion(){
       requestAnimationFrame(()=>{
         const fb = document.querySelector(".feedback");
         if(!fb) return;
+        const navH = 76;                                  // 固定ボタンの高さ
         const rect = fb.getBoundingClientRect();
-        // 画面下部は固定ボタン(.qnav-fixed)が重なるので、その分を除いて考える
-        const navH = 76;
         const visibleBottom = window.innerHeight - navH;
-        // すでに見えているなら動かさない(不要なスクロールは酔いのもと)
+        // すでに全体が見えているなら動かさない(不要なスクロールは酔いのもと)
         if(rect.top >= 0 && rect.bottom <= visibleBottom) return;
-        fb.scrollIntoView({ behavior: "smooth", block: "center" });
+        // scrollIntoView(block:"center")は、ページ最下部付近では
+        // 中央まで持ち上げられず効かないことがある(読解の長文問題で発生)。
+        // 解説の上端が画面の1/3あたりに来るよう、自分で位置を計算して移動する。
+        const target = window.scrollY + rect.top - (window.innerHeight / 3);
+        window.scrollTo({
+          top: Math.max(0, target),
+          behavior: "smooth"
+        });
       });
     };
     card.appendChild(optBtn);
@@ -5952,13 +5972,13 @@ function renderQuestion(){
   if(ST.idx > 0){
     const prevBtn = document.createElement("button");
     prevBtn.className = "secondary"; prevBtn.textContent = "← ";
-    prevBtn.onclick = ()=>{ ST.idx -= 1; render(); };
+    prevBtn.onclick = ()=>{ goToQuestion(ST.idx - 1); };
     nav.appendChild(prevBtn);
   }
   if(ST.idx < ST.queue.length - 1){
     const nextBtn = document.createElement("button");
     nextBtn.className = "primary"; nextBtn.textContent = tr(T.next);
-    nextBtn.onclick = ()=>{ ST.idx += 1; render(); };
+    nextBtn.onclick = ()=>{ goToQuestion(ST.idx + 1); };
     nav.appendChild(nextBtn);
   } else {
     const doneBtn = document.createElement("button");
@@ -5978,11 +5998,23 @@ function renderQuestion(){
   // スワイプで問題送り: 左スワイプで次へ、右スワイプで前へ(それぞれボタンがある時だけ反応)。
   // 最後の問題での左スワイプは「提出/終了」を誤操作させないよう、あえて何もしない。
   attachSwipeNav(wrap,
-    ()=>{ if(ST.idx < ST.queue.length - 1){ ST.idx += 1; render(); } },
-    ()=>{ if(ST.idx > 0){ ST.idx -= 1; render(); } }
+    ()=>{ if(ST.idx < ST.queue.length - 1){ goToQuestion(ST.idx + 1); } },
+    ()=>{ if(ST.idx > 0){ goToQuestion(ST.idx - 1); } }
   );
 
   return wrap;
+}
+
+// 問題を切り替えたときに画面の先頭へ戻す。
+// 読解の長文では前の問題の下の方にいることが多く、
+// そのままだと次の問題が本文の途中から表示されてしまう。
+function goToQuestion(newIdx){
+  ST.idx = newIdx;
+  render();
+  // renderで中身が入れ替わったあとにスクロールする
+  requestAnimationFrame(()=>{
+    window.scrollTo({ top: 0, behavior: "auto" });
+  });
 }
 
 function submitExamCheck(){
