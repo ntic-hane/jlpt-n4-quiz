@@ -813,6 +813,7 @@ const RUBY_DICT = {
 const SPEECH_FIX = {
   // ---- 複数の読みがあり、誤読されやすい語 ----
   "大事": "だいじ",           // 「おおごと」と誤読されやすい
+  "一日中": "いちにちじゅう",   // 「一日」より先に一致させる（長い順に処理されるため）
   "一日": "いちにち",         // 「ついたち」と誤読されやすい
   "一人": "ひとり",
   "二人": "ふたり",
@@ -4409,6 +4410,21 @@ function pickGenderVoices(voices){
 // 古い列のタイマーが動いても無視できるようにする。
 let speakSeqToken = 0;
 
+// 端末が持つ音声の一覧。getVoices()はブラウザ起動直後に空を返すことがあり、
+// 少し遅れて voiceschanged イベントで通知される。
+// speak()のたびに取り直すと最初の1回だけ声が取れないため、キャッシュしておく。
+let cachedVoices = [];
+function refreshVoices(){
+  if(!("speechSynthesis" in window)) return;
+  const v = window.speechSynthesis.getVoices();
+  if(v && v.length) cachedVoices = v;
+}
+if("speechSynthesis" in window){
+  refreshVoices();
+  // 一覧が後から届く環境向け。届いたら差し替える。
+  window.speechSynthesis.onvoiceschanged = refreshVoices;
+}
+
 function speak(script, rate, onState){
   const notifyState = (state)=>{ if(onState) onState(state); };
   if(!("speechSynthesis" in window)){
@@ -4417,8 +4433,13 @@ function speak(script, rate, onState){
   }
   try{
     window.speechSynthesis.cancel();
-    const voices = window.speechSynthesis.getVoices();
+    // キャッシュを使う。まだ空なら念のためこの場でも取り直す。
+    refreshVoices();
+    const voices = cachedVoices;
     const { female, male } = pickGenderVoices(voices);
+    // 男女で別の音声が取れたかどうか。取れていればpitchはいじらない
+    // （声で区別できているのにpitchも動かすと、加工された声に聞こえるため）。
+    const hasDistinctVoices = !!(female && male && female !== male);
     const neutralVoice = female || voices.find(v=>v.lang && v.lang.startsWith("ja")) || null;
     // 実際に問題文で使用する話者ラベルのみを対象に分割する(誤検出防止)。
     // SPEAKER_LABELSはビルド時に全聴解データから自動生成される(gen_speaker_labels.js参照)。
@@ -4461,15 +4482,18 @@ function speak(script, rate, onState){
       if(m){
         const label = m[1];
         spokenText = part.slice(m[0].length); // 話者ラベル自体は読み上げず、発言内容だけを話す
-        // ピッチは控えめにする。極端に上げ下げすると人の声から離れ、
-        // かえって機械的でぎこちなく聞こえる。
-        // 実際の男女の高さの違いは、この程度の幅に収まる。
-        if(label === "女"){ pitch = 1.12; voice = female || neutralVoice; }
-        else if(label === "男"){ pitch = 0.92; voice = male || neutralVoice; }
+        // 男女で別の音声が取れているなら、それだけで区別がつく。
+        // そこへさらにpitchを上下させると声が加工されたように聞こえるので、
+        // その場合はpitchを変えない。
+        // 音声が1種類しかない端末では、pitchが唯一の区別手段になるので使う。
+        const hi = hasDistinctVoices ? 1.0 : 1.10;
+        const lo = hasDistinctVoices ? 1.0 : 0.92;
+        if(label === "女"){ pitch = hi; voice = female || neutralVoice; }
+        else if(label === "男"){ pitch = lo; voice = male || neutralVoice; }
         else {
           // 「店員」「客」などのラベル。登場順に交互の声を割り当てる
           if(label !== lastLabel){ toggle = !toggle; lastLabel = label; }
-          pitch = toggle ? 1.10 : 0.93;
+          pitch = toggle ? hi : lo;
           voice = toggle ? (female || neutralVoice) : (male || neutralVoice);
         }
       }
@@ -4505,7 +4529,7 @@ function speak(script, rate, onState){
     // 状況説明と会話のあいだは長め、会話中の話者交代は短めにする。
     // 本試験も同じように、状況説明のあとにしっかり間を置いてから会話が始まる。
     const GAP_AFTER_NARRATION = 1100;  // 状況説明・質問のあと(ミリ秒)
-    const GAP_BETWEEN_SPEAKERS = 450;  // 会話中に話者が代わるとき
+    const GAP_BETWEEN_SPEAKERS = 400;  // 会話中に話者が代わるとき
 
     speakSeqToken += 1;
     const myToken = speakSeqToken;
