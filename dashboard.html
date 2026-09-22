@@ -1827,11 +1827,13 @@ function buildLearnerSummary(){
       l.learnerName = r.learner_name || null;
       l.learnerNameKana = r.learner_name_kana || null;
       l.inRoster = true;
+      l.program = r.program || "gino"; // 'gino'=技能実習 / 'tokutei'=特定技能
     } else {
       l.trainingEndDate = null;
       l.learnerName = null;
       l.learnerNameKana = null;
       l.inRoster = false;
+      l.program = "gino";
     }
 
     // NTLP登録状況: roster.learner_id = students.dekisugi_student_code で名寄せ
@@ -1851,17 +1853,29 @@ function buildLearnerSummary(){
     l.statusOverrideFinished = period ? !!period.status_override_finished : false;
 
     // 実習終了済み判定: roster.training_end_date はほぼ全員空欄で機能しないため、
-    // Dekisugiの在籍フラグ名(dekisugi_status)を正とする。「在籍」以外は全て終了済み扱い。
+    // Dekisugiの在籍フラグ名(dekisugi_status)を正とする。
+    // 技能実習(program='gino')は「在籍」以外は全て終了済み扱い。
     // (中途帰国・帰国(実習完了)・特定活動中(特定技能等への移行)・他組合管理・入国キャンセル等)
-    // 在籍フラグ自体が無い(student_periodsに一致が無い)場合だけは、判断材料が無いため終了済みにしない。
-    // 加えて、在籍フラグは「在籍」のままでも現在の号が既に終了しており、特定技能等への移行後に
-    // 更新されていないと推測される人(status_override_finished)も終了済み扱いにする。
-    l.isFinished = l.dekisugiStatus ? (l.dekisugiStatus !== "在籍" || l.statusOverrideFinished) : false;
+    // 特定技能(program='tokutei')は在籍フラグの値自体が違う(所属中/就業中/転籍(他→自)等の
+    // コード変換済みラベル)ため、DB側のjn_ssw_active_statusと同じ活動中ラベルの集合で判定する。
+    // どちらも、在籍フラグ自体が無い(student_periodsに一致が無い)場合は判断材料が無いため
+    // 終了済みにしない。status_override_finished(号は終了済みだが在籍フラグ未更新の疑い)は共通。
+    const SSW_ACTIVE_STATUS_LABELS = ["所属中", "就業中", "転籍(他→自)"];
+    if(l.program === "tokutei"){
+      l.isFinished = l.dekisugiStatus
+        ? (!SSW_ACTIVE_STATUS_LABELS.includes(l.dekisugiStatus) || l.statusOverrideFinished)
+        : false;
+    } else {
+      l.isFinished = l.dekisugiStatus ? (l.dekisugiStatus !== "在籍" || l.statusOverrideFinished) : false;
+    }
 
     // アカウント発行可否: 未登録 かつ 企業マスタに存在 かつ Dekisugi企業IDのマッピング済み
+    // ※現時点でこの画面の「アカウント発行」ボタンはcreate_student_account(技能実習用)しか
+    //   呼べないため、対象は技能実習(program='gino')のみに限定する。特定技能のアカウント発行は
+    //   別途create_ssw_student_accountで対応する(今回はSQLでの一括発行のみ、画面のボタン化は未対応)。
     const dekisugiCompanyId = companyDekisugiMap[l.company_id];
     l.dekisugiCompanyId = dekisugiCompanyId || null;
-    l.canIssueAccount = !l.ntlpRegistered && l.companyMapped && !!dekisugiCompanyId;
+    l.canIssueAccount = l.program === "gino" && !l.ntlpRegistered && l.companyMapped && !!dekisugiCompanyId;
 
     // 要フォロー判定: 3日以上未学習 / 進捗20%未満 / 正答率40%未満 / 正答率は高いが翻訳依存度も高い、のいずれか
     const rate = l.n > 0 ? Math.round(l.c/l.n*100) : 0;
@@ -2206,7 +2220,7 @@ function buildSummaryContent(wrap, tab){
       nameDiv.className = "followup-namewrap";
       const nameLine = document.createElement("div");
       nameLine.className = "followup-name";
-      nameLine.innerHTML = flagBadge(l.nationality) + escapeHtml((l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）");
+      nameLine.innerHTML = programBadge(l.program) + flagBadge(l.nationality) + escapeHtml((l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）");
       const reasonLine = document.createElement("div");
       reasonLine.className = "followup-reason";
       reasonLine.textContent = l.followUpReasons.join(" / ");
@@ -3654,6 +3668,10 @@ function renderLearnerKarte(){
 
   // ヘッダーカード
   const headCard = el('<div class="card"></div>');
+  const programBadgeEl = document.createElement("div");
+  programBadgeEl.style.marginBottom = "6px";
+  programBadgeEl.innerHTML = programBadge(l.program);
+  headCard.appendChild(programBadgeEl);
   const nameEl = document.createElement("div");
   nameEl.style.cssText = "font-size:24px;font-weight:800;color:var(--green);letter-spacing:-.01em;";
   nameEl.textContent = l.learnerName || l.learner_id;
@@ -4132,6 +4150,16 @@ function flagBadge(nationality){
   return "<span class='flag-badge' title='"+escapeHtml(nationality)+"'>"+svg+"</span>";
 }
 
+// 技能実習／特定技能の区分バッジ。一覧・カルテの両方で使う共通部品。
+// 技能実習(gino)は既存の運用で圧倒的多数のため色を付けず控えめに、
+// 特定技能(tokutei)は紫系のバッジで目立たせて区別しやすくする。
+function programBadge(program){
+  if(program === "tokutei"){
+    return "<span class='badge-pill' style='background:"+STAT_COLORS.purple.bg+";color:"+STAT_COLORS.purple.icon+";margin-right:6px;'>特定技能</span>";
+  }
+  return "<span class='badge-pill' style='background:"+STAT_COLORS.blue.bg+";color:"+STAT_COLORS.blue.icon+";margin-right:6px;'>技能実習</span>";
+}
+
 function buildLearnerRow(l, scopeForTable){
   const tr = document.createElement("tr");
   const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
@@ -4156,7 +4184,8 @@ function buildLearnerRow(l, scopeForTable){
   let learnerCell = escapeHtml(l.learner_id);
   const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
   if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
-  let nameCell = flagBadge(l.nationality) + (l.learnerName ? escapeHtml(l.learnerName) : "-") +
+  let nameCell = "<div style='margin-bottom:3px;'>"+programBadge(l.program)+"</div>" +
+    flagBadge(l.nationality) + (l.learnerName ? escapeHtml(l.learnerName) : "-") +
     (l.learnerNameKana ? "<div style='font-size:10.5px;color:var(--text-sub);font-weight:400;margin-top:1px;'>"+escapeHtml(l.learnerNameKana)+"</div>" : "");
 
   let ntlpCell;
@@ -4528,7 +4557,7 @@ function renderLearningLearnersOnly(){
     const statusLabel = l.needsFollowUp ? "要フォロー" : l.questionsStudied===0 ? "未学習" : "良好";
     row.innerHTML =
       "<div class='learner-mgmt-main'>"+
-        "<div class='learner-mgmt-name'>"+flagBadge(l.nationality)+escapeHtml(l.learnerName||l.learner_id)+
+        "<div class='learner-mgmt-name'>"+programBadge(l.program)+flagBadge(l.nationality)+escapeHtml(l.learnerName||l.learner_id)+
           (l.learnerNameKana ? " <span style='font-weight:400;color:var(--text-sub);font-size:0.85em;'>"+escapeHtml(l.learnerNameKana)+"</span>" : "")+"</div>"+
         "<div class='learner-mgmt-company'>"+escapeHtml(l.companyName||l.company_id)+
           (l.workplaces&&l.workplaces.length? "　／　"+escapeHtml(l.workplaces.map(w=>w.workplace_name).join("・")) : "")+"</div>"+
