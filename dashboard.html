@@ -494,6 +494,40 @@ const QID_CATEGORY_MAP = {"Q1":{"cat":"kanji","subj":"moji"},"Q2":{"cat":"kanji"
 (function(){
 "use strict";
 
+// ============================================================
+// メンテナンスバナー機能
+// Supabaseのapp_settingsテーブル(id=1)を見て、maintenance_mode=trueなら
+// 画面上部に警告バナーを出す。管理者向け画面なので日本語のみ表示。
+// ============================================================
+async function checkMaintenanceBanner(){
+  try{
+    const res = await fetch(SUPABASE_URL + "/rest/v1/app_settings?select=maintenance_mode,maintenance_message&id=eq.1", {
+      headers: { "apikey": SUPABASE_KEY }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+    const settings = rows[0];
+    if(!settings || !settings.maintenance_mode) return;
+
+    const msg = settings.maintenance_message
+      || "ただいまアプリをアップデート中です。表示が一時的に不安定になる場合があります。";
+
+    const banner = document.createElement("div");
+    banner.id = "maintenanceBanner";
+    banner.style.cssText = [
+      "position:fixed", "top:0", "left:0", "right:0", "z-index:9999",
+      "background:#b45309", "color:#fff", "padding:10px 16px",
+      "font-size:13px", "line-height:1.5", "text-align:center",
+      "box-shadow:0 2px 6px rgba(0,0,0,0.15)"
+    ].join(";");
+    banner.textContent = "⚠ " + msg;
+    document.body.prepend(banner);
+    document.body.style.paddingTop = (banner.offsetHeight || 44) + "px";
+  }catch(e){
+    // 取得失敗時は何も表示しない
+  }
+}
+
 let session = null; // {access_token, refresh_token, expires_at, loginId, email}
 
 function el(html){ const d=document.createElement("div"); d.innerHTML=html; return d.firstElementChild; }
@@ -4778,6 +4812,7 @@ function escapeHtml(s){
   });
 })();
 
+checkMaintenanceBanner();
 render();
 })();
 </script>

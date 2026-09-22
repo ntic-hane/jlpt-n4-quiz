@@ -3790,6 +3790,49 @@ const DATA_CHOUKAI_8 = [
 (function(){
 "use strict";
 
+// ============================================================
+// メンテナンスバナー機能
+// Supabaseのapp_settingsテーブル(id=1)を見て、maintenance_mode=trueなら
+// 画面上部に警告バナーを出す。学習自体はブロックしない。
+// ============================================================
+const MAINTENANCE_DEFAULT_MSG = [
+  "ただいまアプリをアップデート中です。ご不便をおかけしますが、しばらくしてから再度お試しください。",
+  "The app is currently being updated. Sorry for the inconvenience — please try again in a little while.",
+  "Aplikasi sedang diperbarui. Mohon maaf atas ketidaknyamanannya — silakan coba lagi sebentar lagi.",
+  "Kasalukuyang ina-update ang app. Paumanhin sa abala — pakisubukang muli sandali.",
+  "แอปกำลังอยู่ระหว่างการอัปเดต ขออภัยในความไม่สะดวก กรุณาลองใหม่อีกครั้งในอีกสักครู่"
+];
+
+async function checkMaintenanceBanner(){
+  try{
+    const res = await fetch(SUPABASE_URL + "/rest/v1/app_settings?select=maintenance_mode,maintenance_message&id=eq.1", {
+      headers: { "apikey": SUPABASE_KEY }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+    const settings = rows[0];
+    if(!settings || !settings.maintenance_mode) return;
+
+    const msg = settings.maintenance_message
+      ? settings.maintenance_message
+      : tr(MAINTENANCE_DEFAULT_MSG);
+
+    const banner = document.createElement("div");
+    banner.id = "maintenanceBanner";
+    banner.style.cssText = [
+      "position:fixed", "top:0", "left:0", "right:0", "z-index:9999",
+      "background:#b45309", "color:#fff", "padding:10px 16px",
+      "font-size:13px", "line-height:1.5", "text-align:center",
+      "box-shadow:0 2px 6px rgba(0,0,0,0.15)"
+    ].join(";");
+    banner.textContent = "⚠ " + msg;
+    document.body.prepend(banner);
+    document.body.style.paddingTop = (banner.offsetHeight || 44) + "px";
+  }catch(e){
+    // 取得失敗時は何も表示しない(通常利用をブロックしないため)
+  }
+}
+
 const STORAGE_KEY_BASE = "ntic_jlpt_v1";
 // ログイン中の実習生ごとにローカルキャッシュを分離する。
 // (認証導入前は端末内で1人分のデータしか想定していなかったため、
@@ -6098,6 +6141,7 @@ function renderResult(){
 
 // ---- init ----
 // セッション確認が終わるまでは、render()のガード処理により自動的にログイン画面が表示される
+checkMaintenanceBanner();
 render();
 establishSession().then(result=>{
   if(result){
