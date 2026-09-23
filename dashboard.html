@@ -2825,14 +2825,22 @@ function buildSummaryContent(wrap, tab){
 
   // ==== サブタブ: 学習概要 ====
   if(dashState.learningSubTab === "overview"){
+    // KPIカードをタップしたら、実習生別タブでその条件の人だけに絞り込んで表示する。
+    // (絞り込みなしだと未学習者が多すぎて、学習中の人を探すのが大変なため)
+    const goToLearnerFilter = (filterId)=>{
+      dashState.learningLearnerFilter = filterId;
+      dashState.learningLearnerPage = 0;
+      dashState.learningSubTab = "learners";
+      render();
+    };
     const kpiRow1 = el('<div class="kpi-cardgrid"></div>');
-    kpiRow1.appendChild(block(fmtNum(totalLearners)+"人", "学習対象", {icon:"users", color:"green", card:true}));
-    kpiRow1.appendChild(block(fmtNum(studying.length)+"人", "学習中", {icon:"book", color:"blue", card:true}));
-    kpiRow1.appendChild(block(fmtNum(notStudied.length)+"人", "未学習", {icon:"userOff", color:"gray", card:true, waveSubtle:true}));
-    kpiRow1.appendChild(block(fmtNum(followUps.length)+"人", "要フォロー", {alert: followUps.length>0, icon:"alertTriangle", card:true}));
+    kpiRow1.appendChild(block(fmtNum(totalLearners)+"人", "学習対象", {icon:"users", color:"green", card:true, onclick: totalLearners>0 ? ()=>goToLearnerFilter("all") : null}));
+    kpiRow1.appendChild(block(fmtNum(studying.length)+"人", "学習中", {icon:"book", color:"blue", card:true, onclick: studying.length>0 ? ()=>goToLearnerFilter("studying") : null}));
+    kpiRow1.appendChild(block(fmtNum(notStudied.length)+"人", "未学習", {icon:"userOff", color:"gray", card:true, waveSubtle:true, onclick: notStudied.length>0 ? ()=>goToLearnerFilter("notstudied") : null}));
+    kpiRow1.appendChild(block(fmtNum(followUps.length)+"人", "要フォロー", {alert: followUps.length>0, icon:"alertTriangle", card:true, onclick: followUps.length>0 ? ()=>goToLearnerFilter("followup") : null}));
     learningWrap.appendChild(kpiRow1);
     const kpiRow2 = el('<div class="kpi-cardgrid cols-3" style="margin-top:var(--sp-4);"></div>');
-    kpiRow2.appendChild(block(fmtNum(thisWeek.length)+"人", "今週学習", {icon:"calendar", color:"purple", card:true, waveSubtle:true}));
+    kpiRow2.appendChild(block(fmtNum(thisWeek.length)+"人", "今週学習", {icon:"calendar", color:"purple", card:true, waveSubtle:true, onclick: thisWeek.length>0 ? ()=>goToLearnerFilter("thisweek") : null}));
     kpiRow2.appendChild(block(avgProgress+"%", "平均進捗", {icon:"trendingUp", color:"blue", card:true, waveSubtle:true}));
     kpiRow2.appendChild(block(avgRate+"%", "平均正答率", {icon:"target", color:"green", card:true, waveSubtle:true}));
     learningWrap.appendChild(kpiRow2);
@@ -2898,6 +2906,8 @@ function buildSummaryContent(wrap, tab){
   else if(dashState.learningSubTab === "learners"){
     const filterDefs = [
       { id:"all", label:"すべて" },
+      { id:"studying", label:"学習中" },
+      { id:"thisweek", label:"今週学習" },
       { id:"notstudied", label:"未学習" },
       { id:"stale", label:"7日以上未学習" },
       { id:"lowprogress", label:"進捗が低い" },
@@ -4541,6 +4551,8 @@ function renderLearningLearnersOnly(){
 
   const filterId = dashState.learningLearnerFilter;
   if(filterId === "notstudied") learners = learners.filter(l=>l.questionsStudied===0);
+  else if(filterId === "studying") learners = learners.filter(l=>l.questionsStudied>0);
+  else if(filterId === "thisweek") learners = learners.filter(l=>l.lastSeen && (Date.now()-new Date(l.lastSeen).getTime()) <= 7*86400000);
   else if(filterId === "stale") learners = learners.filter(l=>!l.lastSeen || (Date.now()-new Date(l.lastSeen).getTime())/86400000 >= 7);
   else if(filterId === "lowprogress") learners = learners.filter(l=>l.questionsStudied>0 && l.progressPct < 20);
   else if(filterId === "lowrate") learners = learners.filter(l=>l.n>0 && l.rate < 40);
