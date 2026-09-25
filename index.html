@@ -325,7 +325,12 @@ const T = {
   recentTitle:   ["最近の学習","Recent Learning","Belajar Terkini","Kamakailang Pag-aaral","การเรียนล่าสุด"],
   recentNoData:  ["まだ学習記録がありません。","No learning records yet.","Belum ada catatan belajar.","Wala pang learning records.","ยังไม่มีประวัติการเรียน"],
   todayRecommend:["今日のおすすめ","Today's Recommendation","Rekomendasi Hari Ini","Rekomendasyon Ngayon","แนะนำสำหรับวันนี้"],
-  ctaContinue:   ["学習を続ける","Continue Learning","Lanjutkan Belajar","Ipagpatuloy ang Pag-aaral","เรียนต่อ"],
+  ctaContinue:   ["前回の続き","Continue where you left off","Lanjutkan yang terakhir","Ituloy ang huling pinag-aralan","เรียนต่อจากครั้งที่แล้ว"],
+  ctaStart:      ["学習をはじめる","Start Learning","Mulai Belajar","Simulan ang Pag-aaral","เริ่มเรียน"],
+  ctaWeak:       ["苦手分野を勉強する","Study your weak area","Pelajari bagian yang lemah","Pag-aralan ang mahinang bahagi","เรียนหมวดที่ยังไม่ถนัด"],
+  studyTitle:    ["分野を選んで学習する","Choose a subject to study","Pilih subjek untuk belajar","Pumili ng subject na pag-aaralan","เลือกหมวดที่จะเรียน"],
+  practiceGo:    ["練習する ›","Practice ›","Latihan ›","Practice ›","ฝึกซ้อม ›"],
+  recordTitle:   ["学習の記録","Your Learning Record","Catatan Belajar","Talaan ng Pag-aaral","บันทึกการเรียน"],
   notStartedYet: ["まだ学習を始めていません","Haven't started studying yet","Belum mulai belajar","Hindi pa nagsisimulang mag-aral","ยังไม่ได้เริ่มเรียน"],
   greatSubj:     ["得意","Strong","Kuat","Malakas","ถนัด"],
   goodSubj:      ["順調","Good","Bagus","Maganda","ดี"],
@@ -5442,6 +5447,23 @@ function weakestSubject(){
   return worst;
 }
 
+// ---- 前回の続き: 最後に回答した問題の科目・カテゴリを返す(記録が無ければnull) ----
+// 端末に保存した回答記録(d.q[問題ID].t = 最終回答時刻)から探す。今のレベル(N4/N3)の記録だけが対象。
+function lastStudied(){
+  const d = load();
+  // 今のレベルに存在する問題だけを対象にする(削除・差し替えされた問題の記録は無視する)
+  const idToSubj = {};
+  ["moji","bunpo","dokkai","choukai"].forEach(k=>{
+    (ALL_DATA[k] || []).forEach(q=>{ idToSubj[q.id] = { subj: k, cat: q.c }; });
+  });
+  let best = null, lastT = 0;
+  Object.keys(d.q || {}).forEach(qid=>{
+    const t = d.q[qid] && d.q[qid].t;
+    if(t && t > lastT && idToSubj[qid]){ lastT = t; best = idToSubj[qid]; }
+  });
+  return best;
+}
+
 // ---- ホーム到達フェーズ ----
 function currentPhase(){
   const s = overallStats();
@@ -5845,6 +5867,112 @@ function renderHomeView(){
     wrap.appendChild(idWrap);
   }
 
+  // ---- 1. 分野を選んで学習する(ホームの入口。開いてすぐ目に入る位置に置く) ----
+  const sec3 = el('<div class="jsection first"></div>');
+  const lbl3 = el('<div class="jsectiontitle"></div>'); lbl3.textContent = tr(T.studyTitle);
+  sec3.appendChild(lbl3);
+
+
+  const subjIcons = {
+    moji: ICON_GPT.vocabulary,
+    bunpo: ICON_GPT.grammar,
+    dokkai: ICON_GPT.reading,
+    choukai: ICON_GPT.listening
+  };
+  const sec3grid = el('<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>');
+  ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
+    const r = subjRate(subj);
+    const rate = r.rate === null ? 0 : r.rate;
+    const card = el('<div class="jsubjcard"></div>');
+    card.style.cssText = "background:var(--card-bg,#fff);border:1px solid var(--border,#e1e0d9);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;";
+    const iconBox = document.createElement("div");
+    iconBox.style.cssText = "width:40px;height:40px;margin:0 auto;";
+    iconBox.innerHTML = subjIcons[subj];
+    const iconSvg = iconBox.querySelector("svg");
+    if(iconSvg){ iconSvg.setAttribute("width","40"); iconSvg.setAttribute("height","40"); }
+    const nameEl = document.createElement("div");
+    nameEl.style.cssText = "font-size:13.5px;font-weight:700;margin-top:8px;";
+    nameEl.textContent = tr(SUBJECT[subj]);
+    const rateEl = document.createElement("div");
+    rateEl.style.cssText = "font-size:11.5px;color:var(--sub,#8a8578);margin-top:2px;";
+    rateEl.textContent = r.rate === null ? tr(["未学習","Not started","Belum mulai","Hindi pa nasisimulan","ยังไม่ได้เรียน"]) : rate + "%";
+    const goEl = document.createElement("div");
+    goEl.style.cssText = "font-size:11.5px;font-weight:700;color:var(--primary,#1a3a6b);margin-top:6px;";
+    goEl.textContent = tr(T.practiceGo);
+    card.appendChild(iconBox); card.appendChild(nameEl); card.appendChild(rateEl); card.appendChild(goEl);
+    card.onclick = ()=>{ ST.mode="practice"; ST.subject=subj; ST.selectedCats=[]; ST.view="select"; render(); };
+    sec3grid.appendChild(card);
+  });
+  sec3.appendChild(sec3grid);
+  wrap.appendChild(sec3);
+
+  // ---- 2. 前回の続き / 苦手分野を勉強する(学習記録があるときだけ表示) ----
+  // 以前は大きな「学習を続ける」ボタン1つだけが目立ち、そこからしか入れないと誤解されやすかった。
+  // 入口は上の4科目カードとし、ここは近道として控えめな2つのボタンにする。
+  const last = lastStudied();
+  const chevron = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+  const shortcutBtn = (title, sub, onclick)=>{
+    const b = document.createElement("button");
+    b.style.cssText = "display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card-bg,#fff);border:1px solid var(--border,#e1e0d9);border-radius:12px;padding:12px 14px;margin-top:10px;cursor:pointer;color:inherit;font:inherit;";
+    const body = document.createElement("div");
+    body.style.flex = "1";
+    const t1 = document.createElement("div");
+    t1.style.cssText = "font-size:13.5px;font-weight:700;";
+    t1.textContent = title;
+    const t2 = document.createElement("div");
+    t2.style.cssText = "font-size:11.5px;color:var(--sub,#8a8578);margin-top:2px;";
+    t2.textContent = sub;
+    body.appendChild(t1); body.appendChild(t2);
+    const arrow = document.createElement("div");
+    arrow.style.cssText = "color:var(--sub,#8a8578);display:flex;";
+    arrow.innerHTML = chevron;
+    b.appendChild(body); b.appendChild(arrow);
+    b.onclick = onclick;
+    return b;
+  };
+  if(last){
+    const lastSub = tr(SUBJECT[last.subj]) + (last.cat && CAT[last.cat] ? "・" + tr(CAT[last.cat]) : "");
+    wrap.appendChild(shortcutBtn(tr(T.ctaContinue), lastSub, ()=>{ ST.mode="practice"; ST.subject=last.subj; ST.selectedCats = last.cat ? [last.cat] : []; ST.view="select"; render(); }));
+  }
+  if(weakest){
+    const weakSub = tr(SUBJECT[weakest.subj]) + "（" + weakest.rate + "%）";
+    wrap.appendChild(shortcutBtn(tr(T.ctaWeak), weakSub, ()=>{ ST.mode="practice"; ST.subject=weakest.subj; ST.selectedCats=[]; ST.view="select"; render(); }));
+  }
+
+  // ---- 生活情報への入り口(N4/N3のレベルと関係なく、いつでも見られる) ----
+  wrap.appendChild(el('<hr class="jdivider" style="margin:20px 0 14px;">'));
+  const lifeNote = document.createElement("div");
+  lifeNote.style.cssText = "font-size:11px;color:var(--sub,#8a8578);margin-bottom:4px;";
+  lifeNote.textContent = tr(["N4・N3に関係なく、いつでも学習できます","Available anytime, regardless of N4/N3","Tersedia kapan saja, terlepas dari N4/N3","Available anumang oras, kahit N4/N3","ใช้ได้ตลอดเวลา ไม่ว่าจะเป็น N4 หรือ N3"]);
+  wrap.appendChild(lifeNote);
+  const lifeCard = el('<div class="card" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff7ed,#fef3e2);border-color:#f5deb3;"></div>');
+  const lifeIcon = document.createElement("div");
+  lifeIcon.style.cssText = "width:32px;height:32px;flex-shrink:0;";
+  lifeIcon.innerHTML = '<svg viewBox="0 0 128 128" width="32" height="32"><circle cx="64" cy="40" r="20" fill="#b8722c"/><path fill="#b8722c" d="M25 108C27 82 42 68 64 68C86 68 101 82 103 108H25Z"/></svg>';
+  lifeCard.appendChild(lifeIcon);
+  const lifeBody = document.createElement("div");
+  lifeBody.style.flex = "1";
+  const lifeTitle = document.createElement("div");
+  lifeTitle.style.cssText = "font-size:13.5px;font-weight:700;";
+  lifeTitle.textContent = tr(["日本での生活について学ぶ","Learn about life in Japan","Belajar tentang kehidupan di Jepang","Alamin ang tungkol sa buhay sa Japan","เรียนรู้เกี่ยวกับการใช้ชีวิตในญี่ปุ่น"]);
+  const lifeSub = document.createElement("div");
+  lifeSub.style.cssText = "font-size:11px;color:var(--sub,#8a8578);margin-top:1px;";
+  lifeSub.textContent = tr(["ごみ出し・交通ルール・宿舎マナーなど","Trash, traffic rules, dorm manners, etc.","Sampah, aturan lalu lintas, tata krama asrama, dll.","Basura, traffic rules, dorm manners, atbp.","ขยะ กฎจราจร มารยาทหอพัก และอื่นๆ"]);
+  lifeBody.appendChild(lifeTitle); lifeBody.appendChild(lifeSub);
+  lifeCard.appendChild(lifeBody);
+  const lifeArrow = document.createElement("div");
+  lifeArrow.textContent = "›"; lifeArrow.style.cssText = "color:#b8722c;font-size:18px;";
+  lifeCard.appendChild(lifeArrow);
+  lifeCard.onclick = ()=>{ ST.view = "lifeHome"; render(); };
+  wrap.appendChild(lifeCard);
+
+  wrap.appendChild(el('<hr class="jdivider">'));
+
+  // ---- 学習の記録(ダッシュボード)。入口より下に置く ----
+  const recHead = el('<div class="jsectiontitle" style="margin-top:4px;"></div>');
+  recHead.textContent = tr(T.recordTitle);
+  wrap.appendChild(recHead);
+
   let statusText, statusAttn;
   if(notStarted){
     statusText = tr(T.notStartedYet); statusAttn = false;
@@ -5858,8 +5986,8 @@ function renderHomeView(){
     statusText = tr(T.statusVeryBad); statusAttn = true;
   }
 
-  // ---- 1. N4学習到達度 ----
-  const sec1 = el('<div class="jsection first"></div>');
+  // ---- 3. 学習到達度 ----
+  const sec1 = el('<div class="jsection"></div>');
   const lbl1 = el('<div class="jlabel"></div>'); lbl1.textContent = tr(T.achieveTitle);
   sec1.appendChild(lbl1);
   const bignum = document.createElement("div");
@@ -5883,7 +6011,7 @@ function renderHomeView(){
   wrap.appendChild(sec1);
   wrap.appendChild(el('<hr class="jdivider">'));
 
-  // ---- 2. 学習状況サマリー ----
+  // ---- 4. 学習状況サマリー ----
   const sec2 = el('<div class="jsummary"></div>');
   const summaryIcons = {
     studied: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
@@ -5914,94 +6042,6 @@ function renderHomeView(){
   sec2.appendChild(jcell(summaryIcons.rate, s.studied>0 ? s.rate+"%" : "—", tr(T.overallRate), jaOnlyExtra));
   sec2.appendChild(jcell(summaryIcons.time, weekly.n+tr(["問","q","soal","tanong","ข้อ"]), tr(T.weeklyCount)));
   wrap.appendChild(sec2);
-
-  // ---- CTA: 学習を続ける ----
-  const ctaBtn = document.createElement("button");
-  ctaBtn.className = "jcta";
-  const ctaBookIcon = ICON_GPT.continue.replace("<svg ", '<svg width="22" height="22" ');
-  const ctaChevIcon = '<svg class="jctachev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
-  const ctaTarget = weakest ? weakest.subj : null;
-  if(ctaTarget){
-    ctaBtn.innerHTML = ctaBookIcon + '<span class="jctatext">' + tr(T.ctaContinue) + '<span class="jctasub">' + tr(SUBJECT[ctaTarget]) + '</span></span>' + ctaChevIcon;
-    ctaBtn.onclick = ()=>{ ST.mode="practice"; ST.subject=ctaTarget; ST.selectedCats=[]; ST.view="select"; render(); };
-  } else {
-    ctaBtn.innerHTML = ctaBookIcon + '<span class="jctatext">' + tr(T.ctaContinue) + '<span class="jctasub">' + tr(T.chooseSubject) + '</span></span>' + ctaChevIcon;
-    ctaBtn.onclick = ()=>{ ST.view="practice"; render(); };
-  }
-  wrap.appendChild(ctaBtn);
-
-  if(weakest){
-    const hint = el('<div class="jhint"></div>');
-    const recKey = weakest.subj==="moji"?T.recommendMoji : weakest.subj==="bunpo"?T.recommendBunpo : weakest.subj==="dokkai"?T.recommendDokkai : T.recommendChoukai;
-    hint.textContent = tr(SUBJECT[weakest.subj]) + "（" + weakest.rate + "%）　" + tr(recKey);
-    wrap.appendChild(hint);
-  }
-
-  wrap.appendChild(el('<hr class="jdivider" style="margin-top:28px;">'));
-
-  // ---- 3. 分野別実力 ----
-  const sec3 = el('<div class="jsection"></div>');
-  const lbl3 = el('<div class="jsectiontitle"></div>'); lbl3.textContent = tr(T.subjectStrength);
-  sec3.appendChild(lbl3);
-
-
-  const subjIcons = {
-    moji: ICON_GPT.vocabulary,
-    bunpo: ICON_GPT.grammar,
-    dokkai: ICON_GPT.reading,
-    choukai: ICON_GPT.listening
-  };
-  const sec3grid = el('<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>');
-  ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
-    const r = subjRate(subj);
-    const rate = r.rate === null ? 0 : r.rate;
-    const card = el('<div class="jsubjcard"></div>');
-    card.style.cssText = "background:var(--card-bg,#fff);border:1px solid var(--border,#e1e0d9);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;";
-    const iconBox = document.createElement("div");
-    iconBox.style.cssText = "width:40px;height:40px;margin:0 auto;";
-    iconBox.innerHTML = subjIcons[subj];
-    const iconSvg = iconBox.querySelector("svg");
-    if(iconSvg){ iconSvg.setAttribute("width","40"); iconSvg.setAttribute("height","40"); }
-    const nameEl = document.createElement("div");
-    nameEl.style.cssText = "font-size:13.5px;font-weight:700;margin-top:8px;";
-    nameEl.textContent = tr(SUBJECT[subj]);
-    const rateEl = document.createElement("div");
-    rateEl.style.cssText = "font-size:11.5px;color:var(--sub,#8a8578);margin-top:2px;";
-    rateEl.textContent = r.rate === null ? tr(["未学習","Not started","Belum mulai","Hindi pa nasisimulan","ยังไม่ได้เรียน"]) : rate + "%";
-    card.appendChild(iconBox); card.appendChild(nameEl); card.appendChild(rateEl);
-    card.onclick = ()=>{ ST.mode="practice"; ST.subject=subj; ST.selectedCats=[]; ST.view="select"; render(); };
-    sec3grid.appendChild(card);
-  });
-  sec3.appendChild(sec3grid);
-  wrap.appendChild(sec3);
-
-  // ---- 生活情報への入り口(N4/N3のレベルと関係なく、いつでも見られる) ----
-  wrap.appendChild(el('<hr class="jdivider">'));
-  const lifeNote = document.createElement("div");
-  lifeNote.style.cssText = "font-size:11px;color:var(--sub,#8a8578);margin-bottom:4px;";
-  lifeNote.textContent = tr(["N4・N3に関係なく、いつでも学習できます","Available anytime, regardless of N4/N3","Tersedia kapan saja, terlepas dari N4/N3","Available anumang oras, kahit N4/N3","ใช้ได้ตลอดเวลา ไม่ว่าจะเป็น N4 หรือ N3"]);
-  wrap.appendChild(lifeNote);
-  const lifeCard = el('<div class="card" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff7ed,#fef3e2);border-color:#f5deb3;"></div>');
-  const lifeIcon = document.createElement("div");
-  lifeIcon.style.cssText = "width:32px;height:32px;flex-shrink:0;";
-  lifeIcon.innerHTML = '<svg viewBox="0 0 128 128" width="32" height="32"><circle cx="64" cy="40" r="20" fill="#b8722c"/><path fill="#b8722c" d="M25 108C27 82 42 68 64 68C86 68 101 82 103 108H25Z"/></svg>';
-  lifeCard.appendChild(lifeIcon);
-  const lifeBody = document.createElement("div");
-  lifeBody.style.flex = "1";
-  const lifeTitle = document.createElement("div");
-  lifeTitle.style.cssText = "font-size:13.5px;font-weight:700;";
-  lifeTitle.textContent = tr(["日本での生活について学ぶ","Learn about life in Japan","Belajar tentang kehidupan di Jepang","Alamin ang tungkol sa buhay sa Japan","เรียนรู้เกี่ยวกับการใช้ชีวิตในญี่ปุ่น"]);
-  const lifeSub = document.createElement("div");
-  lifeSub.style.cssText = "font-size:11px;color:var(--sub,#8a8578);margin-top:1px;";
-  lifeSub.textContent = tr(["ごみ出し・交通ルール・宿舎マナーなど","Trash, traffic rules, dorm manners, etc.","Sampah, aturan lalu lintas, tata krama asrama, dll.","Basura, traffic rules, dorm manners, atbp.","ขยะ กฎจราจร มารยาทหอพัก และอื่นๆ"]);
-  lifeBody.appendChild(lifeTitle); lifeBody.appendChild(lifeSub);
-  lifeCard.appendChild(lifeBody);
-  const lifeArrow = document.createElement("div");
-  lifeArrow.textContent = "›"; lifeArrow.style.cssText = "color:#b8722c;font-size:18px;";
-  lifeCard.appendChild(lifeArrow);
-  lifeCard.onclick = ()=>{ ST.view = "lifeHome"; render(); };
-  wrap.appendChild(lifeCard);
-
   wrap.appendChild(el('<hr class="jdivider">'));
 
   // ---- 4. 弱点分析 ----
