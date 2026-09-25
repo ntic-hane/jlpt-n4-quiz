@@ -2053,13 +2053,13 @@ async function loadDashboardData(){
   render();
   try{
     const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods] = await Promise.all([
-      fetchAll("progress"),
-      fetchAll("exam_log", "select=*&order=taken_at.desc&limit=500"),
-      fetchAll("learner_activity"),
+      fetchAllPaged("progress"),
+      fetchAllPaged("exam_log", "select=*&order=taken_at.desc"),
+      fetchAllPaged("learner_activity"),
       fetchAllPaged("companies", "select=*&order=company_id").catch(()=>[]),
       fetchAllPaged("roster", "select=*&order=company_id,learner_id").catch(()=>[]),
       fetchAllPaged("students", "select=*&order=id").catch(()=>[]),
-      fetchAll("daily_summary", "select=*&order=summary_date.desc&limit=2000").catch(()=>[]),
+      fetchAllPaged("daily_summary", "select=*&order=summary_date.desc").catch(()=>[]),
       fetchAllPaged("workplaces", "select=*&order=company_id").catch(()=>[]),
       fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[]),
       fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[])
@@ -2088,13 +2088,13 @@ async function loadDashboardData(){
 async function pullRefreshDashboardData(){
   try{
     const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods] = await Promise.all([
-      fetchAll("progress"),
-      fetchAll("exam_log", "select=*&order=taken_at.desc&limit=500"),
-      fetchAll("learner_activity"),
+      fetchAllPaged("progress"),
+      fetchAllPaged("exam_log", "select=*&order=taken_at.desc"),
+      fetchAllPaged("learner_activity"),
       fetchAllPaged("companies", "select=*&order=company_id").catch(()=>[]),
       fetchAllPaged("roster", "select=*&order=company_id,learner_id").catch(()=>[]),
       fetchAllPaged("students", "select=*&order=id").catch(()=>[]),
-      fetchAll("daily_summary", "select=*&order=summary_date.desc&limit=2000").catch(()=>[]),
+      fetchAllPaged("daily_summary", "select=*&order=summary_date.desc").catch(()=>[]),
       fetchAllPaged("workplaces", "select=*&order=company_id").catch(()=>[]),
       fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[]),
       fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[])
