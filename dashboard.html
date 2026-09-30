@@ -3002,7 +3002,7 @@ function buildSummaryContent(wrap, tab){
         if(st && st.n > 0){ n += st.n; c += st.c; participants += 1; }
       });
       const subj = Object.keys(QID_CATEGORY_MAP).map(k=>QID_CATEGORY_MAP[k]).find(m=>m.cat===cat)?.subj;
-      return { cat, label: CAT_LABEL[cat], subj, rate: n>0 ? Math.round(c/n*100) : null,
+      return { cat, label: CAT_LABEL[cat], subj, n, rate: n>0 ? Math.round(c/n*100) : null,
         participationRate: totalForRate>0 ? Math.round(participants/totalForRate*1000)/10 : 0 };
     }).sort((a,b)=>{
       if(a.rate === null && b.rate === null) return 0;
@@ -3011,8 +3011,13 @@ function buildSummaryContent(wrap, tab){
       return a.rate - b.rate;
     });
 
-    // データがある(rate!==null)カテゴリのうち、最も苦手(先頭)・最も得意(末尾)を1つずつハイライトする。
-    const catWithData = catRanking.filter(d=>d.rate !== null);
+    // 「最も得意」「最も苦手」は、企業全体の解答数が少ないカテゴリだと
+    // (例:全体で2回しか解かれておらず、たまたま2回とも正解/不正解だった等)
+    // 数字が安定せず、実態と違うカテゴリが選ばれてしまう。
+    // そのため、企業全体で合計10回以上解答されたカテゴリだけを対象にする。
+    // (苦手ランキング本体には、この条件を適用しない。あくまで「代表1件」を選ぶ場面だけの絞り込み)
+    const MIN_N_FOR_HIGHLIGHT = 10;
+    const catWithData = catRanking.filter(d=>d.rate !== null && d.n >= MIN_N_FOR_HIGHLIGHT);
     if(catWithData.length > 0){
       const bestWorstGrid = el('<div class="dash-2col"></div>');
       const worst = catWithData[0];
@@ -3075,7 +3080,9 @@ function buildSummaryContent(wrap, tab){
       if(!qAgg[key]) qAgg[key] = { n:0, c:0, level, qid: p.question_id };
       qAgg[key].n += p.n_count; qAgg[key].c += p.c_count;
     });
-    const worstCats = catRanking.filter(d=>d.rate !== null).slice(0, 3);
+    // 「よくある間違いの例」も同じ理由で、最低解答数の条件をかけたカテゴリから選ぶ
+    // (そもそも各問題側にもn>=3の条件があるが、カテゴリの選定自体にもかけておく)
+    const worstCats = catRanking.filter(d=>d.rate !== null && d.n >= MIN_N_FOR_HIGHLIGHT).slice(0, 3);
     if(worstCats.length > 0){
       const exCard = el('<div class="card" style="margin-top:var(--sp-6);"></div>');
       const exTitle = el('<div class="card-title"></div>'); exTitle.textContent = "よくある間違いの例（苦手な分野トップ3）";
