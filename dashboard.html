@@ -449,6 +449,25 @@ button.danger:hover{background:#faf3f0;}
 .missq-q{font-size:13.5px;font-weight:600;color:var(--text-main);line-height:1.6;margin-bottom:6px;}
 .missq-a{font-size:12.5px;color:var(--green,#3d7a52);font-weight:700;margin-bottom:4px;}
 .missq-your{font-size:12.5px;color:#c0392b;font-weight:700;margin-bottom:4px;}
+.hist-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.hist-table th{text-align:left;color:var(--text-sub);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);}
+.hist-table td{padding:7px 8px;border-bottom:1px solid var(--line);}
+.mode-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;}
+.mode-badge.mode-practice{background:#e8f3ec;color:#2a7a4a;}
+.mode-badge.mode-mock{background:#e9f0fb;color:#2a5da8;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-weekday{text-align:center;font-size:11px;color:var(--text-sub);font-weight:700;padding:4px 0;}
+.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;background:var(--bg-alt,#f7f6f2);}
+.cal-cell.cal-empty{background:transparent;}
+.cal-daynum{font-size:11px;color:var(--text-sub);}
+.cal-dot{width:8px;height:8px;border-radius:50%;margin-top:2px;display:inline-block;}
+.cal-dot-practice{background:#3d9a5f;}
+.cal-dot-mock{background:#3a6bc2;}
+.cal-dot-both{background:linear-gradient(90deg,#3d9a5f 50%,#3a6bc2 50%);}
+.cal-dot-unknown{background:#bbb;}
+.cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--text-sub);align-items:center;}
+.cal-legend span{display:flex;align-items:center;gap:4px;}
+.cal-legend .cal-dot{margin-top:0;}
 .missq-e{font-size:12.5px;color:var(--text-sub);line-height:1.6;}
 .missq-more{margin-top:var(--sp-2);background:none;border:none;color:var(--blue);font-weight:700;font-size:13px;cursor:pointer;padding:6px 0;}
 .missq-more:hover{text-decoration:underline;}
@@ -675,6 +694,8 @@ function openKarte(company_id, learner_id){
   dashState.selectedLearner = { company_id, learner_id };
   dashState.karteLevel = "n4"; // 別の学習者のカルテを開くたびN4表示にリセットする
   dashState.karteMissQShowCount = { moji:5, bunpo:5, dokkai:5, choukai:5 }; // 「よく間違えている問題」の表示件数もリセットする
+  dashState.karteHistShowCount = 10; // 学習履歴の表示件数もリセットする
+  dashState.karteCalendarDate = new Date(); // 学習カレンダーの表示月も今月にリセットする
   history.pushState({ view: "karte", company_id, learner_id }, "");
   render();  // 先頭へのスクロールはrender()側で一律に行う
 }
@@ -1887,6 +1908,12 @@ function buildLearnerSummary(){
     if(!map[key].dailyRows) map[key].dailyRows = [];
     map[key].dailyRows.push(d);
   });
+  (dashState.studySessions || []).forEach(s=>{
+    const key = s.company_id + "::" + s.learner_id;
+    if(!map[key]) map[key] = { company_id:s.company_id, learner_id:s.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{}, catStats:{} };
+    if(!map[key].studySessions) map[key].studySessions = [];
+    map[key].studySessions.push(s);
+  });
 
   Object.keys(map).forEach(key=>{
     const l = map[key];
@@ -2056,6 +2083,53 @@ function computeStudyStreakDays(l){
   return streak;
 }
 
+// 学習セッション集計(study_sessionsベース)。セッション数・累計学習時間(秒)を返す。
+// study_sessionsは本機能の実装日以降しか記録がないため、それ以前の学習実績は含まれない。
+function computeSessionStats(l){
+  const rows = l.studySessions || [];
+  const count = rows.length;
+  const totalSeconds = rows.reduce((s,r)=> s + (r.duration_seconds || 0), 0);
+  return { count, totalSeconds };
+}
+// 秒数を「1時間12分」「45分」のような表示用文字列にする。
+function formatDuration(totalSeconds){
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.round((totalSeconds % 3600) / 60);
+  if(h > 0) return h + "時間" + m + "分";
+  return m + "分";
+}
+// 学習カレンダー用データ。year/monthで指定した月の日ごとに、その日の学習種別を返す。
+// study_sessions(セッション記録)がある日は種別(練習/模試/両方)が分かる。
+// それより前は、日次集計(daily_summary)しか手がかりが無く「学習あり(種別不明)」までしか分からない。
+function buildCalendarMonthData(l, year, month){
+  const sessionsByDate = {};
+  (l.studySessions || []).forEach(s=>{
+    const d = new Date(s.started_at);
+    if(d.getFullYear() !== year || d.getMonth() !== month) return;
+    const key = d.getDate();
+    if(!sessionsByDate[key]) sessionsByDate[key] = { practice:false, mock:false };
+    if(s.mode === "mock") sessionsByDate[key].mock = true; else sessionsByDate[key].practice = true;
+  });
+  const dailyDates = new Set();
+  (l.dailyRows || []).forEach(d=>{
+    const dt = new Date(d.summary_date);
+    if(dt.getFullYear() !== year || dt.getMonth() !== month) return;
+    dailyDates.add(dt.getDate());
+  });
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const out = [];
+  for(let day=1; day<=daysInMonth; day++){
+    if(sessionsByDate[day]){
+      out.push({ day, kind: (sessionsByDate[day].practice && sessionsByDate[day].mock) ? "both" : (sessionsByDate[day].mock ? "mock" : "practice") });
+    } else if(dailyDates.has(day)){
+      out.push({ day, kind: "unknown" });
+    } else {
+      out.push({ day, kind: "none" });
+    }
+  }
+  return out;
+}
+
 // 模試(exam_log)関連の詳細指標: 科目別の平均点・受験回数
 function computeExamDetailStats(exams){
   const byGroup = { moji: {n:0,total:0,attempts:0}, bunpo: {n:0,total:0,attempts:0}, choukai: {n:0,total:0,attempts:0} };
@@ -2078,7 +2152,7 @@ async function loadDashboardData(){
   dashState.loading = true; dashState.error = null;
   render();
   try{
-    const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods] = await Promise.all([
+    const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods, studySessions] = await Promise.all([
       fetchAllPaged("progress"),
       fetchAllPaged("exam_log", "select=*&order=taken_at.desc"),
       fetchAllPaged("learner_activity"),
@@ -2088,7 +2162,8 @@ async function loadDashboardData(){
       fetchAllPaged("daily_summary", "select=*&order=summary_date.desc").catch(()=>[]),
       fetchAllPaged("workplaces", "select=*&order=company_id").catch(()=>[]),
       fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[]),
-      fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[])
+      fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[]),
+      fetchAllPaged("study_sessions", "select=*&order=started_at.desc").catch(()=>[])
     ]);
     dashState.progress = progress;
     dashState.exams = exams;
@@ -2100,6 +2175,7 @@ async function loadDashboardData(){
     dashState.workplaces = workplaces;
     dashState.studentWorkplaces = studentWorkplaces;
     dashState.studentPeriods = studentPeriods;
+    dashState.studySessions = studySessions;
     dashState.loading = false;
   }catch(e){
     dashState.loading = false;
@@ -2113,7 +2189,7 @@ async function loadDashboardData(){
 // 裏側で最新データを取りに行き、届いたら差し替える)。
 async function pullRefreshDashboardData(){
   try{
-    const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods] = await Promise.all([
+    const [progress, exams, activity, companies, roster, students, dailySummary, workplaces, studentWorkplaces, studentPeriods, studySessions] = await Promise.all([
       fetchAllPaged("progress"),
       fetchAllPaged("exam_log", "select=*&order=taken_at.desc"),
       fetchAllPaged("learner_activity"),
@@ -2123,7 +2199,8 @@ async function pullRefreshDashboardData(){
       fetchAllPaged("daily_summary", "select=*&order=summary_date.desc").catch(()=>[]),
       fetchAllPaged("workplaces", "select=*&order=company_id").catch(()=>[]),
       fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[]),
-      fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[])
+      fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[]),
+      fetchAllPaged("study_sessions", "select=*&order=started_at.desc").catch(()=>[])
     ]);
     dashState.progress = progress;
     dashState.exams = exams;
@@ -2135,6 +2212,7 @@ async function pullRefreshDashboardData(){
     dashState.workplaces = workplaces;
     dashState.studentWorkplaces = studentWorkplaces;
     dashState.studentPeriods = studentPeriods;
+    dashState.studySessions = studySessions;
   }catch(e){
     // プルリフレッシュの失敗は画面を壊さず、静かに諦める(既存表示はそのまま)
   }
@@ -3844,7 +3922,16 @@ function renderLearnerKarte(){
   const jaOnlyExtra = (l.translationUsageRate !== null && l.translationUsageRate > 0 && l.japaneseOnlyRate !== null) ? "日本語のみ " + l.japaneseOnlyRate + "%" : null;
   stats.appendChild(statBox(rate + "%", "通算正答率", jaOnlyExtra));
   stats.appendChild(statBox(l.lastSeen ? relTime(l.lastSeen) : "-", "最終学習"));
+  const sessionStats = computeSessionStats(l);
+  stats.appendChild(statBox(String(sessionStats.count), "学習セッション数"));
+  stats.appendChild(statBox(sessionStats.totalSeconds > 0 ? formatDuration(sessionStats.totalSeconds) : "-", "累計学習時間"));
+  const streakDays = computeStudyStreakDays(l);
+  stats.appendChild(statBox(streakDays + "日", "学習継続日数", streakDays > 0 ? "直近30日で" + (l.dailyRows||[]).filter(d=>{ const diff=(new Date()-new Date(d.summary_date))/86400000; return diff<=30; }).map(d=>d.summary_date).filter((v,i,a)=>a.indexOf(v)===i).length + "日学習" : null));
   headCard.appendChild(stats);
+  if(sessionStats.count === 0){
+    const sessNote = el('<div style="font-size:11px;color:var(--text-sub);margin-top:4px;">※学習セッション数・累計学習時間は本機能の追加日以降の記録のみが対象です。</div>');
+    headCard.appendChild(sessNote);
+  }
   headCard.appendChild(el('<div style="font-size:11px;color:var(--text-sub);margin-top:6px;">↑ 上記はN4の学習状況です。N3は下の「分野別正答率」カードでレベルを切り替えて確認できます。</div>'));
 
   // ---- 所属事業所（NTIC管理者のみ変更可能） ----
@@ -4160,6 +4247,103 @@ function renderLearnerKarte(){
     });
   }
   wrap.appendChild(examCard);
+
+  // ---- 学習履歴カード(study_sessionsベース。1回の練習・模試セッションごとの記録) ----
+  const histCard2 = el('<div class="card"></div>');
+  const histTitle2 = document.createElement("div");
+  histTitle2.className = "card-title";
+  histTitle2.textContent = "学習履歴";
+  histCard2.appendChild(histTitle2);
+  const mySessions = (l.studySessions || []).slice().sort((a,b)=> new Date(b.started_at) - new Date(a.started_at));
+  if(mySessions.length === 0){
+    const histNote = el('<div class="loading">学習セッションの記録はまだありません（本機能の追加日以降に記録されます）。</div>');
+    histCard2.appendChild(histNote);
+  } else {
+    const histTable = el('<table class="hist-table"></table>');
+    const thead = el('<thead><tr><th>日付</th><th>モード</th><th>分野</th><th>問題数</th><th>正答率</th><th>学習時間</th></tr></thead>');
+    histTable.appendChild(thead);
+    const tbody = document.createElement("tbody");
+    mySessions.slice(0, dashState.karteHistShowCount || 10).forEach(s=>{
+      const tr = document.createElement("tr");
+      const d = new Date(s.started_at);
+      const dateStr = d.getFullYear()+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+      const modeLabel = s.mode === "mock" ? "模試" : "練習";
+      const subjLabel = SUBJECT_LABEL[s.subject] || (s.subject === "bunpo_dokkai" ? "文法・読解" : s.subject || "-");
+      const pct = s.question_count > 0 ? Math.round(s.correct_count / s.question_count * 100) : 0;
+      tr.innerHTML = "<td>"+dateStr+"</td><td><span class='mode-badge mode-"+s.mode+"'>"+modeLabel+"</span></td><td>"+subjLabel+"</td>"+
+        "<td>"+s.question_count+"問</td><td>"+pct+"%</td><td>"+formatDuration(s.duration_seconds)+"</td>";
+      tbody.appendChild(tr);
+    });
+    histTable.appendChild(tbody);
+    histCard2.appendChild(histTable);
+    if(mySessions.length > (dashState.karteHistShowCount || 10)){
+      const histMoreBtn = document.createElement("button");
+      histMoreBtn.className = "missq-more";
+      histMoreBtn.textContent = "もっと見る（あと" + (mySessions.length - (dashState.karteHistShowCount || 10)) + "件）";
+      histMoreBtn.onclick = ()=>{ dashState.karteHistShowCount = (dashState.karteHistShowCount || 10) + 10; render(); };
+      histCard2.appendChild(histMoreBtn);
+    }
+  }
+  wrap.appendChild(histCard2);
+
+  // ---- 学習カレンダーカード ----
+  const calCard = el('<div class="card"></div>');
+  const calTitleRow = el('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"></div>');
+  const calTitle = document.createElement("div");
+  calTitle.className = "card-title";
+  calTitle.style.marginBottom = "0";
+  calTitle.textContent = "学習カレンダー";
+  calTitleRow.appendChild(calTitle);
+  if(!dashState.karteCalendarDate) dashState.karteCalendarDate = new Date();
+  const calYear = dashState.karteCalendarDate.getFullYear();
+  const calMonth = dashState.karteCalendarDate.getMonth();
+  const calNav = el('<div style="display:flex;align-items:center;gap:10px;"></div>');
+  const calPrevBtn = document.createElement("button");
+  calPrevBtn.className = "secondary"; calPrevBtn.style.cssText = "padding:2px 10px;"; calPrevBtn.textContent = "◀";
+  calPrevBtn.onclick = ()=>{ dashState.karteCalendarDate = new Date(calYear, calMonth-1, 1); render(); };
+  const calLabel = document.createElement("div");
+  calLabel.style.cssText = "font-size:13.5px;font-weight:700;min-width:80px;text-align:center;";
+  calLabel.textContent = calYear + "年" + (calMonth+1) + "月";
+  const calNextBtn = document.createElement("button");
+  calNextBtn.className = "secondary"; calNextBtn.style.cssText = "padding:2px 10px;"; calNextBtn.textContent = "▶";
+  calNextBtn.onclick = ()=>{ dashState.karteCalendarDate = new Date(calYear, calMonth+1, 1); render(); };
+  calNav.appendChild(calPrevBtn); calNav.appendChild(calLabel); calNav.appendChild(calNextBtn);
+  calTitleRow.appendChild(calNav);
+  calCard.appendChild(calTitleRow);
+
+  const calDays = buildCalendarMonthData(l, calYear, calMonth);
+  const firstWeekday = new Date(calYear, calMonth, 1).getDay();
+  const grid = el('<div class="cal-grid"></div>');
+  ["日","月","火","水","木","金","土"].forEach(w=>{
+    const wEl = document.createElement("div");
+    wEl.className = "cal-weekday";
+    wEl.textContent = w;
+    grid.appendChild(wEl);
+  });
+  for(let i=0; i<firstWeekday; i++){ grid.appendChild(el('<div class="cal-cell cal-empty"></div>')); }
+  calDays.forEach(dInfo=>{
+    const cell = el('<div class="cal-cell"></div>');
+    const numEl = document.createElement("div");
+    numEl.className = "cal-daynum";
+    numEl.textContent = dInfo.day;
+    cell.appendChild(numEl);
+    if(dInfo.kind !== "none"){
+      const dot = document.createElement("div");
+      dot.className = "cal-dot cal-dot-" + dInfo.kind;
+      cell.appendChild(dot);
+    }
+    grid.appendChild(cell);
+  });
+  calCard.appendChild(grid);
+
+  const calLegend = el('<div class="cal-legend"></div>');
+  calLegend.innerHTML =
+    "<span><span class='cal-dot cal-dot-practice'></span>練習</span>" +
+    "<span><span class='cal-dot cal-dot-mock'></span>模試</span>" +
+    "<span><span class='cal-dot cal-dot-both'></span>両方</span>" +
+    "<span><span class='cal-dot cal-dot-unknown'></span>学習あり(詳細不明)</span>";
+  calCard.appendChild(calLegend);
+  wrap.appendChild(calCard);
 
   return wrap;
 }

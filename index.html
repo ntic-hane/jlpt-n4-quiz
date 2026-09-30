@@ -7254,6 +7254,49 @@ async function establishSession(){
 // ---- クラウド同期(ベストエフォート。失敗してもアプリの動作には一切影響しない) ----
 // company_id/learner_idはDB側のトリガーでログイン本人の値に強制上書きされるが、
 // NOT NULL制約があるため、分かっている自分自身の値を送っておく。
+// ---- 学習セッション記録 ----
+// 練習・模試を問わず「開始してから、次にホームへ戻る(または模試を提出する)まで」を1セッションとして記録する。
+// 管理者ダッシュボードの「学習セッション数・累計学習時間・学習履歴・学習カレンダー」の元データになる。
+function startSession(mode, subject){
+  // 前のセッションが閉じずに残っていたら(通常起きないが念のため)先に片付ける
+  if(ST.session) finishSession();
+  ST.session = { mode, subject, level: ST.level, start: Date.now(), count: 0, correct: 0 };
+}
+function bumpSession(isCorrect){
+  if(!ST.session) return;
+  ST.session.count += 1;
+  if(isCorrect) ST.session.correct += 1;
+}
+function finishSession(){
+  const s = ST.session;
+  ST.session = null;
+  if(!s || s.count === 0) return; // 1問も答えずに離脱した場合は記録しない
+  if(!AUTH.session || !AUTH.student) return;
+  const durationSec = Math.max(1, Math.round((Date.now() - s.start) / 1000));
+  const body = {
+    student_id: AUTH.student.id,
+    company_id: AUTH.student.company_id || "",
+    learner_id: AUTH.student.id,
+    level: s.level,
+    mode: s.mode,
+    subject: s.subject || null,
+    question_count: s.count,
+    correct_count: s.correct,
+    started_at: new Date(s.start).toISOString(),
+    ended_at: new Date().toISOString(),
+    duration_seconds: durationSec
+  };
+  fetch(SUPABASE_URL + "/rest/v1/study_sessions", {
+    method: "POST",
+    headers: authedHeaders({ "Prefer": "return=minimal" }),
+    body: JSON.stringify(body)
+  }).catch(e=>{ console.warn("[sync] study_sessions通信エラー", e); });
+}
+// 注: タブを閉じる・強制終了した場合はfinishSession()が呼ばれず、そのセッションは記録されない。
+// sendBeaconでの代替送信も検討したが、Supabaseの認証はAuthorizationヘッダ(Bearerトークン)が必須で、
+// sendBeaconはヘッダを指定できずapikeyしか渡せないため、RLS(student_insert_own_study_sessions)を
+// 満たせず結局失敗する。中途半端な対応をするより、素直に「閉じた場合は記録されない」ことにした。
+
 function syncProgress(qid){
   if(!AUTH.session || !AUTH.student) return;
   const d = load();
@@ -7819,6 +7862,8 @@ function recordAnswer(qid, isCorrect, subj, translationUsed, selectedIdx){
     d.q[qid].lastWrong = selectedIdx;
   }
 
+  bumpSession(isCorrect);
+
   if(translationUsed){
     d.q[qid].tn += 1;
     if(isCorrect) d.q[qid].tc += 1;
@@ -8074,9 +8119,9 @@ function renderHeader(){
     if(ST.view === "home") return;
     // 模試の途中でうっかりロゴを押して抜けてしまわないよう、既存の「戻る」ボタンと同じ確認を挟む
     if(ST.mode === "mock" && ["select","question"].includes(ST.view)){
-      ask(tr(T.quitMock), ()=>{ clearTimer(); ST.view="home"; render(); });
+      ask(tr(T.quitMock), ()=>{ clearTimer(); finishSession(); ST.view="home"; render(); });
     } else {
-      ST.view = "home"; render();
+      finishSession(); ST.view = "home"; render();
     }
   } : null;
 
@@ -8349,7 +8394,7 @@ function renderPasswordChange(){
     errorMsg.style.display = "none";
     try{
       await authChangePassword(pw1);
-      ST.view = "home";
+      finishSession(); ST.view = "home";
       render();
     }catch(e){
       errorMsg.textContent = tr(T.pwChangeError);
@@ -8775,7 +8820,7 @@ function renderHomeView(){
         // クラウド側(progress/exam_log等)は組合の管理データなので消さない。
         try{ localStorage.removeItem(storageKey()); }catch(e){ /* noop */ }
         memoryFallback = null;
-        ST.view = "home";
+        finishSession(); ST.view = "home";
         render();
       });
     };
@@ -8875,7 +8920,7 @@ function renderSelect(){
   const wrap = document.createElement("div");
   const back = document.createElement("button");
   back.className = "ghost"; back.textContent = tr(T.back);
-  back.onclick = ()=>{ ST.view="home"; render(); };
+  back.onclick = ()=>{ finishSession(); ST.view="home"; render(); };
   wrap.appendChild(back);
 
   const card = el('<div class="card"></div>');
@@ -8941,6 +8986,7 @@ function startPractice(limit){
   ST.queue = pool;
   ST.idx = 0; ST.answers = {}; ST.answered = {}; ST.revealed = {}; ST.flagged = {}; ST.lastAutoPlayedQid = null; ST.lastQid = null;
   ST.view = "question";
+  startSession("practice", ST.subject);
   render();
 }
 
@@ -9000,6 +9046,7 @@ function startMock(examgroup){
   ST.mockTimeUp = false;
   ST.mockTimerSec = examGroupMin()[examgroup]*60;
   ST.view = "question";
+  startSession("mock", examgroup);
   render();
   startTimer();
 }
@@ -9162,7 +9209,7 @@ function renderQuestion(){
   const wrap = document.createElement("div");
   const q = ST.queue[ST.idx];
   if(!q){
-    ST.view="home"; render();
+    finishSession(); ST.view="home"; render();
     return wrap;
   }
 
@@ -9171,9 +9218,9 @@ function renderQuestion(){
   backBtn.className = "ghost"; backBtn.textContent = tr(T.back);
   backBtn.onclick = ()=>{
     if(ST.mode==="mock"){
-      ask(tr(T.quitMock), ()=>{ clearTimer(); ST.view="home"; render(); });
+      ask(tr(T.quitMock), ()=>{ clearTimer(); finishSession(); ST.view="home"; render(); });
     } else {
-      ST.view="home"; render();
+      finishSession(); ST.view="home"; render();
     }
   };
   top.appendChild(backBtn);
@@ -9508,7 +9555,7 @@ function renderQuestion(){
     doneBtn.textContent = ST.mode==="mock" ? tr(T.submit) : tr(T.back);
     doneBtn.onclick = ()=>{
       if(ST.mode==="mock") submitExamCheck();
-      else { ST.view="home"; render(); }
+      else { finishSession(); ST.view="home"; render(); }
     };
     nav.appendChild(doneBtn);
   }
@@ -9561,6 +9608,7 @@ function submitExam(timeUp){
   recordExam(ST.subject, correct, total, pct);
   ST.resultData = { correct, total, pct, timeUp, examgroup: ST.subject };
   ST.view = "result";
+  finishSession();
   render();
 }
 
@@ -9617,7 +9665,7 @@ function renderResult(){
   const homeBtn = document.createElement("button");
   homeBtn.className = "primary"; homeBtn.style.width="100%";
   homeBtn.textContent = tr(T.home);
-  homeBtn.onclick = ()=>{ ST.view="home"; render(); };
+  homeBtn.onclick = ()=>{ finishSession(); ST.view="home"; render(); };
   wrap.appendChild(homeBtn);
 
   return wrap;
