@@ -4368,7 +4368,10 @@ function renderLearnerKarte(){
     histCard2.appendChild(histNote);
   } else {
     const histTable = el('<table class="hist-table"></table>');
-    const thead = el('<thead><tr><th>日付</th><th>モード</th><th>分野</th><th>問題数</th><th>正答率</th><th>学習時間</th></tr></thead>');
+    // <thead>はel()(div経由でHTMLを解析する)では単独で作れず、nullになって表示が空白になるため、
+    // createElementで作ってから中身を入れる(学習セッションのある学習者のカルテが空白になる不具合の修正)
+    const thead = document.createElement("thead");
+    thead.innerHTML = '<tr><th>日付</th><th>モード</th><th>分野</th><th>問題数</th><th>正答率</th><th>学習時間</th></tr>';
     histTable.appendChild(thead);
     const tbody = document.createElement("tbody");
     mySessions.slice(0, dashState.karteHistShowCount || 10).forEach(s=>{
