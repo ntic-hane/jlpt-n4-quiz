@@ -510,6 +510,38 @@ header h1{cursor:pointer;}
 .fbcard-ex .h{font-size:15px;font-weight:800;margin-bottom:6px;color:var(--nv-text);}
 .fbcard-ex .t{font-size:14px;line-height:1.75;color:var(--nv-text);font-weight:500;}
 body.inq header{display:none;}
+
+/* ====================== 模試(案2) ====================== */
+.jmockintro{background:linear-gradient(135deg,#1F4E79 0%,#2C6AA3 100%);color:#fff;border-radius:18px;padding:18px 18px 16px;margin:4px 0 14px;box-shadow:0 3px 10px rgba(31,78,121,.28);}
+.jmockintro-t{font-size:20px;font-weight:800;letter-spacing:-.2px;}
+.jmockintro-s{font-size:13px;opacity:.9;margin-top:4px;font-weight:600;line-height:1.5;}
+.jmockintro-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.jmockintro-chips span{background:rgba(255,255,255,.18);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;}
+.jmock-go{background:var(--nv-blue);color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:800;flex:0 0 auto;}
+.jmocknote{font-size:12.5px;color:var(--nv-sub);line-height:1.6;margin:4px 2px 0;}
+
+/* ====================== 模試の結果(案2) ====================== */
+.jresult{background:#fff;border:1px solid var(--nv-line);border-radius:18px;padding:18px;margin:4px 0 14px;box-shadow:0 2px 8px rgba(15,27,51,.06);border-top:5px solid var(--nv-orange);}
+.jresult.ok{border-top-color:var(--nv-green);}
+.jresult-h{font-size:15px;font-weight:800;color:var(--nv-sub);}
+.jresult-score{display:flex;align-items:baseline;gap:10px;margin:6px 0 4px;}
+.jresult-score b{font-size:34px;font-weight:800;color:var(--nv-text);letter-spacing:-.5px;}
+.jresult-score span{font-size:20px;font-weight:800;color:var(--nv-sub);}
+.jresult-status{font-size:15px;font-weight:800;color:#C77700;}
+.jresult.ok .jresult-status{color:#16875F;}
+.jresult-line{font-size:12.5px;color:var(--nv-sub);margin-top:3px;line-height:1.5;}
+.jresult-bar{height:8px;background:#E9EDF5;border-radius:999px;overflow:hidden;margin-top:14px;}
+.jresult-bar i{display:block;height:100%;background:var(--nv-orange);border-radius:999px;}
+.jresult.ok .jresult-bar i{background:var(--nv-green);}
+.jresitem{background:#fff;border:1px solid var(--nv-line);border-left:5px solid var(--nv-red);border-radius:14px;padding:13px 14px;margin-bottom:10px;}
+.jresitem.ok{border-left-color:var(--nv-green);}
+.jresitem-h{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.jresitem-h .no{width:26px;height:26px;border-radius:50%;background:#EEF2F7;color:var(--nv-sub);font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.jresitem-h .st{font-size:13.5px;font-weight:800;color:#C9344A;}
+.jresitem.ok .jresitem-h .st{color:#16875F;}
+.jresitem-q{font-size:14px;font-weight:700;color:var(--nv-text);line-height:1.6;}
+.jresitem-e{font-size:12.5px;color:var(--nv-sub);line-height:1.65;margin-top:6px;}
+.jresitem-e b{font-weight:800;color:var(--nv-text);}
 </style>
 </head>
 <body>
@@ -704,6 +736,12 @@ const T = {
   wrongBig: ["不正解です","Incorrect","Salah","Mali","ไม่ถูกต้อง","မမှန်ပါ။"],
   backHome: ["ホームに戻る","Back to Home","Kembali ke Beranda","Bumalik sa Home","กลับหน้าหลัก","ပင်မစာမျက်နှာသို့"],
   nextQuestionBtn: ["次の問題へ","Next question","Soal berikutnya","Susunod na tanong","ข้อถัดไป","နောက်မေးခွန်း"],
+  mockIntroTitle: ["JLPT {lv} 模試","JLPT {lv} Mock Exam","Ujian Simulasi JLPT {lv}","JLPT {lv} Mock Exam","สอบจำลอง JLPT {lv}","JLPT {lv} အစမ်းစာမေးပွဲ"],
+  mockIntroSub: ["本番と同じ形式で、実力を確認しましょう","Check your skills in the real exam format","Cek kemampuanmu dengan format ujian sebenarnya","Subukin ang iyong kakayahan sa totoong format ng exam","ตรวจสอบความสามารถด้วยรูปแบบเหมือนการสอบจริง","စစ်မှန်သော စာမေးပွဲပုံစံဖြင့် သင့်စွမ်းရည်ကို စစ်ဆေးပါ"],
+  mockTotalQ: ["全{n}問","{n} questions in total","Total {n} soal","Kabuuang {n} tanong","ทั้งหมด {n} ข้อ","စုစုပေါင်း မေးခွန်း {n} ခု"],
+  mockTotalMin: ["制限時間 合計{m}分","Time limit: {m} min in total","Batas waktu: total {m} menit","Time limit: kabuuang {m} min","เวลาจำกัด รวม {m} นาที","အချိန်ကန့်သတ်ချက် စုစုပေါင်း {m} မိနစ်"],
+  mockSectionCount: ["{k}つのセクション","{k} sections","{k} bagian","{k} na seksyon","{k} ส่วน","{k} ပိုင်း"],
+  mockStartBtn: ["始める","Start","Mulai","Simulan","เริ่ม","စတင်ရန်"],
   welcomeBack: ["おかえりなさい、{n}さん","Welcome back, {n}!","Selamat datang kembali, {n}!","Welcome back, {n}!","ยินดีต้อนรับกลับมา {n}","{n} ပြန်လာတာ ဝမ်းသာပါတယ်။"],
   weekDaysLabel: ["今週の学習日","Study days this week","Hari belajar minggu ini","Mga araw ng pag-aaral ngayong linggo","วันที่เรียนสัปดาห์นี้","ဒီအပတ် လေ့လာတဲ့ရက်များ"],
   daysUnit: ["日","days","hari","araw","วัน","ရက်"],
@@ -7690,17 +7728,90 @@ function renderPracticeView(){
 
 function renderMockView(){
   const wrap = document.createElement("div");
-  const mockCard = el('<div class="card"></div>');
-  ["moji","bunpo_dokkai","choukai"].forEach(g=>{
-    const row = el('<div class="rowbtns" style="margin-bottom:10px;"></div>');
+  const groups = ["moji","bunpo_dokkai","choukai"];
+  const mins = examGroupMin();
+  const lvLabel = ST.level === "n3" ? "N3" : "N4";
+
+  // ---- N4/N3切り替え ----
+  const levelWrap = el('<div class="lvwrap"></div>');
+  const levelPill = el('<div class="lvpill"></div>');
+  [["n4","N4"],["n3","N3"]].forEach(([lv, label])=>{
     const btn = document.createElement("button");
-    btn.className = "primary";
-    btn.textContent = tr(EXAMGROUP_LABEL[g]) + " (" + examGroupMin()[g] + tr(["分","min","menit","min","นาที", "မိနစ်"]) + ")";
-    btn.onclick = ()=> startMock(g);
-    row.appendChild(btn);
-    mockCard.appendChild(row);
+    btn.className = "lvbtn" + (ST.level === lv ? " active" : "");
+    btn.textContent = label;
+    btn.onclick = ()=>{ if(ST.level !== lv){ setLevel(lv); render(); } };
+    levelPill.appendChild(btn);
   });
-  wrap.appendChild(mockCard);
+  levelWrap.appendChild(levelPill);
+  wrap.appendChild(levelWrap);
+
+  // 各セクションの問題数(本試験の目安の問題数。開始時と同じ作り方で数える)
+  const counts = {};
+  groups.forEach(g=>{
+    try{
+      const cats = Object.keys(CAT_TO_EXAMGROUP).filter(c=>CAT_TO_EXAMGROUP[c]===g);
+      counts[g] = buildMockPool(ALL_Q.filter(q=>cats.includes(q.c)), cats, ST.level).length;
+    }catch(e){ counts[g] = 0; }
+  });
+  const totalQ = groups.reduce((a,g)=>a+counts[g],0);
+  const totalMin = groups.reduce((a,g)=>a+(mins[g]||0),0);
+
+  // ---- 説明カード ----
+  const intro = el('<div class="jmockintro"></div>');
+  intro.innerHTML = '<div class="jmockintro-t"></div><div class="jmockintro-s"></div><div class="jmockintro-chips"></div>';
+  intro.querySelector(".jmockintro-t").textContent = fmtT(T.mockIntroTitle, { lv: lvLabel });
+  intro.querySelector(".jmockintro-s").textContent = tr(T.mockIntroSub);
+  const chips = intro.querySelector(".jmockintro-chips");
+  [fmtT(T.mockTotalQ, { n: totalQ }), fmtT(T.mockTotalMin, { m: totalMin }), fmtT(T.mockSectionCount, { k: groups.length })].forEach(t=>{
+    const c = document.createElement("span"); c.textContent = t; chips.appendChild(c);
+  });
+  wrap.appendChild(intro);
+
+  // ---- 3つのセクション ----
+  const icons = {
+    moji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    bunpo_dokkai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>',
+    choukai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'
+  };
+  const subjOf = { moji:"moji", bunpo_dokkai:"bunpo", choukai:"choukai" };
+  groups.forEach(g=>{
+    const row = el('<button class="jsubj2 jmocksec" data-subj="'+subjOf[g]+'"></button>');
+    row.innerHTML = '<span class="jsubj2-ic">'+icons[g]+'</span>'+
+      '<span class="jsubj2-body"><span class="jsubj2-t1"></span><span class="jsubj2-t2"></span></span>'+
+      '<span class="jmock-go"></span>';
+    row.querySelector(".jsubj2-t1").textContent = tr(EXAMGROUP_LABEL[g]);
+    row.querySelector(".jsubj2-t2").textContent = (mins[g] || 0) + tr(["分","min","menit","min","นาที","မိနစ်"]) + "　·　" + counts[g] + tr(["問","q","soal","tanong","ข้อ","ခု"]);
+    row.querySelector(".jmock-go").textContent = tr(T.mockStartBtn);
+    row.onclick = ()=> startMock(g);
+    wrap.appendChild(row);
+  });
+
+  // ---- 本番と同じ条件のお知らせ ----
+  const note = el('<div class="jmocknote"></div>');
+  note.textContent = "※ " + tr(["模試モードは本試験と同条件のため、ふりがな・母語表示はありません。","Mock exam mode has no furigana or native-language display, matching real exam conditions.","Mode ujian tidak ada furigana atau tampilan bahasa asli, sesuai kondisi ujian asli.","Walang furigana o native-language display sa mock exam mode, katulad ng tunay na exam.","ในโหมดสอบจำลอง จะไม่มีการแสดงฟุริงานะหรือภาษาแม่ เพื่อให้เงื่อนไขเหมือนการสอบจริง","အစမ်းစာမေးပွဲမုဒ်သည် တကယ့်စာမေးပွဲနှင့် အခြေအနေ တူသဖြင့် ဖူရိဂနနှင့် မိခင်ဘာသာကို မပြပါ။"]);
+  wrap.appendChild(note);
+
+  // ---- これまでの成績(端末に残る直近の模試。新しい順に最大5件) ----
+  const sec = el('<div class="jsec"></div>');
+  const h = el('<div class="jsec-h"><div class="jsec-t"></div></div>'); h.querySelector(".jsec-t").textContent = tr(T.examResultsTitle);
+  sec.appendChild(h);
+  const card = el('<div class="card jexamcard"></div>');
+  const exams = (load().exams || []).slice(0, 5);
+  if(exams.length === 0){
+    const em = el('<div class="card-desc"></div>'); em.textContent = tr(T.noExamYet); card.appendChild(em);
+  } else {
+    exams.forEach(e=>{
+      const r = el('<div class="jexamrow"></div>');
+      const dt = new Date(e.d);
+      r.innerHTML = '<span class="g"></span><b></b><span class="d"></span>';
+      r.querySelector(".g").textContent = EXAMGROUP_LABEL[e.g] ? tr(EXAMGROUP_LABEL[e.g]) : e.g;
+      r.querySelector("b").textContent = e.pct + "%";
+      r.querySelector(".d").textContent = dt.getFullYear() + "/" + (dt.getMonth()+1) + "/" + dt.getDate();
+      card.appendChild(r);
+    });
+  }
+  sec.appendChild(card);
+  wrap.appendChild(sec);
   return wrap;
 }
 
@@ -8481,47 +8592,31 @@ function submitExam(timeUp){
 function renderResult(){
   const wrap = document.createElement("div");
   const r = ST.resultData;
-  const card = el('<div class="card"></div>');
-  const h = document.createElement("div");
-  h.style.fontSize="18px"; h.style.fontWeight="700"; h.style.marginBottom="10px";
-  h.textContent = tr(T.result) + (r.timeUp ? "（"+tr(["時間切れ","Time up","Waktu habis","Naubos ang oras","หมดเวลา", "အချိန် ကုန်ပါပြီ"])+"）" : "");
-  card.appendChild(h);
-
-  const scoreLine = document.createElement("div");
-  scoreLine.style.fontSize="28px"; scoreLine.style.fontWeight="700"; scoreLine.style.color="var(--blue)";
-  scoreLine.textContent = r.correct+" / "+r.total+"（"+r.pct+"%）";
-  card.appendChild(scoreLine);
-
-  const passInfo = document.createElement("div");
-  passInfo.style.marginTop="8px"; passInfo.style.fontSize="13px";
-  passInfo.style.color = r.pct>=65 ? "var(--green)" : "var(--red)";
-  passInfo.textContent = (r.pct>=65 ? tr(T.passed) : tr(T.notPassed));
-  card.appendChild(passInfo);
-
-  const passLineInfo = document.createElement("div");
-  passLineInfo.style.marginTop="2px"; passLineInfo.style.fontSize="11px"; passLineInfo.style.color="var(--sub,#8a8578)";
-  passLineInfo.textContent = tr(T.passLine);
-  card.appendChild(passLineInfo);
+  const passed = r.pct >= 65;
+  // ---- 結果カード(合格ラインに到達=緑 / あと少し=橙) ----
+  const card = el('<div class="jresult '+(passed ? "ok" : "ng")+'"></div>');
+  card.innerHTML = '<div class="jresult-h"></div><div class="jresult-score"><b></b><span></span></div><div class="jresult-status"></div><div class="jresult-line"></div>'+
+                   '<div class="jresult-bar"><i></i></div>';
+  card.querySelector(".jresult-h").textContent = tr(T.result) + (r.timeUp ? "（"+tr(["時間切れ","Time up","Waktu habis","Naubos ang oras","หมดเวลา", "အချိန် ကုန်ပါပြီ"])+"）" : "");
+  card.querySelector(".jresult-score b").textContent = r.correct + " / " + r.total;
+  card.querySelector(".jresult-score span").textContent = r.pct + "%";
+  card.querySelector(".jresult-status").textContent = passed ? tr(T.passed) : tr(T.notPassed);
+  card.querySelector(".jresult-line").textContent = tr(T.passLine);
+  card.querySelector(".jresult-bar i").style.width = Math.min(100, r.pct) + "%";
   wrap.appendChild(card);
 
-  const listCard = el('<div class="card"></div>');
+  // ---- 問題ごとの結果(カード) ----
   ST.queue.forEach((q,i)=>{
-    const row = document.createElement("div");
-    row.style.padding = "10px 0";
-    row.style.borderBottom = "1px solid #eee";
     const ok = ST.answers[i] === q.a;
-    row.innerHTML = '<div style="font-size:13px;font-weight:700;color:'+(ok?"var(--green)":"var(--red)")+'">'+(i+1)+". "+(ok?tr(T.correct):tr(T.incorrect))+'</div>';
-    const qt = document.createElement("div");
-    qt.style.fontSize="13px"; qt.style.margin="4px 0";
-    qt.textContent = tr(q.q);
-    row.appendChild(qt);
-    const et = document.createElement("div");
-    et.style.fontSize="12px"; et.style.color="#667";
-    et.textContent = tr(T.explanation)+"："+tr(q.e);
-    row.appendChild(et);
-    listCard.appendChild(row);
+    const item = el('<div class="jresitem '+(ok ? "ok" : "ng")+'"></div>');
+    item.innerHTML = '<div class="jresitem-h"><span class="no"></span><span class="st"></span></div><div class="jresitem-q"></div><div class="jresitem-e"><b></b><span></span></div>';
+    item.querySelector(".no").textContent = i + 1;
+    item.querySelector(".st").textContent = ok ? tr(T.correct) : tr(T.incorrect);
+    item.querySelector(".jresitem-q").textContent = tr(q.q);
+    item.querySelector(".jresitem-e b").textContent = tr(T.explanation) + "：";
+    item.querySelector(".jresitem-e span").textContent = tr(q.e);
+    wrap.appendChild(item);
   });
-  wrap.appendChild(listCard);
 
   const listNote = el('<div class="explanation-note"></div>');
   listNote.style.margin = "10px 2px 0";
@@ -8529,7 +8624,7 @@ function renderResult(){
   wrap.appendChild(listNote);
 
   const homeBtn = document.createElement("button");
-  homeBtn.className = "primary"; homeBtn.style.width="100%";
+  homeBtn.className = "primary"; homeBtn.style.width="100%"; homeBtn.style.marginTop = "14px";
   homeBtn.textContent = tr(T.home);
   homeBtn.onclick = ()=>{ finishSession(); ST.view="home"; render(); };
   wrap.appendChild(homeBtn);
