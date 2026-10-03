@@ -178,6 +178,148 @@ ruby rt{font-size:11px;color:var(--sub);user-select:none;}
 .jrecentrow span:first-child{color:var(--sub);width:48px;flex:0 0 auto;}
 
 body.lang-my{font-family:"Noto Sans Myanmar","Myanmar Text","Padauk","Hiragino Sans","Yu Gothic",system-ui,-apple-system,sans-serif;line-height:1.75;}
+
+/* =====================================================================
+   実習生アプリの新デザイン(管理ダッシュボードの配色・形に揃える)
+   薄いグレーの背景 / 白いカード(薄い線・角丸) / 青を基調 / 科目ごとの色(文字・語彙=青、文法=緑、読解=橙、聴解=紫)
+   ===================================================================== */
+:root{
+  --nv-bg:#F3F5FA; --nv-text:#1B2437; --nv-sub:#6B7690; --nv-line:#E6EAF2;
+  --nv-blue:#3B82F6; --nv-blue-bg:#EAF2FF; --nv-green:#22B07D; --nv-green-bg:#E4F6EE;
+  --nv-orange:#F59E3A; --nv-orange-bg:#FFF1DE; --nv-purple:#8B5CF6; --nv-purple-bg:#F0EAFF;
+  --nv-red:#EF5B6F; --nv-red-bg:#FDEBEE;
+  --blue:#3B82F6; --ink:#1B2437; --sub:#6B7690; --line:#E6EAF2; --accent:#E04A5F; --green:#22B07D; --bgpanel:#F7F9FD;
+}
+body{background-image:none !important;background-color:var(--nv-bg) !important;}
+header{background:#fff;border-bottom:1px solid var(--nv-line);}
+.langswitchbtn{background:#F3F5FA;border-color:var(--nv-line);}
+
+/* 下のタブ(スマホで押しやすいよう、画面の下に固定) */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:150;max-width:600px;margin:0 auto;background:#fff;border:0;border-top:1px solid var(--nv-line);padding:4px 6px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(15,27,51,.05);}
+.tabbtn{border:0 !important;border-radius:12px;padding:7px 4px;font-size:11.5px;}
+.tabbtn.active{color:var(--nv-blue);background:var(--nv-blue-bg);}
+body:has(.tabbar){padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+
+/* カード */
+.card,.idcard,.qcard{border-radius:14px;border:1px solid var(--nv-line);background:#fff;box-shadow:0 1px 2px rgba(15,27,51,.04);}
+.idcardwrap{gap:10px;}
+.idcard{padding:14px 16px;}
+.idcardicon{width:38px;height:38px;border-radius:50%;background:var(--nv-blue-bg);color:var(--nv-blue);}
+.jdivider{display:none;}
+.jsection{padding:18px 0 6px;}
+.jsectiontitle{font-size:17px;font-weight:800;color:var(--nv-text);margin-bottom:12px;}
+
+/* N4/N3の切り替え */
+.lvwrap{display:flex;justify-content:flex-end;margin-bottom:12px;}
+.lvpill{display:flex;background:#E9EEF7;border-radius:999px;padding:3px;}
+.lvbtn{border:0;border-radius:999px;padding:6px 20px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--nv-sub);font-family:inherit;}
+.lvbtn.active{background:var(--nv-blue);color:#fff;box-shadow:0 1px 3px rgba(59,130,246,.35);}
+
+/* 科目タイル */
+.jsubjgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.jsubjcard{--sc:var(--nv-blue);--sb:var(--nv-blue-bg);background:#fff;border:1px solid var(--nv-line);border-radius:16px;padding:14px 14px 12px;cursor:pointer;box-shadow:0 1px 2px rgba(15,27,51,.04);display:flex;flex-direction:column;align-items:flex-start;text-align:left;}
+.jsubjcard[data-subj="bunpo"]{--sc:var(--nv-green);--sb:var(--nv-green-bg);}
+.jsubjcard[data-subj="dokkai"]{--sc:var(--nv-orange);--sb:var(--nv-orange-bg);}
+.jsubjcard[data-subj="choukai"]{--sc:var(--nv-purple);--sb:var(--nv-purple-bg);}
+.jsubjcard:active{transform:scale(.985);}
+.jsubjicon{width:40px;height:40px;border-radius:12px;background:var(--sb);color:var(--sc);display:flex;align-items:center;justify-content:center;}
+.jsubjicon svg{width:22px;height:22px;}
+.jsubjname{font-size:15px;font-weight:800;color:var(--nv-text);margin-top:10px;}
+.jsubjrate{font-size:12px;color:var(--nv-sub);margin-top:2px;font-weight:600;}
+.jsubjbar{width:100%;height:6px;background:#EEF1F7;border-radius:999px;overflow:hidden;margin-top:8px;}
+.jsubjbar i{display:block;height:100%;background:var(--sc);border-radius:999px;}
+.jsubjgo{font-size:12px;font-weight:800;color:var(--sc);margin-top:9px;}
+
+/* 近道・生活情報 */
+.jshortcut{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:1px solid var(--nv-line);border-radius:14px;padding:13px 15px;margin-top:10px;cursor:pointer;color:inherit;font:inherit;box-shadow:0 1px 2px rgba(15,27,51,.04);}
+.jshortcut-body{flex:1;}
+.jshortcut-t1{font-size:14px;font-weight:800;color:var(--nv-text);}
+.jshortcut-t2{font-size:12px;color:var(--nv-sub);margin-top:2px;}
+.jshortcut-arrow{color:var(--nv-sub);display:flex;}
+.jlifecard{background:var(--nv-orange-bg) !important;border-color:#FADDB5 !important;border-radius:16px !important;}
+
+/* 学習の記録 */
+.jlabel{font-size:12.5px;font-weight:700;color:var(--nv-sub);}
+.jbignum{color:var(--nv-text);}
+.jstatus{color:var(--nv-text);}
+.jstatus.attn{color:var(--accent);}
+.jsummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px 0;align-items:stretch;}
+.jitem{background:#fff;border:1px solid var(--nv-line);border-radius:14px;padding:12px 10px;box-shadow:0 1px 2px rgba(15,27,51,.04);min-width:0;}
+.jitemtop{flex-direction:column;align-items:flex-start;gap:6px;}
+.jitemicon{width:32px;height:32px;border-radius:50%;background:var(--nv-blue-bg);color:var(--nv-blue);}
+.jitem:nth-child(2) .jitemicon{background:var(--nv-green-bg);color:var(--nv-green);}
+.jitem:nth-child(3) .jitemicon{background:var(--nv-purple-bg);color:var(--nv-purple);}
+.jnum{font-size:20px;font-weight:800;color:var(--nv-text);}
+.jitemlabels{margin:2px 0 0 0;}
+.jsublabel{font-size:11px;color:var(--nv-sub);font-weight:600;display:block;}
+.jweakrow{border-bottom:1px solid var(--nv-line);}
+.jweaklink{color:var(--nv-blue);text-decoration:none;font-weight:700;}
+
+/* 練習・問題 */
+.milestone{background:linear-gradient(135deg,#0F1B33,#1D3160);border-radius:16px;}
+.catchip{border-radius:999px;background:#fff;border-color:var(--nv-line);padding:7px 14px;}
+.catchip.sel{background:var(--nv-blue);border-color:var(--nv-blue);color:#fff;}
+.opt{border-radius:12px;border:1.5px solid var(--nv-line);padding:14px 16px;background:#fff;}
+.opt.correct{border-color:var(--nv-green);background:var(--nv-green-bg);}
+.opt.wrong{border-color:var(--nv-red);background:var(--nv-red-bg);}
+.opt.sel{border-color:var(--nv-blue);background:var(--nv-blue-bg);}
+.feedback{border-radius:12px;background:#fff;}
+.feedback.ok{background:var(--nv-green-bg);border-color:#BDEBD6;color:#16875F;}
+.feedback.ng{background:var(--nv-red-bg);border-color:#F7C9D0;color:#C9344A;}
+.progress{opacity:1;font-weight:700;color:var(--nv-sub);}
+button.primary{background:var(--nv-blue);border-radius:12px;box-shadow:0 2px 6px rgba(59,130,246,.3);}
+button.secondary{border-radius:12px;border-color:var(--nv-line);}
+.qnav-fixed{border-top:1px solid var(--nv-line);box-shadow:0 -2px 12px rgba(15,27,51,.05);}
+.fbartrack{height:7px;border-radius:999px;background:#E9EDF5;}
+.fbar{border-radius:999px;background:var(--nv-blue);}
+.mockprogtrack{height:7px;border-radius:999px;background:#E9EDF5;}
+.mockprogfill{background:var(--nv-blue);border-radius:999px;}
+.modal-box{border-radius:16px;}
+.gridnum button.current{border-color:var(--nv-blue);color:var(--nv-blue);}
+
+.card-title{font-size:15px;font-weight:800;color:var(--nv-text);margin-bottom:4px;}
+.card-desc{font-size:12px;color:var(--nv-sub);line-height:1.6;margin-bottom:8px;}
+.jlifecard{display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;}
+
+input[type=text],input[type=password],input[type=email],input:not([type]),select{border-radius:12px !important;border:1px solid var(--nv-line) !important;background:#fff;}
+input[type=text]:focus,input[type=password]:focus{outline:2px solid var(--nv-blue-bg);border-color:var(--nv-blue) !important;}
+
+/* ====================== ホーム(新): あいさつ・今日のおすすめ・学習記録 ====================== */
+.jgreet{margin:4px 0 14px;}
+.jgreet-t{font-size:22px;font-weight:800;color:var(--nv-text);line-height:1.3;letter-spacing:-.2px;}
+.jgreet-week{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--nv-sub);font-weight:600;flex-wrap:wrap;}
+.jgreet-dots{display:inline-flex;gap:5px;}
+.jgreet-dots i{width:10px;height:10px;border-radius:50%;background:#DDE3EE;display:inline-block;}
+.jgreet-dots i.on{background:var(--nv-blue);}
+.jgreet-week b{color:var(--nv-text);font-weight:800;}
+
+.jhero{--sc:var(--nv-blue);--sb:#fff;background:linear-gradient(135deg,#EAF2FF 0%,#F5F9FF 100%);border:1px solid #D6E4FB;border-radius:18px;padding:16px 16px 14px;margin-bottom:6px;box-shadow:0 2px 8px rgba(59,130,246,.10);}
+.jhero[data-subj="bunpo"]{--sc:var(--nv-green);}
+.jhero[data-subj="dokkai"]{--sc:var(--nv-orange);}
+.jhero[data-subj="choukai"]{--sc:var(--nv-purple);}
+.jhero-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--nv-text);}
+.jhero-label .star{width:22px;height:22px;border-radius:7px;background:var(--nv-green);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;}
+.jhero-main{display:flex;align-items:center;gap:14px;margin:14px 0 14px;}
+.jhero-icon{width:54px;height:54px;border-radius:16px;background:#fff;color:var(--sc);display:flex;align-items:center;justify-content:center;flex:0 0 54px;box-shadow:0 1px 4px rgba(15,27,51,.08);}
+.jhero-icon svg{width:28px;height:28px;}
+.jhero-title{font-size:18px;font-weight:800;color:var(--nv-text);line-height:1.35;}
+.jhero-sub{font-size:12px;color:var(--nv-sub);margin-top:4px;line-height:1.5;font-weight:600;}
+.jhero-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--nv-blue);color:#fff;border:0;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 8px rgba(59,130,246,.35);}
+.jhero-btn i{font-style:normal;font-size:16px;}
+.jhero-btn:active{transform:scale(.99);}
+.jweak .jshortcut-t1{color:#C9344A;}
+
+/* 学習記録 */
+.recper{display:flex;gap:6px;margin:0 0 10px;}
+.recperbtn{border:1px solid var(--nv-line);background:#fff;color:var(--nv-sub);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.recperbtn.active{background:var(--nv-blue);border-color:var(--nv-blue);color:#fff;}
+.jexamcard{margin-top:6px;}
+.jexamrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--nv-line);font-size:13px;}
+.jexamrow:last-child{border-bottom:0;}
+.jexamrow .g{flex:1;color:var(--nv-text);font-weight:600;}
+.jexamrow b{font-size:16px;font-weight:800;color:var(--nv-text);}
+.jexamrow .d{font-size:11px;color:var(--nv-sub);min-width:76px;text-align:right;}
+.jhero-title{font-size:16.5px;line-break:strict;text-wrap:balance;}
 </style>
 </head>
 <body>
@@ -243,13 +385,13 @@ const T = {
   practiceMode: ["練習モード","Practice Mode","Mode Latihan","Practice Mode","โหมดฝึกซ้อม", "လေ့ကျင့်မှုမုဒ်"],
   mockMode:     ["模試モード","Mock Exam","Ujian Simulasi","Mock Exam","โหมดสอบจำลอง", "အစမ်းစာမေးပွဲမုဒ်"],
   startPractice:["練習を始める","Start Practice","Mulai Latihan","Simulan ang Practice","เริ่มฝึกซ้อม", "လေ့ကျင့်မှု စတင်ရန်"],
-  startMock:    ["模試を始める","Start Mock Exam","Mulai Ujian","Simulan ang Mock Exam","เริ่มสอบจำลอง", "အစမ်းစာမေးပွဲ စတင်ရန်"],
+  startMock:    ["模試を始める","Start Mock Exam","Mulai Ujian Simulasi","Simulan ang Mock Exam","เริ่มสอบจำลอง","အစမ်းစာမေးပွဲ စတင်ရန်"],
   selectCategory:["分野を選んでください（複数可）","Select categories (multiple OK)","Pilih kategori (bisa lebih dari satu)","Pumili ng kategorya (maaaring marami)","เลือกหมวดหมู่ (เลือกได้หลายข้อ)", "ဘာသာရပ်ကို ရွေးပါ (တစ်ခုထက်ပို ရွေးနိုင်သည်)"],
   random10:     ["ランダム10問","Random 10","Acak 10","Random 10","สุ่ม 10 ข้อ", "ကျပန်း မေးခွန်း ၁၀ ခု"],
   allQuestions: ["全問","All Questions","Semua Soal","Lahat ng Tanong","ทุกข้อ", "မေးခွန်း အားလုံး"],
   back:         ["← ホーム","← Home","← Beranda","← Home","← หน้าหลัก", "← ပင်မစာမျက်နှာ"],
   next:         ["次へ","Next","Berikutnya","Susunod","ถัดไป", "နောက်တစ်ခု"],
-  submit:       ["採点する","Submit","Kirim","Isumite","ส่งคำตอบ", "အမှတ်တွက်ရန်"],
+  submit:       ["採点する","Submit","Kirim Jawaban","Isumite","ส่งคำตอบ","အမှတ်တွက်ရန်"],
   correct:      ["正解","Correct","Benar","Tama","ถูกต้อง", "မှန်ပါသည်"],
   incorrect:    ["不正解","Incorrect","Salah","Mali","ไม่ถูกต้อง", "မှားပါသည်"],
   explanation:  ["解説","Explanation","Penjelasan","Paliwanag","คำอธิบาย", "ရှင်းလင်းချက်"],
@@ -266,7 +408,7 @@ const T = {
   mistakeCardDesc: ["正答率が低い問題を順に表示しています(3回以上解答した問題のみ)","Questions with the lowest accuracy are shown first (only questions answered 3+ times)","Soal dengan akurasi terendah ditampilkan dulu (hanya soal yang dijawab 3+ kali)","Ipinapakita muna ang mga soal na may pinakamababang tamang sagot (mga soal na sinagutan nang 3+ beses lang)","แสดงคำถามที่มีอัตราความถูกต้องต่ำที่สุดก่อน (เฉพาะคำถามที่ตอบมาแล้ว 3 ครั้งขึ้นไป)", "မှန်ကန်မှုနှုန်း နိမ့်သော မေးခွန်းများကို အစဉ်လိုက် ပြသထားသည် (၃ ကြိမ်နှင့်အထက် ဖြေဆိုပြီးသော မေးခွန်းများသာ)"],
   mistakeYourAnswer: ["あなたが選んだ答え","Your answer","Jawaban Anda","Ang sagot mo","คำตอบของคุณ", "သင်ရွေးခဲ့သော အဖြေ"],
   mistakeCorrectAnswer: ["正解","Correct answer","Jawaban benar","Tamang sagot","คำตอบที่ถูก", "မှန်ပါသည်"],
-  mistakeRate: ["正答率","Accuracy","Akurasi","Tamang sagot","อัตราถูก", "မှန်ကန်မှုနှုန်း"],
+  mistakeRate: ["正答率","Accuracy","Akurasi","Tamang sagot","อัตราความถูกต้อง","မှန်ကန်မှုနှုန်း"],
   mistakeEmpty: ["繰り返し間違えている問題はまだありません","No repeated mistakes yet","Belum ada kesalahan berulang","Wala pang paulit-ulit na mali","ยังไม่มีคำถามที่ตอบผิดซ้ำๆ", "ထပ်ခါထပ်ခါ မှားနေသော မေးခွန်း မရှိသေးပါ"],
   mistakeMore: ["もっと見る","Show more","Lihat lebih banyak","Tingnan pa","ดูเพิ่มเติม", "ပိုကြည့်ရန်"],
   studiedCount: ["学習済み","Studied","Sudah Dipelajari","Naaralan na","เรียนแล้ว", "လေ့လာပြီး"],
@@ -285,15 +427,15 @@ const T = {
   timeLeft:     ["残り時間","Time Left","Waktu Tersisa","Natitirang Oras","เวลาที่เหลือ", "ကျန်ချိန်"],
   unanswered:   ["未回答の問題があります。採点しますか？","Some questions are unanswered. Submit anyway?","Beberapa soal belum dijawab. Tetap kirim?","May mga hindi pa nasasagot. Isumite pa rin?","ยังมีข้อที่ยังไม่ได้ตอบ ต้องการส่งคำตอบเลยหรือไม่?", "မဖြေရသေးသော မေးခွန်းများ ရှိပါသည်။ အမှတ်တွက်မလား။"],
   quitMock:     ["模試を中断しますか？中断した回の成績は記録されません。","Quit the mock exam? Progress for this attempt won't be saved.","Hentikan ujian simulasi? Nilai percobaan ini tidak akan disimpan.","Itigil ang mock exam? Hindi maisasave ang score ng pagsubok na ito.","ต้องการยกเลิกสอบจำลองหรือไม่? ผลของครั้งนี้จะไม่ถูกบันทึก", "အစမ်းစာမေးပွဲကို ရပ်လိုပါသလား။ ဤအကြိမ်၏ ရလဒ်ကို မှတ်တမ်းမတင်ပါ။"],
-  passed:       ["合格ラインに到達","Above pass line","Di atas batas lulus","Nasa itaas ng pass line","ถึงเกณฑ์ผ่านแล้ว", "အောင်မှတ်ကို ရောက်ရှိပါပြီ"],
-  notPassed:    ["合格ラインまであと少し","Below pass line","Di bawah batas lulus","Nasa ibaba ng pass line","ยังไม่ถึงเกณฑ์ผ่าน", "အောင်မှတ်ရရန် အနည်းငယ်သာ လိုတော့သည်"],
+  passed:       ["合格ラインに到達","Reached the pass line","Mencapai batas lulus","Naabot ang pass line","ถึงเกณฑ์ผ่านแล้ว","အောင်မှတ်ကို ရောက်ရှိပါပြီ"],
+  notPassed:    ["合格ラインまであと少し","Almost at the pass line","Hampir mencapai batas lulus","Malapit na sa pass line","ยังไม่ถึงเกณฑ์ผ่าน","အောင်မှတ်ရရန် အနည်းငယ်သာ လိုတော့သည်"],
   playAudio:    ["▶ 音声を聞く","▶ Play audio","▶ Putar audio","▶ I-play ang audio","▶ ฟังเสียง", "▶ အသံ နားထောင်ရန်"],
   replayAudio:  ["🔊 もう一度聞く","🔊 Replay","🔊 Putar lagi","🔊 I-play ulit","🔊 ฟังอีกครั้ง", "🔊 ထပ်နားထောင်ရန်"],
   playAudioFallback: ["▶ 音声を再生","▶ Play audio","▶ Putar audio","▶ I-play ang audio","▶ เล่นเสียง", "▶ အသံ ဖွင့်ရန်"],
   audioPlaying: ["再生中…","Playing…","Sedang diputar…","Pino-play…","กำลังเล่น…", "ဖွင့်နေသည်…"],
   audioBlocked: ["自動再生できませんでした。ボタンで再生してください。","Couldn't auto-play. Please play manually.","Tidak bisa memutar otomatis. Silakan putar secara manual.","Hindi na-auto-play. Paki-play nang manu-mano.","ไม่สามารถเล่นอัตโนมัติได้ กรุณากดปุ่มเพื่อเล่นเสียง", "အလိုအလျောက် မဖွင့်နိုင်ပါ။ ခလုတ်ကို နှိပ်၍ ဖွင့်ပါ။"],
   audioSpeed:   ["速度","Speed","Kecepatan","Bilis","ความเร็ว", "အမြန်နှုန်း"],
-  audioAutoPlaySetting: ["聴解問題の音声を自動再生","Auto-play listening audio","Putar otomatis audio mendengarkan","I-auto-play ang listening audio","เล่นเสียงข้อสอบฟังอัตโนมัติ", "နားထောင်ရန် အသံကို အလိုအလျောက် ဖွင့်ရန်"],
+  audioAutoPlaySetting: ["聴解問題の音声を自動再生","Auto-play listening audio","Putar otomatis audio soal menyimak","I-auto-play ang listening audio","เล่นเสียงข้อสอบฟังอัตโนมัติ","နားထောင်ရန် အသံကို အလိုအလျောက် ဖွင့်ရန်"],
   showScript:   ["会話スクリプトを文字で表示","Show conversation script as text","Tampilkan skrip percakapan","Ipakita ang script ng usapan","แสดงบทสนทนาเป็นข้อความ", "စကားပြော စာသားကို ပြရန်"],
   showTranslation: ["訳を見る","Show translation","Tampilkan terjemahan","Ipakita ang salin","ดูคำแปล", "ဘာသာပြန် ကြည့်ရန်"],
   scriptLabel:  ["スクリプト","Script","Skrip","Script","บทสนทนา", "စာသား"],
@@ -329,8 +471,8 @@ const T = {
   achieveCaptionPractice:["模試未受験のため練習正答率で算出（参考値）","Based on practice accuracy (no mock exam yet, reference only)","Berdasarkan akurasi latihan (belum ujian simulasi, hanya referensi)","Base sa practice accuracy (wala pang mock exam, sanggunian lang)","คำนวณจากอัตราความถูกต้องในการฝึกซ้อม (ยังไม่ได้สอบจำลอง เป็นเพียงค่าอ้างอิง)", "အစမ်းစာမေးပွဲ မဖြေရသေးသဖြင့် လေ့ကျင့်မှု အဖြေမှန်နှုန်းဖြင့် တွက်ထားသည် (ကိုးကားရန်သာ)"],
   statusGood:    ["順調に学習できています","You're on track","Anda berada di jalur yang benar","Nasa tamang landas ka","คุณกำลังเรียนได้อย่างราบรื่น", "လေ့လာမှု ကောင်းကောင်း တိုးတက်နေပါသည်"],
   statusMid:     ["もう少しで合格ラインです","Almost at the pass line","Hampir mencapai batas lulus","Malapit na sa pass line","ใกล้ถึงเกณฑ์ผ่านแล้ว", "အောင်မှတ်နှင့် နီးကပ်နေပါပြီ"],
-  statusBad:     ["要強化：重点的な学習が必要です","Needs improvement: focused study needed","Perlu ditingkatkan: perlu belajar fokus","Kailangan ng pagpapabuti: focused study kailangan","ควรเสริม: ต้องเน้นทบทวนเป็นพิเศษ", "အားဖြည့်ရန် လိုအပ်: အာရုံစိုက်၍ လေ့လာရန် လိုအပ်ပါသည်"],
-  statusVeryBad: ["要重点対策：基礎から見直しましょう","Needs major focus: review the basics","Perlu fokus besar: tinjau ulang dasar-dasar","Kailangan ng malaking focus: balikan ang basics","ควรเน้นเป็นพิเศษ: กลับไปทบทวนพื้นฐาน", "အထူး ဂရုစိုက်ရန်: အခြေခံမှ ပြန်လေ့လာပါ"],
+  statusBad:     ["要強化：重点的な学習が必要です","Needs improvement: focused study needed","Perlu ditingkatkan: perlu belajar lebih fokus","Kailangan ng pagpapabuti: kailangang mag-aral nang mas nakatuon","ควรเสริม: ต้องเน้นทบทวนเป็นพิเศษ","အားဖြည့်ရန် လိုအပ်: အာရုံစိုက်၍ လေ့လာရန် လိုအပ်ပါသည်"],
+  statusVeryBad: ["要重点対策：基礎から見直しましょう","Needs major focus: review the basics","Perlu perhatian khusus: tinjau kembali dari dasar","Kailangan ng espesyal na pagsisikap: balikan ang mga pangunahing kaalaman","ควรเน้นเป็นพิเศษ: กลับไปทบทวนพื้นฐาน","အထူး ဂရုစိုက်ရန်: အခြေခံမှ ပြန်လေ့လာပါ"],
   pointsToGo:    ["合格ラインまであと","points to the pass line","poin lagi menuju batas lulus","points na lang papunta sa pass line","อีกกี่คะแนนถึงเกณฑ์ผ่าน", "အောင်မှတ်ရရန် ကျန်ရှိသည့်"],
   weeklyCount:   ["今週","This week","Minggu ini","Ngayong linggo","สัปดาห์นี้", "ဤအပတ်"],
   subjectStrength: ["分野別実力","Strength by Subject","Kekuatan per Subjek","Lakas kada Subject","ความสามารถแยกตามหมวด", "ဘာသာရပ်အလိုက် စွမ်းရည်"],
@@ -342,7 +484,7 @@ const T = {
   recommendChoukai:["聴解の練習量を増やしましょう","Increase your listening practice","Tingkatkan latihan mendengarkan","Dagdagan ang listening practice","เพิ่มปริมาณการฝึกฟัง", "နားထောင် လေ့ကျင့်မှုကို ပိုများများ လုပ်ပါ"],
   practiceThis:  ["この分野を練習する","Practice this area","Latih area ini","I-practice ito","ฝึกซ้อมหมวดนี้", "ဤဘာသာရပ်ကို လေ့ကျင့်ရန်"],
   trendTitle:    ["学習推移（直近7日間）","Trend (Last 7 Days)","Tren (7 Hari Terakhir)","Trend (Huling 7 Araw)","แนวโน้มการเรียน (7 วันล่าสุด)", "လေ့လာမှု တိုးတက်ပြောင်းလဲမှု (နောက်ဆုံး ၇ ရက်)"],
-  trendNoData:   ["2日以上学習すると、推移グラフが表示されます。","Study on 2 or more days to see a trend graph.","Belajar 2 hari atau lebih untuk melihat grafik tren.","Mag-aral ng 2 o higit pang araw para makita ang trend graph.","เรียนต่อเนื่อง 2 วันขึ้นไปเพื่อดูกราฟแนวโน้ม", "၂ ရက်နှင့် အထက် လေ့လာပါက ဂရပ်ကို ပြပါမည်။"],
+  trendNoData:   ["2日以上学習すると、推移グラフが表示されます。","Study on 2 or more days to see a trend graph.","Belajar 2 hari atau lebih untuk melihat grafik tren.","Mag-aral ng 2 o higit pang araw para makita ang trend graph.","เรียนอย่างน้อย 2 วันเพื่อดูกราฟแนวโน้ม","၂ ရက်နှင့် အထက် လေ့လာပါက ဂရပ်ကို ပြပါမည်။"],
   recentTitle:   ["最近の学習","Recent Learning","Belajar Terkini","Kamakailang Pag-aaral","การเรียนล่าสุด", "မကြာသေးမီက လေ့လာမှု"],
   recentNoData:  ["まだ学習記録がありません。","No learning records yet.","Belum ada catatan belajar.","Wala pang learning records.","ยังไม่มีประวัติการเรียน", "လေ့လာမှု မှတ်တမ်း မရှိသေးပါ။"],
   todayRecommend:["今日のおすすめ","Today's Recommendation","Rekomendasi Hari Ini","Rekomendasyon Ngayon","แนะนำสำหรับวันนี้", "ယနေ့ အကြံပြုချက်"],
@@ -360,6 +502,24 @@ const T = {
   tabHome:       ["ホーム","Home","Beranda","Home","หน้าหลัก", "ပင်မစာမျက်နှာ"],
   tabPractice:   ["練習する","Practice","Latihan","Practice","ฝึกซ้อม", "လေ့ကျင့်ရန်"],
   tabMock:       ["模試を受ける","Mock Exam","Ujian Simulasi","Mock Exam","สอบจำลอง", "အစမ်းစာမေးပွဲ ဖြေရန်"],
+  tabRecord: ["学習記録","Record","Catatan","Talaan","บันทึก","မှတ်တမ်း"],
+  welcomeBack: ["おかえりなさい、{n}さん","Welcome back, {n}!","Selamat datang kembali, {n}!","Welcome back, {n}!","ยินดีต้อนรับกลับมา {n}","{n} ပြန်လာတာ ဝမ်းသာပါတယ်။"],
+  weekDaysLabel: ["今週の学習日","Study days this week","Hari belajar minggu ini","Mga araw ng pag-aaral ngayong linggo","วันที่เรียนสัปดาห์นี้","ဒီအပတ် လေ့လာတဲ့ရက်များ"],
+  daysUnit: ["日","days","hari","araw","วัน","ရက်"],
+  todayPick: ["今日のおすすめ","Today's pick","Rekomendasi hari ini","Rekomendasyon ngayon","แนะนำวันนี้","ယနေ့အတွက် အကြံပြုချက်"],
+  pickStartTitle: ["{s}を10問 練習しましょう","Practice 10 questions: {s}","Latihan 10 soal: {s}","Magsanay ng 10 tanong sa {s}","ฝึก {s} 10 ข้อ","{s} မေးခွန်း ၁၀ ခု လေ့ကျင့်ကြမယ်"],
+  pickContinueTitle: ["{s}を 10問 続けましょう","Continue {s}: 10 questions","Lanjutkan {s}: 10 soal","Ituloy ang {s}: 10 tanong","เรียน {s} ต่ออีก 10 ข้อ","{s} ကို မေးခွန်း ၁၀ ခု ဆက်လက်လေ့ကျင့်ကြမယ်"],
+  lastResultLine: ["前回：{n}問中 {c}問正解","Last time: {c} of {n} correct","Terakhir: {c} dari {n} benar","Huling beses: {c} sa {n} ang tama","ครั้งก่อน: ถูก {c} จาก {n} ข้อ","ယခင်: {n} ခုအနက် {c} ခု မှန်"],
+  startStudyBtn: ["学習を始める","Start studying","Mulai belajar","Simulan ang pag-aaral","เริ่มเรียน","စတင်လေ့လာမည်"],
+  firstHint: ["まず1つ、やってみましょう","Let's try one first","Coba satu dulu","Subukan muna natin ang isa","ลองทำสักหนึ่งชุดก่อน","တစ်ခုအရင် စမ်းကြည့်ကြမယ်"],
+  weakPickTitle: ["苦手：{c}","Weak area: {c}","Bagian yang perlu ditingkatkan: {c}","Bahaging kailangang pagbutihin: {c}","จุดที่ยังไม่ถนัด: {c}","အားနည်းချက်: {c}"],
+  rateLine: ["正答率 {r}%","Accuracy {r}%","Akurasi {r}%","Katumpakan {r}%","อัตราความถูกต้อง {r}%","အဖြေမှန်နှုန်း {r}%"],
+  period7: ["7日間","7 days","7 hari","7 araw","7 วัน","၇ ရက်"],
+  period30: ["30日間","30 days","30 hari","30 araw","30 วัน","၃၀ ရက်"],
+  trendTitle30: ["学習推移（直近30日間）","Trend (Last 30 Days)","Tren (30 Hari Terakhir)","Trend (Huling 30 Araw)","แนวโน้มการเรียน (30 วันล่าสุด)","လေ့လာမှုအခြေအနေ (နောက်ဆုံး ၃၀ ရက်)"],
+  examResultsTitle: ["模試の成績","Mock exam results","Hasil ujian simulasi","Resulta ng Mock Exam","ผลสอบจำลอง","အစမ်းစာမေးပွဲ ရလဒ်"],
+  noExamYet: ["まだ模試を受けていません","No mock exams yet","Belum ada ujian simulasi","Wala pang nagawang mock exam","ยังไม่ได้สอบจำลอง","အစမ်းစာမေးပွဲ မဖြေရသေးပါ"],
+  accountTitle: ["アカウント","Account","Akun","Account","บัญชี","အကောင့်"],
   tipsTitle:     ["学習のコツ","Study Tips","Tips Belajar","Study Tips","เคล็ดลับการเรียน", "လေ့လာနည်း အကြံပြုချက်"],
   tip1Title:     ["毎日少しずつ","A Little Every Day","Sedikit Setiap Hari","Konti Araw-araw","ทำทีละนิดทุกวัน", "နေ့တိုင်း နည်းနည်းချင်း"],
   tip1Body:      ["毎日コツコツ続けることが合格への近道です。","Studying a little every day is the fastest path to passing.","Belajar sedikit setiap hari adalah jalan tercepat menuju kelulusan.","Ang pag-aaral nang kaunti araw-araw ang pinakamabilis na landas tungo sa pagpasa.","การเรียนอย่างสม่ำเสมอทุกวันคือทางลัดสู่การสอบผ่าน", "နေ့တိုင်း နည်းနည်းချင်း ဇွဲမလျှော့ဘဲ လေ့လာရင် စာမေးပွဲ အောင်ဖို့ အမြန်ဆုံး လမ်းပါ။"],
@@ -3856,7 +4016,7 @@ const DATA_MOJI_8 = [
   {
     "c": "kanji",
     "q": ["【荷物】を【受付】にあずけます。「受付」の読み方はどれですか。","I leave my luggage at the reception. How do you read '受付'?","Saya menitipkan barang di resepsionis. Bagaimana cara membaca '受付'?","Iiwan ko ang bagahe sa reception. Paano bibigkasin ang '受付'?","ฝากสัมภาระที่แผนกต้อนรับ อ่านคำว่า「受付」อย่างไร", "ဧည့်ကြိုကောင်တာမှာ ပစ္စည်း အပ်ထားသည်။ '受付' ကို ဘယ်လို ဖတ်မလဲ။"],
-    "o": [["うけつけ","uketsuke","uketsuke","uketsuke","uketsuke"],["じゅふ","juf u","jufu","jufu","jufu"],["うけづけ","ukezuke","ukezuke","ukezuke","ukezuke"],["じゅつけ","jutsuke","jutsuke","jutsuke","jutsuke"]],
+    "o": [["うけつけ","uketsuke","uketsuke","uketsuke","uketsuke"],["じゅふ","jufu","jufu","jufu","jufu"],["うけづけ","ukezuke","ukezuke","ukezuke","ukezuke"],["じゅつけ","jutsuke","jutsuke","jutsuke","jutsuke"]],
     "a": 0,
     "e": ["「受付」は「うけつけ」と読みます。","'受付' (reception) is read 'uketsuke'.","'受付' (resepsionis) dibaca 'uketsuke'.","Ang '受付' (reception) ay binabasang 'uketsuke'.","'受付' (แผนกต้อนรับ) อ่านว่า 'uketsuke'", "'受付' (ဧည့်ကြိုကောင်တာ) ကို 'uketsuke' ဟု ဖတ်သည်။"],
   },
@@ -3919,7 +4079,7 @@ const DATA_MOJI_8 = [
   {
     "c": "bunmyaku",
     "q": ["約束の時間に（　　）ように、早めに出ました。","I left early so as not to (　　) the appointed time.","Saya berangkat lebih awal agar tidak (　　) waktu janji.","Umalis akong maaga para hindi (　　) sa oras ng usapan.","ออกไปแต่เนิ่นๆ เพื่อไม่ให้ (　　) เวลานัด", "ချိန်းထားသော အချိန်ကို (　　) အောင် စောစော ထွက်ခဲ့သည်။"],
-    "o": [["遅れない","be late","terlambat","ma-late","สาย", "နောက်မကျ"],["遅れる","be late","terlambat","ma-late","สาย", "နောက်ကျ"],["急がない","hurry","terburu-buru","magmadali","รีบ", "အလျင်မလို"],["休まない","rest","istirahat","magpahinga","พัก", "အနားမယူ"]],
+    "o": [["遅れない","not be late","tidak terlambat","hindi ma-late","ไม่สาย","နောက်မကျ"],["遅れる","be late","terlambat","ma-late","สาย", "နောက်ကျ"],["急がない","not hurry","tidak terburu-buru","hindi magmadali","ไม่รีบ","အလျင်မလို"],["休まない","not rest","tidak istirahat","hindi magpahinga","ไม่พัก","အနားမယူ"]],
     "a": 0,
     "e": ["「〜ないように」で「〜しないために」という意味を表します。","'~nai you ni' means 'so as not to ~'.","'~nai you ni' berarti 'agar tidak ~'.","Ang '~nai you ni' ay nangangahulugang 'para hindi ~'.","'〜ないように' หมายถึง 'เพื่อไม่ให้〜'", "'~nai you ni' သည် '~ မဖြစ်စေရန်' ဟု အဓိပ္ပာယ်ရသည်။"],
   },
@@ -4153,15 +4313,15 @@ const DATA_DOKKAI_N4_2 = [
   },
   {
     "c": "tanbun",
-    "p": ["【お願い】洗濯機は、夜10時までに使ってください。夜はとなりの部屋の人が寝ているので、音がうるさくなります。","[Request] Please use the washing machine by 10 p.m. At night, the people in the next room are sleeping, so the noise becomes a problem.","[Permintaan] Mohon gunakan mesin cuci sampai pukul 10 malam. Malam hari penghuni kamar sebelah sedang tidur, sehingga suaranya mengganggu.","[Paalala] Pakigamit ang washing machine hanggang 10 ng gabi. Sa gabi, natutulog ang mga tao sa katabing kuwarto, kaya nakakaistorbo ang ingay.","[ขอความร่วมมือ] กรุณาใช้เครื่องซักผ้าภายใน 22.00 น. เพราะตอนกลางคืนคนห้องข้างๆ นอนอยู่ เสียงจึงดังรบกวน", "[တောင်းဆိုချက်] အဝတ်လျှော်စက်ကို ည ၁၀ နာရီမတိုင်မီ သုံးပါ။ ညဘက်တွင် ဘေးခန်းမှ လူများ အိပ်နေသဖြင့် အသံ ဆူညံပါသည်။"],
+    "p": ["【お願い】洗濯機は、夜10時までに使ってください。夜はとなりの部屋の人が寝ているので、音がうるさくなります。","[Request] Please use the washing machine by 10 p.m. At night, the people in the next room are sleeping, so the noise becomes a problem.","[Permintaan] Mohon gunakan mesin cuci paling lambat pukul 10 malam. Malam hari penghuni kamar sebelah sedang tidur, sehingga suaranya mengganggu.","[Paalala] Pakigamit ang washing machine bago mag-10 ng gabi. Sa gabi, natutulog ang mga tao sa katabing kuwarto, kaya nakakaistorbo ang ingay.","[ขอความร่วมมือ] กรุณาใช้เครื่องซักผ้าภายใน 22.00 น. เพราะตอนกลางคืนคนห้องข้างๆ นอนอยู่ เสียงจึงดังรบกวน", "[တောင်းဆိုချက်] အဝတ်လျှော်စက်ကို ည ၁၀ နာရီမတိုင်မီ သုံးပါ။ ညဘက်တွင် ဘေးခန်းမှ လူများ အိပ်နေသဖြင့် အသံ ဆူညံပါသည်။"],
     "q": ["洗濯機について、正しいものはどれですか。","Which is correct about the washing machine?","Manakah yang benar tentang mesin cuci?","Alin ang tama tungkol sa washing machine?","ข้อใดถูกต้องเกี่ยวกับเครื่องซักผ้า", "အဝတ်လျှော်စက်နှင့်ပတ်သက်၍ မှန်သောအရာမှာ ဘာနည်း။"],
-    "o": [["夜10時までに使う","Use it by 10 p.m.","Menggunakannya sampai pukul 10 malam","Gamitin hanggang 10 ng gabi","ใช้ภายใน 22.00 น.", "ည ၁၀ နာရီမတိုင်မီ သုံးသည်"],["夜10時から使う","Use it from 10 p.m.","Menggunakannya mulai pukul 10 malam","Gamitin simula 10 ng gabi","ใช้ตั้งแต่ 22.00 น.", "ည ၁၀ နာရီကစ၍ သုံးသည်"],["朝は使ってはいけない","You must not use it in the morning","Tidak boleh digunakan pada pagi hari","Bawal gamitin sa umaga","ห้ามใช้ตอนเช้า", "မနက်ဘက်တွင် မသုံးရ"],["となりの人に聞いてから使う","Ask the neighbor before using it","Bertanya kepada tetangga sebelum menggunakannya","Magtanong muna sa katabi bago gamitin","ถามคนห้องข้างๆ ก่อนใช้", "ဘေးခန်းလူကို မေးပြီးမှ သုံးသည်"]],
+    "o": [["夜10時までに使う","Use it by 10 p.m.","Menggunakannya paling lambat pukul 10 malam","Gamitin bago mag-10 ng gabi","ใช้ภายใน 22.00 น.", "ည ၁၀ နာရီမတိုင်မီ သုံးသည်"],["夜10時から使う","Use it from 10 p.m.","Menggunakannya mulai pukul 10 malam","Gamitin simula 10 ng gabi","ใช้ตั้งแต่ 22.00 น.", "ည ၁၀ နာရီကစ၍ သုံးသည်"],["朝は使ってはいけない","You must not use it in the morning","Tidak boleh digunakan pada pagi hari","Bawal gamitin sa umaga","ห้ามใช้ตอนเช้า", "မနက်ဘက်တွင် မသုံးရ"],["となりの人に聞いてから使う","Ask the neighbor before using it","Bertanya kepada tetangga sebelum menggunakannya","Magtanong muna sa katabi bago gamitin","ถามคนห้องข้างๆ ก่อนใช้", "ဘေးခန်းလူကို မေးပြီးမှ သုံးသည်"]],
     "a": 0,
-    "e": ["「夜10時までに使ってください」とあります。朝について、本文には書いてありません。","The text says 'Please use it by 10 p.m.' The text does not say anything about the morning.","Teks menyebutkan 'Mohon gunakan sampai pukul 10 malam'. Tidak ada keterangan tentang pagi hari dalam teks.","Nakasulat sa teksto: 'Pakigamit hanggang 10 ng gabi.' Walang nakasulat tungkol sa umaga.","ในข้อความเขียนว่า 'กรุณาใช้ภายใน 22.00 น.' ส่วนช่วงเช้าไม่ได้เขียนไว้ในข้อความ", "စာထဲတွင် 'ည ၁၀ နာရီမတိုင်မီ သုံးပါ' ဟု ရေးထားသည်။ မနက်ဘက်အကြောင်းကို စာထဲတွင် မရေးထားပါ။"]
+    "e": ["「夜10時までに使ってください」とあります。朝について、本文には書いてありません。","The text says 'Please use it by 10 p.m.' The text does not say anything about the morning.","Teks menyebutkan 'Mohon gunakan paling lambat pukul 10 malam'. Tidak ada keterangan tentang pagi hari dalam teks.","Nakasulat sa teksto: 'Pakigamit bago mag-10 ng gabi.' Walang nakasulat tungkol sa umaga.","ในข้อความเขียนว่า 'กรุณาใช้ภายใน 22.00 น.' ส่วนช่วงเช้าไม่ได้เขียนไว้ในข้อความ", "စာထဲတွင် 'ည ၁၀ နာရီမတိုင်မီ သုံးပါ' ဟု ရေးထားသည်။ မနက်ဘက်အကြောင်းကို စာထဲတွင် မရေးထားပါ။"]
   },
   {
     "c": "tanbun",
-    "p": ["田中さんへ。倉庫のカギは、事務所のつくえの引き出しに入っています。使ったあとは、もとの場所にもどしてください。　山下","To Tanaka: The warehouse key is in the drawer of the desk in the office. After you use it, please put it back in its original place.　Yamashita","Kepada Tanaka: Kunci gudang ada di laci meja di kantor. Setelah digunakan, mohon kembalikan ke tempat semula.　Yamashita","Para kay Tanaka: Ang susi ng bodega ay nasa drawer ng mesa sa opisina. Pagkatapos gamitin, pakibalik sa dating lalagyan.　Yamashita","ถึงคุณทานากะ: กุญแจโกดังอยู่ในลิ้นชักโต๊ะในห้องทำงาน ใช้เสร็จแล้วกรุณานำไปวางไว้ที่เดิมนะครับ　ยามาชิตะ", "တာနာကာထံ။ ဂိုဒေါင်သော့သည် ရုံးခန်းရှိ စားပွဲအံဆွဲထဲတွင် ရှိသည်။ သုံးပြီးလျှင် မူလနေရာသို့ ပြန်ထားပါ။　ယာမရှီတာ"],
+    "p": ["田中さんへ。倉庫のカギは、事務所のつくえの引き出しに入っています。使ったあとは、もとの場所にもどしてください。　山下","To Tanaka: The warehouse key is in the drawer of the desk in the office. After you use it, please put it back in its original place.　Yamashita","Kepada Tanaka: Kunci gudang ada di laci meja di kantor. Setelah digunakan, mohon kembalikan ke tempat semula.　Yamashita","Para kay Tanaka: Ang susi ng bodega ay nasa drawer ng mesa sa opisina. Pagkatapos gamitin, pakibalik sa dating lugar.　Yamashita","ถึงคุณทานากะ: กุญแจโกดังอยู่ในลิ้นชักโต๊ะในห้องทำงาน ใช้เสร็จแล้วกรุณานำไปวางไว้ที่เดิมนะครับ　ยามาชิตะ", "တာနာကာထံ။ ဂိုဒေါင်သော့သည် ရုံးခန်းရှိ စားပွဲအံဆွဲထဲတွင် ရှိသည်။ သုံးပြီးလျှင် မူလနေရာသို့ ပြန်ထားပါ။　ယာမရှီတာ"],
     "q": ["倉庫のカギは、どこにありますか。","Where is the warehouse key?","Di mana kunci gudang?","Nasaan ang susi ng bodega?","กุญแจโกดังอยู่ที่ไหน", "ဂိုဒေါင်သော့သည် ဘယ်မှာ ရှိသနည်း။"],
     "o": [["倉庫の中","Inside the warehouse","Di dalam gudang","Sa loob ng bodega","ในโกดัง", "ဂိုဒေါင်အတွင်း"],["田中さんのつくえ","Tanaka's desk","Meja Tanaka","Ang mesa ni Tanaka","โต๊ะของคุณทานากะ", "တာနာကာ၏ စားပွဲ"],["山下さんのかばんの中","Inside Yamashita's bag","Di dalam tas Yamashita","Sa loob ng bag ni Yamashita","ในกระเป๋าของคุณยามาชิตะ", "ယာမရှီတာ၏ အိတ်ထဲ"],["事務所のつくえの引き出し","In the drawer of the desk in the office","Di laci meja di kantor","Sa drawer ng mesa sa opisina","ในลิ้นชักโต๊ะในห้องทำงาน", "ရုံးခန်းရှိ စားပွဲအံဆွဲထဲ"]],
     "a": 3,
@@ -4169,7 +4329,7 @@ const DATA_DOKKAI_N4_2 = [
   },
   {
     "c": "tanbun",
-    "p": ["あした、駅で6時に会う予定でしたが、仕事が少し長くなりそうです。6時30分でもいいですか。時間をかえて、すみません。","We planned to meet at the station at 6 o'clock tomorrow, but my work looks like it will run a little long. Is 6:30 okay? Sorry for changing the time.","Besok kita berencana bertemu di stasiun pukul 6, tetapi pekerjaan saya sepertinya akan sedikit lebih lama. Bolehkah pukul 6.30? Maaf mengubah waktunya.","Plano nating magkita sa istasyon bukas ng 6 o'clock, pero mukhang medyo magtatagal ang trabaho ko. Puwede ba ang 6:30? Pasensya na sa pagbabago ng oras.","พรุ่งนี้ตั้งใจจะเจอกันที่สถานีตอน 6 โมง แต่งานน่าจะเลิกช้าไปหน่อย 6 โมงครึ่งได้ไหม ขอโทษที่เปลี่ยนเวลา", "မနက်ဖြန် ဘူတာတွင် ၆ နာရီ တွေ့ရန် စီစဉ်ထားသော်လည်း အလုပ်က နည်းနည်း ကြာနိုင်သည်။ ၆:၃၀ ဖြစ်ပါသလား။ အချိန်ပြောင်းပေးရသဖြင့် စိတ်မကောင်းပါ။"],
+    "p": ["あした、駅で6時に会う予定でしたが、仕事が少し長くなりそうです。6時30分でもいいですか。時間をかえて、すみません。","We planned to meet at the station at 6 o'clock tomorrow, but my work looks like it will run a little long. Is 6:30 okay? Sorry for changing the time.","Besok kita berencana bertemu di stasiun pukul 6, tetapi pekerjaan saya sepertinya akan sedikit lebih lama. Bolehkah pukul 6.30? Maaf mengubah waktunya.","Plano nating magkita sa istasyon bukas ng alas-6, pero mukhang medyo magtatagal ang trabaho ko. Puwede ba ang 6:30? Pasensya na sa pagbabago ng oras.","พรุ่งนี้ตั้งใจจะเจอกันที่สถานีตอน 6 โมง แต่งานน่าจะเลิกช้าไปหน่อย 6 โมงครึ่งได้ไหม ขอโทษที่เปลี่ยนเวลา", "မနက်ဖြန် ဘူတာတွင် ၆ နာရီ တွေ့ရန် စီစဉ်ထားသော်လည်း အလုပ်က နည်းနည်း ကြာနိုင်သည်။ ၆:၃၀ ဖြစ်ပါသလား။ အချိန်ပြောင်းပေးရသဖြင့် စိတ်မကောင်းပါ။"],
     "q": ["この人は、何をお願いしていますか。","What is this person asking for?","Apa yang diminta orang ini?","Ano ang hinihiling ng taong ito?","คนนี้ขออะไร", "ဤသူသည် ဘာကို တောင်းဆိုနေသနည်း။"],
     "o": [["会う場所をかえること","To change the meeting place","Mengubah tempat bertemu","Palitan ang lugar ng pagkikita","เปลี่ยนสถานที่นัด", "တွေ့ရာနေရာကို ပြောင်းရန်"],["会う時間を30分おそくすること","To make the meeting time 30 minutes later","Mengundurkan waktu bertemu 30 menit","Iurong ng 30 minuto ang oras ng pagkikita","เลื่อนเวลานัดออกไป 30 นาที", "တွေ့ချိန်ကို မိနစ် ၃၀ နောက်ဆုတ်ရန်"],["会うのをやめること","To cancel the meeting","Membatalkan pertemuan","Kanselahin ang pagkikita","ยกเลิกการนัด", "မတွေ့တော့ရန် (ဖျက်သိမ်းရန်)"],["仕事をてつだうこと","To help with work","Membantu pekerjaan","Tumulong sa trabaho","ช่วยทำงาน", "အလုပ်ကို ကူညီရန်"]],
     "a": 1,
@@ -4201,11 +4361,11 @@ const DATA_DOKKAI_N4_2 = [
   },
   {
     "c": "tanbun",
-    "p": ["この電車は、事故のため、10分ほどおくれています。会社に行く人は、会社に電話をしたほうがいいです。","This train is running about 10 minutes late because of an accident. People going to work should call their company.","Kereta ini terlambat sekitar 10 menit karena kecelakaan. Orang yang pergi bekerja sebaiknya menelepon perusahaan.","Naantala ng mga 10 minuto ang tren na ito dahil sa aksidente. Ang mga papasok sa trabaho ay mabuting tumawag sa kumpanya.","รถไฟขบวนนี้ล่าช้าประมาณ 10 นาทีเนื่องจากอุบัติเหตุ ผู้ที่จะไปทำงานควรโทรแจ้งบริษัท", "ဤရထားသည် မတော်တဆမှုကြောင့် မိနစ် ၁၀ ခန့် နောက်ကျနေသည်။ ကုမ္ပဏီသို့ သွားသူများသည် ကုမ္ပဏီကို ဖုန်းဆက်ထားသင့်သည်။"],
+    "p": ["この電車は、事故のため、10分ほどおくれています。会社に行く人は、会社に電話をしたほうがいいです。","This train is running about 10 minutes late because of an accident. People going to work should call their company.","Kereta ini terlambat sekitar 10 menit karena kecelakaan. Orang yang pergi bekerja sebaiknya menelepon perusahaan.","Naantala ng mga 10 minuto ang tren na ito dahil sa aksidente. Ang mga papasok sa trabaho ay mas mabuting tumawag sa kumpanya.","รถไฟขบวนนี้ล่าช้าประมาณ 10 นาทีเนื่องจากอุบัติเหตุ ผู้ที่จะไปทำงานควรโทรแจ้งบริษัท", "ဤရထားသည် မတော်တဆမှုကြောင့် မိနစ် ၁၀ ခန့် နောက်ကျနေသည်။ ကုမ္ပဏီသို့ သွားသူများသည် ကုမ္ပဏီကို ဖုန်းဆက်ထားသင့်သည်။"],
     "q": ["会社に行く人は、何をしたほうがいいですか。","What should people going to work do?","Apa yang sebaiknya dilakukan orang yang pergi bekerja?","Ano ang mabuting gawin ng mga papasok sa trabaho?","ผู้ที่จะไปทำงานควรทำอะไร", "ကုမ္ပဏီသို့ သွားသူများသည် ဘာလုပ်သင့်သနည်း။"],
     "o": [["会社に電話をする","Call the company","Menelepon perusahaan","Tumawag sa kumpanya","โทรหาบริษัท", "ကုမ္ပဏီကို ဖုန်းဆက်သည်"],["バスに乗る","Take a bus","Naik bus","Sumakay ng bus","ขึ้นรถบัส", "ဘတ်စ်ကား စီးသည်"],["先に会社に行く","Go to the company first","Pergi ke perusahaan lebih dulu","Pumunta muna sa kumpanya","ไปบริษัทก่อน", "ကုမ္ပဏီသို့ ဦးစွာ သွားသည်"],["駅員に聞く","Ask the station staff","Bertanya kepada petugas stasiun","Magtanong sa kawani ng istasyon","ถามเจ้าหน้าที่สถานี", "ဘူတာဝန်ထမ်းကို မေးသည်"]],
     "a": 0,
-    "e": ["「会社に行く人は、会社に電話をしたほうがいいです」とあります。","The text says 'People going to work should call their company.'","Teks menyebutkan 'Orang yang pergi bekerja sebaiknya menelepon perusahaan'.","Nakasulat sa teksto: 'Ang mga papasok sa trabaho ay mabuting tumawag sa kumpanya.'","ในข้อความเขียนว่า 'ผู้ที่จะไปทำงานควรโทรแจ้งบริษัท'", "စာထဲတွင် 'ကုမ္ပဏီသို့ သွားသူများသည် ကုမ္ပဏီကို ဖုန်းဆက်ထားသင့်သည်' ဟု ရေးထားသည်။"]
+    "e": ["「会社に行く人は、会社に電話をしたほうがいいです」とあります。","The text says 'People going to work should call their company.'","Teks menyebutkan 'Orang yang pergi bekerja sebaiknya menelepon perusahaan'.","Nakasulat sa teksto: 'Ang mga papasok sa trabaho ay mas mabuting tumawag sa kumpanya.'","ในข้อความเขียนว่า 'ผู้ที่จะไปทำงานควรโทรแจ้งบริษัท'", "စာထဲတွင် 'ကုမ္ပဏီသို့ သွားသူများသည် ကုမ္ပဏီကို ဖုန်းဆက်ထားသင့်သည်' ဟု ရေးထားသည်။"]
   },
   {
     "c": "chubun",
@@ -4233,7 +4393,7 @@ const DATA_DOKKAI_N4_2 = [
   },
   {
     "c": "chubun",
-    "p": ["日本では、6月ごろに雨の日が続きます。これを「梅雨」といいます。梅雨のあいだは、外で洗濯物がかわかないので、部屋の中にほします。また、空気がしめっているので、食べ物がくさりやすくなります。私の国には梅雨がないので、はじめは大変でした。今は、エアコンをつけたり、食べ物を早く食べたりして、気をつけています。","In Japan, rainy days continue around June. This is called 'tsuyu' (the rainy season). During the rainy season, laundry does not dry outside, so I hang it indoors. Also, the air is damp, so food spoils easily. My country does not have a rainy season, so it was hard at first. Now I am careful by turning on the air conditioner and eating food quickly.","Di Jepang, hari hujan berlangsung terus sekitar bulan Juni. Ini disebut 'tsuyu' (musim hujan). Selama musim hujan, cucian tidak kering di luar, jadi saya menjemurnya di dalam ruangan. Selain itu, udaranya lembap sehingga makanan mudah basi. Di negara saya tidak ada musim hujan seperti ini, jadi awalnya sulit. Sekarang saya berhati-hati dengan menyalakan AC dan menghabiskan makanan lebih cepat.","Sa Japan, tuloy-tuloy ang tag-ulan sa bandang Hunyo. Tinatawag itong 'tsuyu' (rainy season). Sa panahong ito, hindi natutuyo ang mga nilabhan sa labas, kaya sa loob ng kuwarto ako nagsasampay. Basa rin ang hangin, kaya madaling mapanis ang pagkain. Walang ganitong tag-ulan sa bansa ko, kaya mahirap sa simula. Ngayon, nag-iingat ako sa pamamagitan ng pagbukas ng aircon at pagkain ng pagkain nang maaga.","ในญี่ปุ่นช่วงเดือนมิถุนายนฝนจะตกต่อเนื่องหลายวัน เรียกว่า 'ฤดูฝน (ซึยุ)' ช่วงนี้ซักผ้าแล้วตากข้างนอกไม่แห้ง จึงต้องตากในห้อง อากาศก็ชื้น อาหารจึงเสียง่าย ประเทศของฉันไม่มีฤดูฝนแบบนี้ ตอนแรกจึงลำบาก ตอนนี้ฉันระวังโดยเปิดเครื่องปรับอากาศและกินอาหารให้เร็วขึ้น", "ဂျပန်တွင် ဇွန်လခန့်တွင် မိုးရွာသောနေ့များ ဆက်တိုက်ရှိသည်။ ၎င်းကို 'ဆွီယု (မိုးရာသီ)' ဟု ခေါ်သည်။ မိုးရာသီအတွင်း အပြင်တွင် အဝတ်လှမ်း၍ မခြောက်သဖြင့် အခန်းထဲတွင် လှမ်းသည်။ ထို့အပြင် လေထုစိုထိုင်းသဖြင့် အစားအစာ ပုပ်လွယ်သည်။ ကျွန်ုပ်၏နိုင်ငံတွင် မိုးရာသီ မရှိသဖြင့် အစပိုင်းတွင် ခက်ခဲခဲ့သည်။ ယခု အဲယားကွန်း ဖွင့်ခြင်း၊ အစားအစာကို စောစောစားခြင်းဖြင့် သတိထားနေသည်။"],
+    "p": ["日本では、6月ごろに雨の日が続きます。これを「梅雨」といいます。梅雨のあいだは、外で洗濯物がかわかないので、部屋の中にほします。また、空気がしめっているので、食べ物がくさりやすくなります。私の国には梅雨がないので、はじめは大変でした。今は、エアコンをつけたり、食べ物を早く食べたりして、気をつけています。","In Japan, rainy days continue around June. This is called 'tsuyu' (the rainy season). During the rainy season, laundry does not dry outside, so I hang it indoors. Also, the air is damp, so food spoils easily. My country does not have a rainy season, so it was hard at first. Now I am careful by turning on the air conditioner and eating food quickly.","Di Jepang, hari hujan berlangsung terus sekitar bulan Juni. Ini disebut 'tsuyu' (musim hujan). Selama musim hujan, cucian tidak kering di luar, jadi saya menjemurnya di dalam ruangan. Selain itu, udaranya lembap sehingga makanan mudah basi. Di negara saya tidak ada musim hujan seperti ini, jadi awalnya sulit. Sekarang saya berhati-hati dengan menyalakan AC dan menghabiskan makanan lebih cepat.","Sa Japan, tuloy-tuloy ang tag-ulan sa bandang Hunyo. Tinatawag itong 'tsuyu' (rainy season). Sa panahong ito, hindi natutuyo ang mga nilabhan sa labas, kaya sa loob ng kuwarto ako nagsasampay. Basa rin ang hangin, kaya madaling mapanis ang pagkain. Walang ganitong tag-ulan sa bansa ko, kaya mahirap sa simula. Ngayon, nag-iingat ako sa pamamagitan ng pagbukas ng aircon at pagkain nang mas maaga.","ในญี่ปุ่นช่วงเดือนมิถุนายนฝนจะตกต่อเนื่องหลายวัน เรียกว่า 'ฤดูฝน (ซึยุ)' ช่วงนี้ซักผ้าแล้วตากข้างนอกไม่แห้ง จึงต้องตากในห้อง อากาศก็ชื้น อาหารจึงเสียง่าย ประเทศของฉันไม่มีฤดูฝนแบบนี้ ตอนแรกจึงลำบาก ตอนนี้ฉันระวังโดยเปิดเครื่องปรับอากาศและกินอาหารให้เร็วขึ้น", "ဂျပန်တွင် ဇွန်လခန့်တွင် မိုးရွာသောနေ့များ ဆက်တိုက်ရှိသည်။ ၎င်းကို 'ဆွီယု (မိုးရာသီ)' ဟု ခေါ်သည်။ မိုးရာသီအတွင်း အပြင်တွင် အဝတ်လှမ်း၍ မခြောက်သဖြင့် အခန်းထဲတွင် လှမ်းသည်။ ထို့အပြင် လေထုစိုထိုင်းသဖြင့် အစားအစာ ပုပ်လွယ်သည်။ ကျွန်ုပ်၏နိုင်ငံတွင် မိုးရာသီ မရှိသဖြင့် အစပိုင်းတွင် ခက်ခဲခဲ့သည်။ ယခု အဲယားကွန်း ဖွင့်ခြင်း၊ အစားအစာကို စောစောစားခြင်းဖြင့် သတိထားနေသည်။"],
     "q": ["梅雨について、正しいものはどれですか。","Which is correct about the rainy season?","Manakah yang benar tentang musim hujan?","Alin ang tama tungkol sa tag-ulan?","ข้อใดถูกต้องเกี่ยวกับฤดูฝน", "မိုးရာသီနှင့်ပတ်သက်၍ မှန်သောအရာမှာ ဘာနည်း။"],
     "o": [["6月ごろに雨の日が続く","Rainy days continue around June","Hari hujan berlangsung terus sekitar bulan Juni","Tuloy-tuloy ang tag-ulan sa bandang Hunyo","ฝนตกต่อเนื่องช่วงเดือนมิถุนายน", "ဇွန်လခန့်တွင် မိုးရွာသောနေ့များ ဆက်တိုက်ရှိသည်"],["洗濯物がよくかわく","Laundry dries well","Cucian cepat kering","Mabilis matuyo ang mga nilabhan","ซักผ้าแล้วแห้งดี", "အဝတ်လှမ်းလျှင် ကောင်းစွာ ခြောက်သည်"],["食べ物が長く食べられる","Food can be kept for a long time","Makanan bisa disimpan lama","Matagal na nakakain ang pagkain","เก็บอาหารไว้ได้นาน", "အစားအစာကို ကြာကြာ စားနိုင်သည်"],["この人の国にもある","It also exists in this person's country","Ada juga di negara orang ini","Mayroon din sa bansa ng taong ito","มีในประเทศของคนนี้ด้วย", "ဤသူ၏နိုင်ငံတွင်လည်း ရှိသည်"]],
     "a": 0,
@@ -5476,6 +5636,27 @@ async function establishSession(){
 // ---- 学習セッション記録 ----
 // 練習・模試を問わず「開始してから、次にホームへ戻る(または模試を提出する)まで」を1セッションとして記録する。
 // 管理者ダッシュボードの「学習セッション数・累計学習時間・学習履歴・学習カレンダー」の元データになる。
+// 科目(と、分かっていればカテゴリ)を指定して、選択画面を経由せず、すぐに10問を始める。
+// 振り返り画面で選択肢を表示する文字列。日本語以外の言語では「日本語（翻訳）」の形にする。
+// 理由: 翻訳だけだと、「ので」と「から」(どちらも because)、「遅れない」と「遅れる」のように、
+//       選んだ答えと正解が、同じ文字に見えてしまう問題があるため。翻訳が日本語と同じ(N3など)場合は、日本語だけを出す。
+function optShown(o){
+  const ja = o[0];
+  if(ST.lang === "ja") return ja;
+  const t = tr(o);
+  return (!t || t === ja) ? ja : ja + "（" + t + "）";
+}
+function startQuick(subj, cats){
+  ST.subject = subj; ST.selectedCats = cats || [];
+  startPractice(10);
+}
+// 文言の{n}などを置き換える(例: 「おかえりなさい、{n}さん」)
+function fmtT(arr, vars){
+  let t = tr(arr);
+  Object.keys(vars || {}).forEach(k=>{ t = t.split("{" + k + "}").join(String(vars[k])); });
+  return t;
+}
+
 function startSession(mode, subject){
   // 前のセッションが閉じずに残っていたら(通常起きないが念のため)先に片付ける
   if(ST.session) finishSession();
@@ -5490,6 +5671,11 @@ function finishSession(){
   const s = ST.session;
   ST.session = null;
   if(!s || s.count === 0) return; // 1問も答えずに離脱した場合は記録しない
+  // 前回の結果(科目・問題数・正解数)を端末に残す。ホームの「今日のおすすめ」で「前回: ○問中○問正解」を出すため。
+  // (通信が不要なので、ログイン状態・通信の成否に関係なく保存する)
+  if(s.mode === "practice"){
+    try{ const dd = load(); dd.lastSession = { d: Date.now(), subj: s.subject || null, n: s.count, c: s.correct }; save(dd); }catch(e){ /* noop */ }
+  }
   if(!AUTH.session || !AUTH.student) return;
   const durationSec = Math.max(1, Math.round((Date.now() - s.start) / 1000));
   const body = {
@@ -6513,7 +6699,7 @@ function render(){
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  const showTabs = ["home","practice","mock","lifeHome"].includes(ST.view);
+  const showTabs = ["home","practice","mock","record","lifeHome"].includes(ST.view);
   if(showTabs) app.appendChild(buildTabBar());
 
   if(ST.view === "login") app.appendChild(renderLogin());
@@ -6521,6 +6707,7 @@ function render(){
   else if(ST.view === "home") app.appendChild(renderHomeView());
   else if(ST.view === "practice") app.appendChild(renderPracticeView());
   else if(ST.view === "mock") app.appendChild(renderMockView());
+  else if(ST.view === "record") app.appendChild(renderRecordView());
   else if(ST.view === "select") app.appendChild(renderSelect());
   else if(ST.view === "question") app.appendChild(renderQuestion());
   else if(ST.view === "result") app.appendChild(renderResult());
@@ -6548,12 +6735,14 @@ function buildTabBar(){
   const tabs = [
     { view:"home", label: tr(T.tabHome), icon: "home" },
     { view:"practice", label: tr(T.tabPractice), icon: "practice" },
-    { view:"mock", label: tr(T.tabMock), icon: "mock" }
+    { view:"mock", label: tr(T.tabMock), icon: "mock" },
+    { view:"record", label: tr(T.tabRecord), icon: "record" }
   ];
   const icons = {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9.5a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>',
     practice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
-    mock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'
+    mock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+    record: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg>'
   };
   tabs.forEach(t=>{
     const btn = document.createElement("button");
@@ -6720,216 +6909,125 @@ function renderPasswordChange(){
 function renderHomeView(){
   const wrap = document.createElement("div");
   const s = overallStats();
-  const ach = achievementScore();
-  const weekly = weeklyStats();
-  const weakest = weakestSubject();
   const notStarted = s.studied === 0;
 
   // ---- N4/N3切り替え ----
-  const levelWrap = el('<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"></div>');
-  const levelPill = el('<div style="display:flex;background:var(--card-bg,#f0efe9);border-radius:20px;padding:3px;border:0.5px solid var(--border,#e1e0d9);"></div>');
+  const levelWrap = el('<div class="lvwrap"></div>');
+  const levelPill = el('<div class="lvpill"></div>');
   [["n4","N4"],["n3","N3"]].forEach(([lv, label])=>{
     const btn = document.createElement("button");
-    const active = ST.level === lv;
+    btn.className = "lvbtn" + (ST.level === lv ? " active" : "");
     btn.textContent = label;
-    btn.style.cssText = "border:none;border-radius:16px;padding:5px 18px;font-size:13px;font-weight:600;cursor:pointer;" +
-      (active ? "background:var(--primary,#1a3a6b);color:#fff;" : "background:transparent;color:var(--sub,#8a8578);");
     btn.onclick = ()=>{ if(ST.level !== lv){ setLevel(lv); render(); } };
     levelPill.appendChild(btn);
   });
   levelWrap.appendChild(levelPill);
   wrap.appendChild(levelWrap);
 
-  // ---- 0. 実習生氏名・所属企業(目立たせるため一番上に表示) ----
-  if(AUTH.student){
-    const idWrap = document.createElement("div");
-    idWrap.className = "idcardwrap";
-    const buildingIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg>';
-    const personIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>';
-    const idRow = (icon, label, value)=>{
-      const row = document.createElement("div");
-      row.className = "idcard";
-      const iconBox = document.createElement("div");
-      iconBox.className = "idcardicon";
-      iconBox.innerHTML = icon;
-      const textBox = document.createElement("div");
-      textBox.className = "idcardtext";
-      const lbl = document.createElement("div");
-      lbl.className = "idcardlabel";
-      lbl.textContent = label;
-      const val = document.createElement("div");
-      val.className = "idcardvalue";
-      val.textContent = value;
-      textBox.appendChild(lbl); textBox.appendChild(val);
-      row.appendChild(iconBox); row.appendChild(textBox);
-      return row;
-    };
-    idWrap.appendChild(idRow(buildingIcon, tr(T.companyId), AUTH.student.company_id || "-"));
-    idWrap.appendChild(idRow(personIcon, tr(T.learnerId), AUTH.student.name || "-"));
-    wrap.appendChild(idWrap);
-  }
+  // ---- あいさつ + 今週の学習日(●が学習した日) ----
+  const fullName = (AUTH.student && AUTH.student.name) ? String(AUTH.student.name).trim() : "";
+  const callName = fullName ? fullName.split(/[\s　]+/)[0] : "";
+  const week7 = dailyTrendArray(7);
+  const studiedDays = week7.filter(x=>x.n > 0).length;
+  const greet = el('<div class="jgreet"></div>');
+  greet.innerHTML = '<div class="jgreet-t"></div>' +
+    '<div class="jgreet-week"><span class="jgreet-wl"></span><span class="jgreet-dots">' + week7.map(x=>'<i class="'+(x.n > 0 ? 'on' : '')+'"></i>').join("") + '</span><b></b></div>';
+  greet.querySelector(".jgreet-t").textContent = callName ? fmtT(T.welcomeBack, { n: callName }) : tr(T.tabHome);
+  greet.querySelector(".jgreet-wl").textContent = tr(T.weekDaysLabel);
+  greet.querySelector("b").textContent = studiedDays + "/7" + tr(T.daysUnit);
+  wrap.appendChild(greet);
 
-  // ---- 1. 分野を選んで学習する(ホームの入口。開いてすぐ目に入る位置に置く) ----
+  // ---- 今日のおすすめ(押すと、すぐ10問が始まる) ----
+  const subjIconsHero = {
+    moji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    bunpo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>',
+    dokkai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="11" cy="14" r="2.5"/><line x1="13" y1="16" x2="15.5" y2="18.5"/></svg>',
+    choukai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'
+  };
+  const lastSt = lastStudied();
+  const lastSess = (load().lastSession) || null;
+  let pickSubj, pickTitle, pickSub;
+  if(!lastSt){
+    pickSubj = "moji";
+    pickTitle = fmtT(T.pickStartTitle, { s: tr(SUBJECT.moji) });
+    pickSub = tr(T.firstHint);
+  } else {
+    pickSubj = lastSt.subj;
+    pickTitle = fmtT(T.pickContinueTitle, { s: tr(SUBJECT[lastSt.subj]) });
+    const catName = (lastSt.cat && CAT[lastSt.cat]) ? tr(CAT[lastSt.cat]) : "";
+    const lastLine = (lastSess && lastSess.subj === lastSt.subj && lastSess.n > 0) ? fmtT(T.lastResultLine, { n: lastSess.n, c: lastSess.c }) : "";
+    pickSub = [catName, lastLine].filter(x=>x).join("　");
+  }
+  const hero = el('<div class="jhero" data-subj="'+pickSubj+'"></div>');
+  hero.innerHTML =
+    '<div class="jhero-label"><span class="star">★</span><span class="lbl"></span></div>'+
+    '<div class="jhero-main"><div class="jhero-icon">'+subjIconsHero[pickSubj]+'</div><div class="jhero-text"><div class="jhero-title"></div><div class="jhero-sub"></div></div></div>'+
+    '<button class="jhero-btn"><span></span><i>→</i></button>';
+  hero.querySelector(".lbl").textContent = tr(T.todayPick);
+  hero.querySelector(".jhero-title").textContent = pickTitle;
+  const subEl = hero.querySelector(".jhero-sub"); subEl.textContent = pickSub; if(!pickSub) subEl.style.display = "none";
+  hero.querySelector(".jhero-btn span").textContent = tr(T.startStudyBtn);
+  hero.querySelector(".jhero-btn").onclick = ()=> startQuick(pickSubj, []);
+  wrap.appendChild(hero);
+
+  // ---- 分野を選んで学習する(タイルを押すと、その科目の10問がすぐ始まる) ----
   const sec3 = el('<div class="jsection first"></div>');
   const lbl3 = el('<div class="jsectiontitle"></div>'); lbl3.textContent = tr(T.studyTitle);
   sec3.appendChild(lbl3);
-
-
-  const subjIcons = {
-    moji: ICON_GPT.vocabulary,
-    bunpo: ICON_GPT.grammar,
-    dokkai: ICON_GPT.reading,
-    choukai: ICON_GPT.listening
-  };
-  const sec3grid = el('<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>');
+  const sec3grid = el('<div class="jsubjgrid"></div>');
   ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
     const r = subjRate(subj);
     const rate = r.rate === null ? 0 : r.rate;
-    const card = el('<div class="jsubjcard"></div>');
-    card.style.cssText = "background:var(--card-bg,#fff);border:1px solid var(--border,#e1e0d9);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;";
-    const iconBox = document.createElement("div");
-    iconBox.style.cssText = "width:40px;height:40px;margin:0 auto;";
-    iconBox.innerHTML = subjIcons[subj];
-    const iconSvg = iconBox.querySelector("svg");
-    if(iconSvg){ iconSvg.setAttribute("width","40"); iconSvg.setAttribute("height","40"); }
-    const nameEl = document.createElement("div");
-    nameEl.style.cssText = "font-size:13.5px;font-weight:700;margin-top:8px;";
+    const card = el('<div class="jsubjcard" data-subj="'+subj+'"></div>');
+    const iconBox = el('<div class="jsubjicon"></div>');
+    iconBox.innerHTML = subjIconsHero[subj];
+    const nameEl = el('<div class="jsubjname"></div>');
     nameEl.textContent = tr(SUBJECT[subj]);
-    const rateEl = document.createElement("div");
-    rateEl.style.cssText = "font-size:11.5px;color:var(--sub,#8a8578);margin-top:2px;";
+    const rateEl = el('<div class="jsubjrate"></div>');
     rateEl.textContent = r.rate === null ? tr(["未学習","Not started","Belum mulai","Hindi pa nasisimulan","ยังไม่ได้เรียน", "မလေ့လာရသေး"]) : rate + "%";
-    const goEl = document.createElement("div");
-    goEl.style.cssText = "font-size:11.5px;font-weight:700;color:var(--primary,#1a3a6b);margin-top:6px;";
+    const bar = el('<div class="jsubjbar"><i style="width:'+rate+'%"></i></div>');
+    const goEl = el('<div class="jsubjgo"></div>');
     goEl.textContent = tr(T.practiceGo);
-    card.appendChild(iconBox); card.appendChild(nameEl); card.appendChild(rateEl); card.appendChild(goEl);
-    card.onclick = ()=>{ ST.mode="practice"; ST.subject=subj; ST.selectedCats=[]; ST.view="select"; render(); };
+    card.appendChild(iconBox); card.appendChild(nameEl); card.appendChild(rateEl); card.appendChild(bar); card.appendChild(goEl);
+    card.onclick = ()=> startQuick(subj, []);
     sec3grid.appendChild(card);
   });
   sec3.appendChild(sec3grid);
   wrap.appendChild(sec3);
 
-  // ---- 2. 前回の続き / 苦手分野を勉強する(学習記録があるときだけ表示) ----
-  // 以前は大きな「学習を続ける」ボタン1つだけが目立ち、そこからしか入れないと誤解されやすかった。
-  // 入口は上の4科目カードとし、ここは近道として控えめな2つのボタンにする。
-  const last = lastStudied();
-  const chevron = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
-  const shortcutBtn = (title, sub, onclick)=>{
-    const b = document.createElement("button");
-    b.style.cssText = "display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card-bg,#fff);border:1px solid var(--border,#e1e0d9);border-radius:12px;padding:12px 14px;margin-top:10px;cursor:pointer;color:inherit;font:inherit;";
-    const body = document.createElement("div");
-    body.style.flex = "1";
-    const t1 = document.createElement("div");
-    t1.style.cssText = "font-size:13.5px;font-weight:700;";
-    t1.textContent = title;
-    const t2 = document.createElement("div");
-    t2.style.cssText = "font-size:11.5px;color:var(--sub,#8a8578);margin-top:2px;";
-    t2.textContent = sub;
-    body.appendChild(t1); body.appendChild(t2);
-    const arrow = document.createElement("div");
-    arrow.style.cssText = "color:var(--sub,#8a8578);display:flex;";
-    arrow.innerHTML = chevron;
-    b.appendChild(body); b.appendChild(arrow);
-    b.onclick = onclick;
-    return b;
-  };
-  if(last){
-    const lastSub = tr(SUBJECT[last.subj]) + (last.cat && CAT[last.cat] ? "・" + tr(CAT[last.cat]) : "");
-    wrap.appendChild(shortcutBtn(tr(T.ctaContinue), lastSub, ()=>{ ST.mode="practice"; ST.subject=last.subj; ST.selectedCats = last.cat ? [last.cat] : []; ST.view="select"; render(); }));
-  }
-  if(weakest){
-    const weakSub = tr(SUBJECT[weakest.subj]) + "（" + weakest.rate + "%）";
-    wrap.appendChild(shortcutBtn(tr(T.ctaWeak), weakSub, ()=>{ ST.mode="practice"; ST.subject=weakest.subj; ST.selectedCats=[]; ST.view="select"; render(); }));
-  }
-
-  // ---- よく間違えている問題(振り返り用。端末内の学習記録だけで完結、通信不要) ----
+  // ---- 苦手の近道(正答率が低い分野。3問以上解いたカテゴリの中で一番低いもの) ----
   {
-    const mistakeCard = el('<div class="card" style="margin-top:14px;"></div>');
-    const mTitle = document.createElement("div");
-    mTitle.className = "card-title";
-    mTitle.textContent = tr(T.mistakeCardTitle);
-    mistakeCard.appendChild(mTitle);
-    const mDesc = document.createElement("div");
-    mDesc.className = "card-desc";
-    mDesc.textContent = tr(T.mistakeCardDesc);
-    mistakeCard.appendChild(mDesc);
-
-    if(typeof ST.mistakeShowCount !== "number") ST.mistakeShowCount = 5;
-    const allMistakes = mistakeReviewList();
-    if(allMistakes.length === 0){
-      const empty = document.createElement("div");
-      empty.style.cssText = "font-size:12.5px;color:var(--sub,#8a8578);padding:8px 0;";
-      empty.textContent = tr(T.mistakeEmpty);
-      mistakeCard.appendChild(empty);
-    } else {
-      const shown = allMistakes.slice(0, ST.mistakeShowCount);
-      shown.forEach(x=>{
-        const item = el('<div style="border:1px solid var(--border,#e1e0d9);border-radius:12px;padding:12px;margin-top:10px;"></div>');
-        const top = el('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"></div>');
-        const catSpan = document.createElement("span");
-        catSpan.style.cssText = "font-size:11px;font-weight:700;color:var(--blue,#2a5da8);background:var(--blue-bg,#eef3fb);padding:2px 8px;border-radius:999px;";
-        catSpan.textContent = tr(CAT[x.q.c] || SUBJECT[x.q.subj]);
-        const rateSpan = document.createElement("span");
-        rateSpan.style.cssText = "font-size:11.5px;color:#c0392b;font-weight:700;";
-        rateSpan.textContent = tr(T.mistakeRate) + " " + Math.round(x.rate*100) + "%（" + x.r.c + "/" + x.r.n + "）";
-        top.appendChild(catSpan); top.appendChild(rateSpan);
-        item.appendChild(top);
-
-        const qEl = document.createElement("div");
-        qEl.style.cssText = "font-size:13.5px;margin-bottom:8px;";
-        renderPaired(qEl, x.q.q);
-        item.appendChild(qEl);
-
-        if(typeof x.r.lastWrongOrig === "number" && x.q.o[x.r.lastWrongOrig]){
-          const yourEl = document.createElement("div");
-          yourEl.style.cssText = "font-size:12.5px;color:#c0392b;margin-bottom:4px;";
-          const yourLabel = document.createElement("span");
-          yourLabel.style.fontWeight = "700";
-          yourLabel.textContent = tr(T.mistakeYourAnswer) + "：";
-          yourEl.appendChild(yourLabel);
-          const yourVal = document.createElement("span");
-          yourVal.textContent = tr(x.q.o[x.r.lastWrongOrig]);
-          yourEl.appendChild(yourVal);
-          item.appendChild(yourEl);
-        }
-
-        const aEl = document.createElement("div");
-        aEl.style.cssText = "font-size:12.5px;color:#2a7a4a;margin-bottom:6px;";
-        const aLabel = document.createElement("span");
-        aLabel.style.fontWeight = "700";
-        aLabel.textContent = tr(T.mistakeCorrectAnswer) + "：";
-        aEl.appendChild(aLabel);
-        const aVal = document.createElement("span");
-        aVal.textContent = tr(x.q.o[x.q.a]);
-        aEl.appendChild(aVal);
-        item.appendChild(aEl);
-
-        if(x.q.e){
-          const eEl = document.createElement("div");
-          eEl.style.cssText = "font-size:12px;color:var(--sub,#8a8578);";
-          eEl.textContent = tr(x.q.e);
-          item.appendChild(eEl);
-        }
-        mistakeCard.appendChild(item);
+    const dq = load().q || {};
+    let worstCat = null;
+    ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
+      const agg = {};
+      (ALL_DATA[subj] || []).forEach(q=>{
+        const r = dq[q.id]; if(!r || !r.n) return;
+        if(!agg[q.c]) agg[q.c] = { n:0, c:0 };
+        agg[q.c].n += r.n; agg[q.c].c += r.c;
       });
-      if(allMistakes.length > shown.length){
-        const moreBtn = document.createElement("button");
-        moreBtn.className = "secondary";
-        moreBtn.style.cssText = "width:100%;margin-top:10px;";
-        moreBtn.textContent = tr(T.mistakeMore) + "（あと" + (allMistakes.length - shown.length) + "）";
-        moreBtn.onclick = ()=>{ ST.mistakeShowCount += 5; render(); };
-        mistakeCard.appendChild(moreBtn);
-      }
+      Object.keys(agg).forEach(cat=>{
+        if(agg[cat].n < 3) return;
+        const rt = Math.round(agg[cat].c / agg[cat].n * 100);
+        if(rt < 70 && (!worstCat || rt < worstCat.rate)) worstCat = { subj, cat, rate: rt };
+      });
+    });
+    if(worstCat && CAT[worstCat.cat]){
+      const wk = el('<button class="jshortcut jweak"></button>');
+      wk.innerHTML = '<div class="jshortcut-body"><div class="jshortcut-t1"></div><div class="jshortcut-t2"></div></div><div class="jshortcut-arrow"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>';
+      wk.querySelector(".jshortcut-t1").textContent = fmtT(T.weakPickTitle, { c: tr(CAT[worstCat.cat]) });
+      wk.querySelector(".jshortcut-t2").textContent = tr(SUBJECT[worstCat.subj]) + "　" + fmtT(T.rateLine, { r: worstCat.rate });
+      wk.onclick = ()=> startQuick(worstCat.subj, [worstCat.cat]);
+      wrap.appendChild(wk);
     }
-    wrap.appendChild(mistakeCard);
   }
 
   // ---- 生活情報への入り口(N4/N3のレベルと関係なく、いつでも見られる) ----
-  wrap.appendChild(el('<hr class="jdivider" style="margin:20px 0 14px;">'));
   const lifeNote = document.createElement("div");
   lifeNote.style.cssText = "font-size:11px;color:var(--sub,#8a8578);margin-bottom:4px;";
   lifeNote.textContent = tr(["N4・N3に関係なく、いつでも学習できます","Available anytime, regardless of N4/N3","Tersedia kapan saja, terlepas dari N4/N3","Available anumang oras, kahit N4/N3","ใช้ได้ตลอดเวลา ไม่ว่าจะเป็น N4 หรือ N3", "N4・N3 မည်သည့်အဆင့်ဖြစ်စေ အချိန်မရွေး လေ့လာနိုင်ပါသည်"]);
   wrap.appendChild(lifeNote);
-  const lifeCard = el('<div class="card" style="cursor:pointer;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff7ed,#fef3e2);border-color:#f5deb3;"></div>');
+  const lifeCard = el('<div class="card jlifecard"></div>');
   const lifeIcon = document.createElement("div");
   lifeIcon.style.cssText = "width:32px;height:32px;flex-shrink:0;";
   lifeIcon.innerHTML = '<svg viewBox="0 0 128 128" width="32" height="32"><circle cx="64" cy="40" r="20" fill="#b8722c"/><path fill="#b8722c" d="M25 108C27 82 42 68 64 68C86 68 101 82 103 108H25Z"/></svg>';
@@ -6951,6 +7049,67 @@ function renderHomeView(){
   wrap.appendChild(lifeCard);
 
   wrap.appendChild(el('<hr class="jdivider">'));
+
+  const footer = el('<div class="footerlinks"></div>');
+
+  const settings = loadSettings();
+  const autoPlayTog = el('<div class="togglewrap" style="justify-content:center;opacity:.75;"></div>');
+  const apCb = document.createElement("input");
+  apCb.type = "checkbox"; apCb.checked = settings.autoPlayAudio; apCb.id = "autoPlayCb";
+  apCb.onchange = ()=>{ saveSettings({ autoPlayAudio: apCb.checked }); };
+  const apLbl = document.createElement("label");
+  apLbl.setAttribute("for","autoPlayCb");
+  apLbl.style.fontSize = "12px";
+  apLbl.textContent = tr(T.audioAutoPlaySetting);
+  autoPlayTog.appendChild(apCb); autoPlayTog.appendChild(apLbl);
+  footer.appendChild(autoPlayTog);
+
+  const footerBtnRow = el('<div class="rowbtns"></div>');
+  const logoutBtn = document.createElement("button");
+  logoutBtn.className = "ghost";
+  logoutBtn.textContent = tr(T.logoutBtn);
+  logoutBtn.onclick = async ()=>{
+    await authLogout();
+    ST.view = "login";
+    render();
+  };
+  // 学習記録の消去は動作確認用アカウントのみ。実習生の画面には出さない。
+  if(isTestAccount()){
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "ghost";
+    clearBtn.textContent = tr(T.clearData);
+    clearBtn.onclick = ()=>{
+      ask(tr(T.confirmClear), ()=>{
+        // この端末に保存された学習記録だけを消す。
+        // クラウド側(progress/exam_log等)は組合の管理データなので消さない。
+        try{ localStorage.removeItem(storageKey()); }catch(e){ /* noop */ }
+        memoryFallback = null;
+        finishSession(); ST.view = "home";
+        render();
+      });
+    };
+    footerBtnRow.appendChild(clearBtn);
+  }
+
+  footerBtnRow.appendChild(logoutBtn);
+  footer.appendChild(footerBtnRow);
+  wrap.appendChild(footer);
+
+  if(storageBroken){
+    notify("localStorage unavailable. Progress will not be saved after closing this tab.");
+  }
+
+  return wrap;
+}
+
+// ---- 学習記録(到達度・今週の状況・弱点・推移・模試の成績・よく間違えている問題) ----
+function renderRecordView(){
+  const wrap = document.createElement("div");
+  const s = overallStats();
+  const ach = achievementScore();
+  const weekly = weeklyStats();
+  const weakest = weakestSubject();
+  const notStarted = s.studied === 0;
 
   // ---- 学習の記録(ダッシュボード)。入口より下に置く ----
   const recHead = el('<div class="jsectiontitle" style="margin-top:4px;"></div>');
@@ -7067,12 +7226,22 @@ function renderHomeView(){
   }
 
   // ---- 5. 学習推移 ----
-  const trendArr = dailyTrendArray(7);
+  const recDays = ST.recDays === 30 ? 30 : 7;
+  const trendArr = dailyTrendArray(recDays);
   const trendSvg = svgDailyTrend(trendArr);
   if(trendSvg){
     const sec5 = el('<div class="jsection"></div>');
-    const lbl5 = el('<div class="jsectiontitle"></div>'); lbl5.textContent = tr(T.trendTitle);
+    const lbl5 = el('<div class="jsectiontitle"></div>'); lbl5.textContent = tr(recDays === 30 ? T.trendTitle30 : T.trendTitle);
     sec5.appendChild(lbl5);
+    const perTabs = el('<div class="recper"></div>');
+    [7,30].forEach(dd=>{
+      const pb = document.createElement("button");
+      pb.className = "recperbtn" + (recDays === dd ? " active" : "");
+      pb.textContent = tr(dd === 7 ? T.period7 : T.period30);
+      pb.onclick = ()=>{ ST.recDays = dd; render(); };
+      perTabs.appendChild(pb);
+    });
+    sec5.appendChild(perTabs);
     const trendWrap = document.createElement("div");
     trendWrap.innerHTML = trendSvg;
     sec5.appendChild(trendWrap);
@@ -7096,54 +7265,142 @@ function renderHomeView(){
     wrap.appendChild(el('<hr class="jdivider">'));
   }
 
-  const footer = el('<div class="footerlinks"></div>');
 
-  const settings = loadSettings();
-  const autoPlayTog = el('<div class="togglewrap" style="justify-content:center;opacity:.75;"></div>');
-  const apCb = document.createElement("input");
-  apCb.type = "checkbox"; apCb.checked = settings.autoPlayAudio; apCb.id = "autoPlayCb";
-  apCb.onchange = ()=>{ saveSettings({ autoPlayAudio: apCb.checked }); };
-  const apLbl = document.createElement("label");
-  apLbl.setAttribute("for","autoPlayCb");
-  apLbl.style.fontSize = "12px";
-  apLbl.textContent = tr(T.audioAutoPlaySetting);
-  autoPlayTog.appendChild(apCb); autoPlayTog.appendChild(apLbl);
-  footer.appendChild(autoPlayTog);
-
-  const footerBtnRow = el('<div class="rowbtns"></div>');
-  const logoutBtn = document.createElement("button");
-  logoutBtn.className = "ghost";
-  logoutBtn.textContent = tr(T.logoutBtn);
-  logoutBtn.onclick = async ()=>{
-    await authLogout();
-    ST.view = "login";
-    render();
-  };
-  // 学習記録の消去は動作確認用アカウントのみ。実習生の画面には出さない。
-  if(isTestAccount()){
-    const clearBtn = document.createElement("button");
-    clearBtn.className = "ghost";
-    clearBtn.textContent = tr(T.clearData);
-    clearBtn.onclick = ()=>{
-      ask(tr(T.confirmClear), ()=>{
-        // この端末に保存された学習記録だけを消す。
-        // クラウド側(progress/exam_log等)は組合の管理データなので消さない。
-        try{ localStorage.removeItem(storageKey()); }catch(e){ /* noop */ }
-        memoryFallback = null;
-        finishSession(); ST.view = "home";
-        render();
+  // ---- 模試の成績(端末に残る直近の模試。新しい順に最大5件) ----
+  {
+    const examCard = el('<div class="card jexamcard"></div>');
+    const et = el('<div class="card-title"></div>'); et.textContent = tr(T.examResultsTitle);
+    examCard.appendChild(et);
+    const exams = (load().exams || []).slice(0, 5);
+    if(exams.length === 0){
+      const em = el('<div class="card-desc"></div>'); em.textContent = tr(T.noExamYet);
+      examCard.appendChild(em);
+    } else {
+      exams.forEach(e=>{
+        const row = el('<div class="jexamrow"></div>');
+        const dt = new Date(e.d);
+        row.innerHTML = '<span class="g"></span><b></b><span class="d"></span>';
+        row.querySelector(".g").textContent = EXAMGROUP_LABEL[e.g] ? tr(EXAMGROUP_LABEL[e.g]) : e.g;
+        row.querySelector("b").textContent = e.pct + "%";
+        row.querySelector(".d").textContent = dt.getFullYear() + "/" + (dt.getMonth()+1) + "/" + dt.getDate();
+        examCard.appendChild(row);
       });
+    }
+    wrap.appendChild(examCard);
+  }
+
+  // ---- よく間違えている問題(振り返り用。端末内の学習記録だけで完結、通信不要) ----
+  {
+    const mistakeCard = el('<div class="card" style="margin-top:14px;"></div>');
+    const mTitle = document.createElement("div");
+    mTitle.className = "card-title";
+    mTitle.textContent = tr(T.mistakeCardTitle);
+    mistakeCard.appendChild(mTitle);
+    const mDesc = document.createElement("div");
+    mDesc.className = "card-desc";
+    mDesc.textContent = tr(T.mistakeCardDesc);
+    mistakeCard.appendChild(mDesc);
+
+    if(typeof ST.mistakeShowCount !== "number") ST.mistakeShowCount = 5;
+    const allMistakes = mistakeReviewList();
+    if(allMistakes.length === 0){
+      const empty = document.createElement("div");
+      empty.style.cssText = "font-size:12.5px;color:var(--sub,#8a8578);padding:8px 0;";
+      empty.textContent = tr(T.mistakeEmpty);
+      mistakeCard.appendChild(empty);
+    } else {
+      const shown = allMistakes.slice(0, ST.mistakeShowCount);
+      shown.forEach(x=>{
+        const item = el('<div style="border:1px solid var(--border,#e1e0d9);border-radius:12px;padding:12px;margin-top:10px;"></div>');
+        const top = el('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"></div>');
+        const catSpan = document.createElement("span");
+        catSpan.style.cssText = "font-size:11px;font-weight:700;color:var(--blue,#2a5da8);background:var(--blue-bg,#eef3fb);padding:2px 8px;border-radius:999px;";
+        catSpan.textContent = tr(CAT[x.q.c] || SUBJECT[x.q.subj]);
+        const rateSpan = document.createElement("span");
+        rateSpan.style.cssText = "font-size:11.5px;color:#c0392b;font-weight:700;";
+        rateSpan.textContent = tr(T.mistakeRate) + " " + Math.round(x.rate*100) + "%（" + x.r.c + "/" + x.r.n + "）";
+        top.appendChild(catSpan); top.appendChild(rateSpan);
+        item.appendChild(top);
+
+        const qEl = document.createElement("div");
+        qEl.style.cssText = "font-size:13.5px;margin-bottom:8px;";
+        renderPaired(qEl, x.q.q);
+        item.appendChild(qEl);
+
+        if(typeof x.r.lastWrongOrig === "number" && x.q.o[x.r.lastWrongOrig]){
+          const yourEl = document.createElement("div");
+          yourEl.style.cssText = "font-size:12.5px;color:#c0392b;margin-bottom:4px;";
+          const yourLabel = document.createElement("span");
+          yourLabel.style.fontWeight = "700";
+          yourLabel.textContent = tr(T.mistakeYourAnswer) + "：";
+          yourEl.appendChild(yourLabel);
+          const yourVal = document.createElement("span");
+          yourVal.textContent = optShown(x.q.o[x.r.lastWrongOrig]);
+          yourEl.appendChild(yourVal);
+          item.appendChild(yourEl);
+        }
+
+        const aEl = document.createElement("div");
+        aEl.style.cssText = "font-size:12.5px;color:#2a7a4a;margin-bottom:6px;";
+        const aLabel = document.createElement("span");
+        aLabel.style.fontWeight = "700";
+        aLabel.textContent = tr(T.mistakeCorrectAnswer) + "：";
+        aEl.appendChild(aLabel);
+        const aVal = document.createElement("span");
+        aVal.textContent = optShown(x.q.o[x.q.a]);
+        aEl.appendChild(aVal);
+        item.appendChild(aEl);
+
+        if(x.q.e){
+          const eEl = document.createElement("div");
+          eEl.style.cssText = "font-size:12px;color:var(--sub,#8a8578);";
+          eEl.textContent = tr(x.q.e);
+          item.appendChild(eEl);
+        }
+        mistakeCard.appendChild(item);
+      });
+      if(allMistakes.length > shown.length){
+        const moreBtn = document.createElement("button");
+        moreBtn.className = "secondary";
+        moreBtn.style.cssText = "width:100%;margin-top:10px;";
+        moreBtn.textContent = tr(T.mistakeMore) + "（あと" + (allMistakes.length - shown.length) + "）";
+        moreBtn.onclick = ()=>{ ST.mistakeShowCount += 5; render(); };
+        mistakeCard.appendChild(moreBtn);
+      }
+    }
+    wrap.appendChild(mistakeCard);
+  }
+
+  // ---- アカウント(企業ID・実習生ID) ----
+  // ---- 0. 実習生氏名・所属企業(目立たせるため一番上に表示) ----
+  if(AUTH.student){
+    const idWrap = document.createElement("div");
+    idWrap.className = "idcardwrap";
+    const buildingIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg>';
+    const personIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>';
+    const idRow = (icon, label, value)=>{
+      const row = document.createElement("div");
+      row.className = "idcard";
+      const iconBox = document.createElement("div");
+      iconBox.className = "idcardicon";
+      iconBox.innerHTML = icon;
+      const textBox = document.createElement("div");
+      textBox.className = "idcardtext";
+      const lbl = document.createElement("div");
+      lbl.className = "idcardlabel";
+      lbl.textContent = label;
+      const val = document.createElement("div");
+      val.className = "idcardvalue";
+      val.textContent = value;
+      textBox.appendChild(lbl); textBox.appendChild(val);
+      row.appendChild(iconBox); row.appendChild(textBox);
+      return row;
     };
-    footerBtnRow.appendChild(clearBtn);
+    idWrap.appendChild(idRow(buildingIcon, tr(T.companyId), AUTH.student.company_id || "-"));
+    idWrap.appendChild(idRow(personIcon, tr(T.learnerId), AUTH.student.name || "-"));
+    wrap.appendChild(idWrap);
   }
 
-  footerBtnRow.appendChild(logoutBtn);
-  footer.appendChild(footerBtnRow);
-  wrap.appendChild(footer);
-
-  if(storageBroken){
-    notify("localStorage unavailable. Progress will not be saved after closing this tab.");
-  }
 
   return wrap;
 }
