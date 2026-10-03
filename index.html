@@ -320,6 +320,196 @@ input[type=text]:focus,input[type=password]:focus{outline:2px solid var(--nv-blu
 .jexamrow b{font-size:16px;font-weight:800;color:var(--nv-text);}
 .jexamrow .d{font-size:11px;color:var(--nv-sub);min-width:76px;text-align:right;}
 .jhero-title{font-size:16.5px;line-break:strict;text-wrap:balance;}
+
+/* ====================== 見やすさの調整(ダッシュボードのスマホ版に近づける) ====================== */
+:root{--nv-sub:#556079;--sub:#556079;}
+/* ヘッダーを小さく(画面の上の約75px → 約55px)。問題画面でも、場所を取らないように */
+header{padding:7px 14px;padding-top:calc(7px + env(safe-area-inset-top));}
+.orgLogo{width:38px;}
+header .headerTop{gap:9px;}
+header h1 .appTitleTop{font-size:10.5px;}
+header h1 .appTitleMain{font-size:16.5px;margin-top:0;}
+.langswitchbtn{padding:5px 10px;font-size:12.5px;}
+/* 小さな灰色の文字を、少し大きく・濃く */
+.jsublabel{font-size:12px;color:var(--nv-sub);}
+.jlabel{font-size:13px;}
+.progress{font-size:13px;}
+.jshortcut-t2{font-size:12.5px;}
+.jhero-sub{font-size:13px;}
+.jhero-title{font-size:18px;font-weight:800;}
+.jgreet-week{font-size:12.5px;}
+.tabbtn{font-size:12px;font-weight:700;}
+.tabbtn svg{width:24px;height:24px;}
+/* 科目タイル: 正答率を大きな数字で */
+.jsubjrate{display:flex;align-items:baseline;gap:2px;margin-top:3px;min-height:30px;}
+.jsubjrate b{font-size:28px;font-weight:800;color:var(--sc);line-height:1;letter-spacing:-.5px;}
+.jsubjrate u{text-decoration:none;font-size:14px;font-weight:800;color:var(--sc);}
+.jsubjrate span{font-size:11.5px;color:var(--nv-sub);font-weight:700;margin-left:6px;}
+.jsubjrate .none{font-size:13px;color:var(--nv-sub);font-weight:700;}
+.jsubjname{font-size:15.5px;}
+/* 数字カード(ダッシュボードと同じ形) */
+.jsummary{gap:10px;}
+.jitem{padding:12px 11px;}
+.jitemtop{gap:8px;}
+.jitemicon{width:34px;height:34px;}
+.jnum{font-size:22px;font-weight:800;letter-spacing:-.3px;}
+.jsublabel{line-height:1.35;}
+
+/* 数字カード: 数字は大きく、単位は小さく(320pxでも、枠からはみ出さない) */
+.jnum{display:flex;align-items:baseline;gap:2px;white-space:nowrap;min-width:0;}
+.jnum b{font-size:22px;font-weight:800;letter-spacing:-.3px;}
+.jnum small{font-size:12px;font-weight:700;color:var(--nv-sub);}
+.jitem{overflow:hidden;}
+.jitemtop{align-items:flex-start;}
+@media (max-width:360px){ .jnum b{font-size:19px;} .jnum small{font-size:11px;} .jitem{padding:10px 9px;} }
+.jhero-title{font-size:17px;}
+.jnum{flex-wrap:wrap;white-space:normal;row-gap:0;}
+.jnum b,.jnum small{white-space:nowrap;}
+.jnum{max-width:100%;}
+.jitemtop{min-width:0;max-width:100%;}
+.jsummary .jnum{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 2px;font-size:inherit;line-height:1.15;max-width:100%;letter-spacing:0;}
+.jsubjrate{display:block;min-height:0;}
+.jsubjrate span{display:block;margin:3px 0 0;font-size:11.5px;line-height:1.3;}
+.jsubjrate .none{display:block;margin-top:6px;}
+
+/* ====================== 新デザイン(案2): 紺ベース・科目の色・ヘッダー・設定画面 ====================== */
+:root{
+  --nv-blue:#1F4E79; --nv-blue-bg:#E7EEF6; --blue:#1F4E79;
+  --sj-moji:#E5484D; --sj-moji-bg:#FDECEC; --sj-bunpo:#3B82F6; --sj-bunpo-bg:#E8F0FE;
+  --sj-dokkai:#22A06B; --sj-dokkai-bg:#E3F6EC; --sj-choukai:#F59E0B; --sj-choukai-bg:#FFF3D6;
+}
+/* 科目の色(案: 文字・語彙=赤、文法=青、読解=緑、聴解=オレンジ) */
+.jsubjcard{--sc:var(--sj-moji);--sb:var(--sj-moji-bg);}
+.jsubjcard[data-subj="bunpo"]{--sc:var(--sj-bunpo);--sb:var(--sj-bunpo-bg);}
+.jsubjcard[data-subj="dokkai"]{--sc:var(--sj-dokkai);--sb:var(--sj-dokkai-bg);}
+.jsubjcard[data-subj="choukai"]{--sc:var(--sj-choukai);--sb:var(--sj-choukai-bg);}
+.jhero{--sc:var(--sj-moji);}
+.jhero[data-subj="bunpo"]{--sc:var(--sj-bunpo);} .jhero[data-subj="dokkai"]{--sc:var(--sj-dokkai);} .jhero[data-subj="choukai"]{--sc:var(--sj-choukai);}
+.jsubjbar i{background:var(--nv-blue);}
+.jsubjrate b,.jsubjrate u{color:var(--nv-text);}
+.jsubjgo{color:var(--nv-blue);}
+.jhero-btn{background:var(--nv-blue);box-shadow:0 3px 8px rgba(31,78,121,.30);}
+button.primary{box-shadow:0 2px 6px rgba(31,78,121,.28);}
+.lvbtn.active{box-shadow:0 1px 3px rgba(31,78,121,.35);}
+.jgreet-dots i.on{background:var(--nv-blue);}
+
+/* ヘッダー: 「JLPTナビ」の文字と、言語・歯車のボタンだけ(ロゴは出さない) */
+header{background:transparent;border-bottom:0;padding:12px 18px 4px;padding-top:calc(12px + env(safe-area-inset-top));}
+.orgLogo{display:none;}
+header h1 .appTitleTop{display:none;}
+header h1 .appTitleMain{font-size:26px;font-weight:800;color:var(--nv-blue);letter-spacing:-.3px;margin:0;}
+header h1{cursor:pointer;}
+.langswitchbtn .langname{display:none;}
+.langswitchbtn{padding:6px 9px;gap:5px;}
+.gearbtn{width:40px;height:40px;border:0;background:transparent;color:var(--nv-sub);display:flex;align-items:center;justify-content:center;border-radius:12px;cursor:pointer;padding:0;margin-left:2px;}
+.gearbtn svg{width:26px;height:26px;}
+.langbar{align-items:center;}
+
+/* 設定画面 */
+.jpagetitle{font-size:24px;font-weight:800;color:var(--nv-text);margin:6px 0 14px;}
+.jsetcard{margin-bottom:12px;}
+.jlanggrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
+.jlangbtn{border:1.5px solid var(--nv-line);background:#fff;border-radius:12px;padding:12px 8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--nv-text);}
+.jlangbtn.active{background:var(--nv-blue);border-color:var(--nv-blue);color:#fff;}
+.jsetrow{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px;font-weight:600;color:var(--nv-text);cursor:pointer;}
+.jsetrow input{width:22px;height:22px;accent-color:var(--nv-blue);}
+.jsetkv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--nv-line);font-size:14px;}
+.jsetkv:last-child{border-bottom:0;}
+.jsetkv span{color:var(--nv-sub);font-weight:600;} .jsetkv b{font-weight:800;color:var(--nv-text);text-align:right;word-break:break-all;}
+.jlogout{color:#D9374E !important;border-color:#F3B6C0 !important;}
+
+/* ====================== ホーム(案2): 今日のおすすめ・学習の進捗・前回の続き・模試 ====================== */
+.jhero2{--sc:var(--sj-moji);--sb:var(--sj-moji-bg);background:#fff;border:1px solid var(--nv-line);border-radius:18px;padding:16px;margin:4px 0 6px;box-shadow:0 2px 8px rgba(15,27,51,.06);}
+.jhero2[data-subj="bunpo"]{--sc:var(--sj-bunpo);--sb:var(--sj-bunpo-bg);}
+.jhero2[data-subj="dokkai"]{--sc:var(--sj-dokkai);--sb:var(--sj-dokkai-bg);}
+.jhero2[data-subj="choukai"]{--sc:var(--sj-choukai);--sb:var(--sj-choukai-bg);}
+.jhero2-label{font-size:16px;font-weight:800;color:var(--nv-text);margin-bottom:12px;}
+.jhero2-main{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.jhero2-icon{width:52px;height:52px;border-radius:50%;background:var(--sb);color:var(--sc);display:flex;align-items:center;justify-content:center;flex:0 0 52px;}
+.jhero2-icon svg{width:26px;height:26px;}
+.jhero2-title{font-size:18px;font-weight:800;color:var(--nv-text);line-height:1.35;text-wrap:balance;}
+.jhero2-sub{font-size:13px;color:var(--nv-sub);margin-top:4px;line-height:1.5;font-weight:600;}
+.jhero2-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--nv-blue);color:#fff;border:0;border-radius:14px;padding:15px 16px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 8px rgba(31,78,121,.30);}
+.jhero2-btn i{font-style:normal;}
+.jhero2-btn:active{transform:scale(.99);}
+
+.jsec{margin-top:18px;}
+.jsec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.jsec-t{font-size:17px;font-weight:800;color:var(--nv-text);}
+.jsec-link{border:0;background:none;color:var(--nv-sub);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 0;}
+.jprog-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.jprog{--sc:var(--sj-moji);--sb:var(--sj-moji-bg);background:#fff;border:1px solid var(--nv-line);border-radius:16px;padding:12px;text-align:left;cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(15,27,51,.04);}
+.jprog[data-subj="bunpo"]{--sc:var(--sj-bunpo);--sb:var(--sj-bunpo-bg);}
+.jprog[data-subj="dokkai"]{--sc:var(--sj-dokkai);--sb:var(--sj-dokkai-bg);}
+.jprog[data-subj="choukai"]{--sc:var(--sj-choukai);--sb:var(--sj-choukai-bg);}
+.jprog:active{transform:scale(.985);}
+.jprog-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.jprog .ic{width:34px;height:34px;border-radius:50%;background:var(--sb);color:var(--sc);display:flex;align-items:center;justify-content:center;flex:0 0 34px;}
+.jprog .ic svg{width:19px;height:19px;}
+.jprog .nm{font-size:14.5px;font-weight:800;color:var(--nv-text);line-height:1.25;}
+.jprog-row{display:flex;align-items:center;gap:8px;}
+.jprog-bar{flex:1;height:7px;background:#E9EDF5;border-radius:999px;overflow:hidden;}
+.jprog-bar i{display:block;height:100%;background:var(--nv-blue);border-radius:999px;}
+.jprog-row b{font-size:14px;font-weight:800;color:var(--nv-text);min-width:36px;text-align:right;font-variant-numeric:tabular-nums;}
+
+.jrow{--sc:var(--sj-bunpo);--sb:var(--sj-bunpo-bg);width:100%;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--nv-line);border-radius:16px;padding:12px 14px;text-align:left;cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(15,27,51,.04);}
+.jrow[data-subj="moji"]{--sc:var(--sj-moji);--sb:var(--sj-moji-bg);}
+.jrow[data-subj="dokkai"]{--sc:var(--sj-dokkai);--sb:var(--sj-dokkai-bg);}
+.jrow[data-subj="choukai"]{--sc:var(--sj-choukai);--sb:var(--sj-choukai-bg);}
+.jrow-ic{width:42px;height:42px;border-radius:50%;background:var(--sb);color:var(--sc);display:flex;align-items:center;justify-content:center;flex:0 0 42px;}
+.jrow-ic svg{width:22px;height:22px;}
+.jrow-body{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.jrow-t1{font-size:15.5px;font-weight:800;color:var(--nv-text);}
+.jrow-t2{font-size:13px;color:var(--nv-sub);font-weight:600;line-height:1.4;}
+.jrow-chev{color:var(--nv-sub);display:flex;}
+.jmockcard{margin-top:16px;background:#E8F0FA;border-color:#D5E3F5;--sb:#fff;--sc:var(--nv-blue);}
+
+/* ====================== 練習する(案2) ====================== */
+.jsubj2{--sc:var(--sj-moji);--sb:var(--sj-moji-bg);width:100%;display:flex;align-items:center;gap:13px;background:#fff;border:1px solid var(--nv-line);border-radius:18px;padding:14px;margin-bottom:10px;text-align:left;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(15,27,51,.05);}
+.jsubj2[data-subj="bunpo"]{--sc:var(--sj-bunpo);--sb:var(--sj-bunpo-bg);}
+.jsubj2[data-subj="dokkai"]{--sc:var(--sj-dokkai);--sb:var(--sj-dokkai-bg);}
+.jsubj2[data-subj="choukai"]{--sc:var(--sj-choukai);--sb:var(--sj-choukai-bg);}
+.jweakrow2{--sc:#D9374E;--sb:#FDECEE;}
+.jsubj2:active{transform:scale(.99);}
+.jsubj2-ic{width:52px;height:52px;border-radius:50%;background:var(--sb);color:var(--sc);display:flex;align-items:center;justify-content:center;flex:0 0 52px;}
+.jsubj2-ic svg{width:26px;height:26px;}
+.jsubj2-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.jsubj2-t1{font-size:16px;font-weight:800;color:var(--nv-text);}
+.jsubj2-t2{font-size:12.5px;color:var(--nv-sub);font-weight:600;line-height:1.4;}
+.jsubj2-bar{display:flex;align-items:center;gap:10px;margin-top:4px;}
+.jsubj2-bar .jprog-bar{flex:1;display:block;}
+.jsubj2-bar b{font-size:14px;font-weight:800;color:var(--nv-text);min-width:38px;text-align:right;}
+.jlife2{--sc:#F59E0B;--sb:#FFF3D6;}
+
+/* ====================== 問題画面(案2): ヘッダー・進捗の棒・番号つきの選択肢・結果カード ====================== */
+.qtop{display:grid !important;grid-template-columns:44px 1fr 64px;align-items:center;gap:4px;margin:2px 0 6px;}
+.qback{width:40px;height:40px;border:0;background:transparent;color:var(--nv-text);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.qtitle{text-align:center;font-size:17px;font-weight:800;color:var(--nv-text);}
+.qtop .progress{text-align:right;font-weight:800;color:var(--nv-sub);font-size:14px;}
+.qprogbar{height:7px;background:#E1E7F0;border-radius:999px;overflow:hidden;margin:0 0 12px;}
+.qprogbar i{display:block;height:100%;background:var(--nv-blue);border-radius:999px;}
+.opt.numbered{display:flex;align-items:center;gap:14px;text-align:left;padding:13px 16px;border-radius:14px;}
+.opt.numbered::before{content:attr(data-n);width:30px;height:30px;border-radius:50%;background:#EEF2F7;color:var(--nv-sub);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:0 0 30px;}
+.opt.numbered.correct::before{background:var(--nv-green);color:#fff;}
+.opt.numbered.wrong::before{background:var(--nv-red);color:#fff;}
+.opt.numbered.sel::before{background:var(--nv-blue);color:#fff;}
+.fbcard{padding:0 !important;border-radius:16px !important;overflow:hidden;background:#fff !important;border:1px solid var(--nv-line) !important;color:var(--nv-text) !important;}
+.fbcard-head{display:flex;align-items:center;gap:10px;padding:14px 16px 8px;}
+.fbcard.ok .fbcard-head{background:var(--nv-green-bg);} .fbcard.ng .fbcard-head{background:var(--nv-red-bg);}
+.fbcard-head b{font-size:19px;font-weight:800;}
+.fbcard.ok .fbcard-head b{color:#16875F;} .fbcard.ng .fbcard-head b{color:#C9344A;}
+.fbcard-ic{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 30px;}
+.fbcard.ok .fbcard-ic{background:var(--nv-green);} .fbcard.ng .fbcard-ic{background:var(--nv-red);}
+.fbcard-ic svg{width:17px;height:17px;}
+.fbcard-ans{display:flex;align-items:center;gap:8px;padding:0 16px 14px;font-size:15px;font-weight:700;}
+.fbcard.ok .fbcard-ans{background:var(--nv-green-bg);} .fbcard.ng .fbcard-ans{background:var(--nv-red-bg);}
+.fbcard-ans .k{color:var(--nv-sub);font-size:13px;}
+.fbcard-ans .n{width:26px;height:26px;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+.fbcard-ans .v{font-weight:800;}
+.fbcard-ex{padding:14px 16px 16px;}
+.fbcard-ex .h{font-size:15px;font-weight:800;margin-bottom:6px;color:var(--nv-text);}
+.fbcard-ex .t{font-size:14px;line-height:1.75;color:var(--nv-text);font-weight:500;}
+body.inq header{display:none;}
 </style>
 </head>
 <body>
@@ -503,6 +693,17 @@ const T = {
   tabPractice:   ["練習する","Practice","Latihan","Practice","ฝึกซ้อม", "လေ့ကျင့်ရန်"],
   tabMock:       ["模試を受ける","Mock Exam","Ujian Simulasi","Mock Exam","สอบจำลอง", "အစမ်းစာမေးပွဲ ဖြေရန်"],
   tabRecord: ["学習記録","Record","Catatan","Talaan","บันทึก","မှတ်တမ်း"],
+  settingsTitle: ["設定","Settings","Pengaturan","Mga Setting","การตั้งค่า","ဆက်တင်"],
+  languageLabel: ["言語","Language","Bahasa","Wika","ภาษา","ဘာသာစကား"],
+  practiceWord: ["練習","Practice","Latihan","Pagsasanay","ฝึกซ้อม","လေ့ကျင့်ရန်"],
+  progressTitle: ["学習の進捗","Your Progress","Kemajuan Belajar","Progreso sa Pag-aaral","ความคืบหน้าการเรียน","လေ့လာမှု တိုးတက်မှု"],
+  seeDetails: ["くわしく見る","See details","Lihat detail","Tingnan ang detalye","ดูรายละเอียด","အသေးစိတ်ကြည့်ရန်"],
+  mockCardSub: ["実力を確認しましょう","Check your skills","Cek kemampuanmu","Subukin ang iyong kakayahan","ตรวจสอบความสามารถของคุณ","သင့်စွမ်းရည်ကို စစ်ဆေးပါ"],
+  otherContent: ["その他のコンテンツ","More content","Konten lainnya","Iba pang nilalaman","เนื้อหาอื่น ๆ","အခြားအကြောင်းအရာများ"],
+  correctBig: ["正解です！","Correct!","Benar!","Tama!","ถูกต้อง!","မှန်ပါသည်။"],
+  wrongBig: ["不正解です","Incorrect","Salah","Mali","ไม่ถูกต้อง","မမှန်ပါ။"],
+  backHome: ["ホームに戻る","Back to Home","Kembali ke Beranda","Bumalik sa Home","กลับหน้าหลัก","ပင်မစာမျက်နှာသို့"],
+  nextQuestionBtn: ["次の問題へ","Next question","Soal berikutnya","Susunod na tanong","ข้อถัดไป","နောက်မေးခွန်း"],
   welcomeBack: ["おかえりなさい、{n}さん","Welcome back, {n}!","Selamat datang kembali, {n}!","Welcome back, {n}!","ยินดีต้อนรับกลับมา {n}","{n} ပြန်လာတာ ဝမ်းသာပါတယ်။"],
   weekDaysLabel: ["今週の学習日","Study days this week","Hari belajar minggu ini","Mga araw ng pag-aaral ngayong linggo","วันที่เรียนสัปดาห์นี้","ဒီအပတ် လေ့လာတဲ့ရက်များ"],
   daysUnit: ["日","days","hari","araw","วัน","ရက်"],
@@ -5646,6 +5847,77 @@ function optShown(o){
   const t = tr(o);
   return (!t || t === ja) ? ja : ja + "（" + t + "）";
 }
+// ---- 設定画面(言語・聴解の音声自動再生・アカウント・ログアウト) ----
+function renderSettingsView(){
+  const wrap = document.createElement("div");
+  const top = el('<div class="topbar"></div>');
+  const backBtn = document.createElement("button");
+  backBtn.className = "ghost"; backBtn.textContent = tr(T.back);
+  backBtn.onclick = ()=>{ ST.view = "home"; render(); };
+  top.appendChild(backBtn);
+  top.appendChild(el('<div></div>'));
+  wrap.appendChild(top);
+  const title = el('<div class="jpagetitle"></div>'); title.textContent = tr(T.settingsTitle);
+  wrap.appendChild(title);
+
+  // 言語
+  const langCard = el('<div class="card jsetcard"></div>');
+  const lt = el('<div class="card-title"></div>'); lt.textContent = tr(T.languageLabel); langCard.appendChild(lt);
+  const NAMES = { ja:"日本語", en:"English", id:"Bahasa Indonesia", tl:"Tagalog", th:"ภาษาไทย", my:"မြန်မာဘာသာ" };
+  const lg = el('<div class="jlanggrid"></div>');
+  LANGS.forEach(l=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "jlangbtn" + (ST.lang === l ? " active" : "");
+    b.textContent = NAMES[l] || l;
+    b.onclick = ()=>{ ST.lang = l; render(); };
+    lg.appendChild(b);
+  });
+  langCard.appendChild(lg);
+  wrap.appendChild(langCard);
+
+  // 聴解の音声の自動再生
+  const audCard = el('<div class="card jsetcard"></div>');
+  const settings = loadSettings();
+  const row = el('<label class="jsetrow"></label>');
+  const lbl = document.createElement("span"); lbl.textContent = tr(T.audioAutoPlaySetting);
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = settings.autoPlayAudio;
+  cb.onchange = ()=>{ saveSettings({ autoPlayAudio: cb.checked }); };
+  row.appendChild(lbl); row.appendChild(cb);
+  audCard.appendChild(row);
+  wrap.appendChild(audCard);
+
+  // アカウント
+  if(AUTH.student){
+    const acc = el('<div class="card jsetcard"></div>');
+    const at = el('<div class="card-title"></div>'); at.textContent = tr(T.accountTitle); acc.appendChild(at);
+    const rows = [[tr(T.companyId), AUTH.student.company_id || "-"],[tr(T.learnerId), AUTH.student.name || "-"]];
+    rows.forEach(([k,v])=>{
+      const r = el('<div class="jsetkv"><span></span><b></b></div>');
+      r.querySelector("span").textContent = k; r.querySelector("b").textContent = v; acc.appendChild(r);
+    });
+    wrap.appendChild(acc);
+  }
+
+  const btnRow = el('<div class="rowbtns" style="margin-top:16px;"></div>');
+  if(isTestAccount()){
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "ghost"; clearBtn.textContent = tr(T.clearData);
+    clearBtn.onclick = ()=>{
+      ask(tr(T.confirmClear), ()=>{
+        try{ localStorage.removeItem(storageKey()); }catch(e){ /* noop */ }
+        memoryFallback = null; finishSession(); ST.view = "home"; render();
+      });
+    };
+    btnRow.appendChild(clearBtn);
+  }
+  const logoutBtn = document.createElement("button");
+  logoutBtn.className = "ghost jlogout"; logoutBtn.textContent = tr(T.logoutBtn);
+  logoutBtn.onclick = async ()=>{ await authLogout(); ST.view = "login"; render(); };
+  btnRow.appendChild(logoutBtn);
+  wrap.appendChild(btnRow);
+  return wrap;
+}
+
 function startQuick(subj, cats){
   ST.subject = subj; ST.selectedCats = cats || [];
   startPractice(10);
@@ -6675,6 +6947,15 @@ function renderHeader(){
   document.addEventListener("click", ()=>{ menu.style.display = "none"; }, { once:true });
 
   bar.appendChild(wrap);
+
+  // 歯車ボタン(設定画面へ)。ログイン前後の画面では出さない。
+  if(!["login","passwordChange"].includes(ST.view)){
+    const gear = document.createElement("button");
+    gear.type = "button"; gear.className = "gearbtn"; gear.setAttribute("aria-label", tr(T.settingsTitle));
+    gear.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    gear.onclick = (e)=>{ e.stopPropagation(); ST.view = "settings"; render(); };
+    bar.appendChild(gear);
+  }
 }
 
 // 直前に描画していた画面。画面が変わったときだけ先頭へ戻すために覚えておく。
@@ -6683,6 +6964,8 @@ let lastRenderedView = null;
 function render(){
   // ミャンマー文字は行の高さが必要なため、ミャンマー語表示中はbodyにクラスを付けてフォントと行間を切り替える
   try{ document.body.classList.toggle("lang-my", ST.lang === "my"); }catch(e){ /* noop */ }
+  // 問題画面では、上のヘッダー(JLPTナビ・言語・歯車)を隠して、問題を大きく見せる
+  try{ document.body.classList.toggle("inq", ST.view === "question"); }catch(e){ /* noop */ }
   // 画面が再描画されるたびに、再生中の音声があれば止める(問題を移動しても鳴り続けるのを防ぐ)
   if("speechSynthesis" in window){
     try{ window.speechSynthesis.cancel(); }catch(e){ /* noop */ }
@@ -6708,6 +6991,7 @@ function render(){
   else if(ST.view === "practice") app.appendChild(renderPracticeView());
   else if(ST.view === "mock") app.appendChild(renderMockView());
   else if(ST.view === "record") app.appendChild(renderRecordView());
+  else if(ST.view === "settings") app.appendChild(renderSettingsView());
   else if(ST.view === "select") app.appendChild(renderSelect());
   else if(ST.view === "question") app.appendChild(renderQuestion());
   else if(ST.view === "result") app.appendChild(renderResult());
@@ -6924,185 +7208,143 @@ function renderHomeView(){
   levelWrap.appendChild(levelPill);
   wrap.appendChild(levelWrap);
 
-  // ---- あいさつ + 今週の学習日(●が学習した日) ----
-  const fullName = (AUTH.student && AUTH.student.name) ? String(AUTH.student.name).trim() : "";
-  const callName = fullName ? fullName.split(/[\s　]+/)[0] : "";
-  const week7 = dailyTrendArray(7);
-  const studiedDays = week7.filter(x=>x.n > 0).length;
-  const greet = el('<div class="jgreet"></div>');
-  greet.innerHTML = '<div class="jgreet-t"></div>' +
-    '<div class="jgreet-week"><span class="jgreet-wl"></span><span class="jgreet-dots">' + week7.map(x=>'<i class="'+(x.n > 0 ? 'on' : '')+'"></i>').join("") + '</span><b></b></div>';
-  greet.querySelector(".jgreet-t").textContent = callName ? fmtT(T.welcomeBack, { n: callName }) : tr(T.tabHome);
-  greet.querySelector(".jgreet-wl").textContent = tr(T.weekDaysLabel);
-  greet.querySelector("b").textContent = studiedDays + "/7" + tr(T.daysUnit);
-  wrap.appendChild(greet);
-
-  // ---- 今日のおすすめ(押すと、すぐ10問が始まる) ----
-  const subjIconsHero = {
+  const subjIcons = {
     moji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
     bunpo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>',
-    dokkai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="11" cy="14" r="2.5"/><line x1="13" y1="16" x2="15.5" y2="18.5"/></svg>',
+    dokkai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',
     choukai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'
   };
+  const chevron = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+  const dq = load().q || {};
+  const SUBJS = ["moji","bunpo","dokkai","choukai"];
+
+  // ---- 今日のおすすめ: 学習記録がなければ文字・語彙から。あれば、正答率が低い分野(3問以上解いたカテゴリで70%未満の最低)を優先 ----
+  let worst = null;
+  SUBJS.forEach(subj=>{
+    const agg = {};
+    (ALL_DATA[subj] || []).forEach(q=>{
+      const r = dq[q.id]; if(!r || !r.n) return;
+      if(!agg[q.c]) agg[q.c] = { n:0, c:0 };
+      agg[q.c].n += r.n; agg[q.c].c += r.c;
+    });
+    Object.keys(agg).forEach(cat=>{
+      if(agg[cat].n < 3) return;
+      const rt = Math.round(agg[cat].c / agg[cat].n * 100);
+      if(rt < 70 && (!worst || rt < worst.rate)) worst = { subj, cat, rate: rt };
+    });
+  });
   const lastSt = lastStudied();
-  const lastSess = (load().lastSession) || null;
-  let pickSubj, pickTitle, pickSub;
-  if(!lastSt){
-    pickSubj = "moji";
-    pickTitle = fmtT(T.pickStartTitle, { s: tr(SUBJECT.moji) });
-    pickSub = tr(T.firstHint);
+  let pickSubj, pickCats = [], pickTitle, pickSub;
+  if(notStarted || !lastSt){
+    pickSubj = "moji"; pickTitle = fmtT(T.pickStartTitle, { s: tr(SUBJECT.moji) }); pickSub = tr(T.firstHint);
+  } else if(worst && CAT[worst.cat]){
+    pickSubj = worst.subj; pickCats = [worst.cat];
+    pickTitle = fmtT(T.pickStartTitle, { s: tr(SUBJECT[worst.subj]) });
+    pickSub = fmtT(T.weakPickTitle, { c: tr(CAT[worst.cat]) }) + "　" + fmtT(T.rateLine, { r: worst.rate });
   } else {
-    pickSubj = lastSt.subj;
-    pickTitle = fmtT(T.pickContinueTitle, { s: tr(SUBJECT[lastSt.subj]) });
-    const catName = (lastSt.cat && CAT[lastSt.cat]) ? tr(CAT[lastSt.cat]) : "";
-    const lastLine = (lastSess && lastSess.subj === lastSt.subj && lastSess.n > 0) ? fmtT(T.lastResultLine, { n: lastSess.n, c: lastSess.c }) : "";
-    pickSub = [catName, lastLine].filter(x=>x).join("　");
+    pickSubj = lastSt.subj; pickTitle = fmtT(T.pickContinueTitle, { s: tr(SUBJECT[lastSt.subj]) });
+    pickSub = (lastSt.cat && CAT[lastSt.cat]) ? tr(CAT[lastSt.cat]) : "";
   }
-  const hero = el('<div class="jhero" data-subj="'+pickSubj+'"></div>');
+  const hero = el('<div class="jhero2" data-subj="'+pickSubj+'"></div>');
   hero.innerHTML =
-    '<div class="jhero-label"><span class="star">★</span><span class="lbl"></span></div>'+
-    '<div class="jhero-main"><div class="jhero-icon">'+subjIconsHero[pickSubj]+'</div><div class="jhero-text"><div class="jhero-title"></div><div class="jhero-sub"></div></div></div>'+
-    '<button class="jhero-btn"><span></span><i>→</i></button>';
-  hero.querySelector(".lbl").textContent = tr(T.todayPick);
-  hero.querySelector(".jhero-title").textContent = pickTitle;
-  const subEl = hero.querySelector(".jhero-sub"); subEl.textContent = pickSub; if(!pickSub) subEl.style.display = "none";
-  hero.querySelector(".jhero-btn span").textContent = tr(T.startStudyBtn);
-  hero.querySelector(".jhero-btn").onclick = ()=> startQuick(pickSubj, []);
+    '<div class="jhero2-label"></div>'+
+    '<div class="jhero2-main"><div class="jhero2-icon">'+subjIcons[pickSubj]+'</div><div class="jhero2-text"><div class="jhero2-title"></div><div class="jhero2-sub"></div></div></div>'+
+    '<button class="jhero2-btn"><span></span><i>→</i></button>';
+  hero.querySelector(".jhero2-label").textContent = tr(T.todayPick);
+  hero.querySelector(".jhero2-title").innerHTML = String(pickTitle).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(10\s?(?:問|questions|soal|tanong|ข้อ|ခု))/,'<span style="white-space:nowrap">$1</span>');
+  const subEl = hero.querySelector(".jhero2-sub"); subEl.textContent = pickSub; if(!pickSub) subEl.style.display = "none";
+  hero.querySelector(".jhero2-btn span").textContent = tr(T.startStudyBtn);
+  hero.querySelector(".jhero2-btn").onclick = ()=> startQuick(pickSubj, pickCats);
   wrap.appendChild(hero);
 
-  // ---- 分野を選んで学習する(タイルを押すと、その科目の10問がすぐ始まる) ----
-  const sec3 = el('<div class="jsection first"></div>');
-  const lbl3 = el('<div class="jsectiontitle"></div>'); lbl3.textContent = tr(T.studyTitle);
-  sec3.appendChild(lbl3);
-  const sec3grid = el('<div class="jsubjgrid"></div>');
-  ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
+  // ---- 学習の進捗(4科目。押すと、その科目の10問がすぐ始まる) ----
+  const prog = el('<div class="jsec"></div>');
+  const ph = el('<div class="jsec-h"><div class="jsec-t"></div><button class="jsec-link"></button></div>');
+  ph.querySelector(".jsec-t").textContent = tr(T.progressTitle);
+  const pl = ph.querySelector(".jsec-link"); pl.textContent = tr(T.seeDetails) + " ›";
+  pl.onclick = ()=>{ ST.view = "record"; render(); };
+  prog.appendChild(ph);
+  const grid = el('<div class="jprog-grid"></div>');
+  SUBJS.forEach(subj=>{
     const r = subjRate(subj);
-    const rate = r.rate === null ? 0 : r.rate;
-    const card = el('<div class="jsubjcard" data-subj="'+subj+'"></div>');
-    const iconBox = el('<div class="jsubjicon"></div>');
-    iconBox.innerHTML = subjIconsHero[subj];
-    const nameEl = el('<div class="jsubjname"></div>');
-    nameEl.textContent = tr(SUBJECT[subj]);
-    const rateEl = el('<div class="jsubjrate"></div>');
-    rateEl.textContent = r.rate === null ? tr(["未学習","Not started","Belum mulai","Hindi pa nasisimulan","ยังไม่ได้เรียน", "မလေ့လာရသေး"]) : rate + "%";
-    const bar = el('<div class="jsubjbar"><i style="width:'+rate+'%"></i></div>');
-    const goEl = el('<div class="jsubjgo"></div>');
-    goEl.textContent = tr(T.practiceGo);
-    card.appendChild(iconBox); card.appendChild(nameEl); card.appendChild(rateEl); card.appendChild(bar); card.appendChild(goEl);
-    card.onclick = ()=> startQuick(subj, []);
-    sec3grid.appendChild(card);
+    const t = el('<button class="jprog" data-subj="'+subj+'"></button>');
+    t.innerHTML = '<div class="jprog-top"><span class="ic">'+subjIcons[subj]+'</span><span class="nm"></span></div>'+
+                  '<div class="jprog-row"><div class="jprog-bar"><i style="width:'+(r.rate === null ? 0 : r.rate)+'%"></i></div><b></b></div>';
+    t.querySelector(".nm").textContent = tr(SUBJECT[subj]);
+    t.querySelector("b").textContent = r.rate === null ? "—" : r.rate + "%";
+    t.onclick = ()=> startQuick(subj, []);
+    grid.appendChild(t);
   });
-  sec3.appendChild(sec3grid);
-  wrap.appendChild(sec3);
+  prog.appendChild(grid);
+  wrap.appendChild(prog);
 
-  // ---- 苦手の近道(正答率が低い分野。3問以上解いたカテゴリの中で一番低いもの) ----
-  {
-    const dq = load().q || {};
-    let worstCat = null;
-    ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
-      const agg = {};
-      (ALL_DATA[subj] || []).forEach(q=>{
-        const r = dq[q.id]; if(!r || !r.n) return;
-        if(!agg[q.c]) agg[q.c] = { n:0, c:0 };
-        agg[q.c].n += r.n; agg[q.c].c += r.c;
-      });
-      Object.keys(agg).forEach(cat=>{
-        if(agg[cat].n < 3) return;
-        const rt = Math.round(agg[cat].c / agg[cat].n * 100);
-        if(rt < 70 && (!worstCat || rt < worstCat.rate)) worstCat = { subj, cat, rate: rt };
-      });
-    });
-    if(worstCat && CAT[worstCat.cat]){
-      const wk = el('<button class="jshortcut jweak"></button>');
-      wk.innerHTML = '<div class="jshortcut-body"><div class="jshortcut-t1"></div><div class="jshortcut-t2"></div></div><div class="jshortcut-arrow"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>';
-      wk.querySelector(".jshortcut-t1").textContent = fmtT(T.weakPickTitle, { c: tr(CAT[worstCat.cat]) });
-      wk.querySelector(".jshortcut-t2").textContent = tr(SUBJECT[worstCat.subj]) + "　" + fmtT(T.rateLine, { r: worstCat.rate });
-      wk.onclick = ()=> startQuick(worstCat.subj, [worstCat.cat]);
-      wrap.appendChild(wk);
-    }
+  // ---- 前回の続き(最後に学習したカテゴリ。解いた問題数/全問題数) ----
+  if(lastSt && lastSt.cat && CAT[lastSt.cat]){
+    const qs = (ALL_DATA[lastSt.subj] || []).filter(q=>q.c === lastSt.cat);
+    const done = qs.filter(q=>dq[q.id] && dq[q.id].n > 0).length;
+    const sec = el('<div class="jsec"></div>');
+    const h = el('<div class="jsec-h"><div class="jsec-t"></div></div>'); h.querySelector(".jsec-t").textContent = tr(T.ctaContinue);
+    sec.appendChild(h);
+    const card = el('<button class="jrow" data-subj="'+lastSt.subj+'"></button>');
+    card.innerHTML = '<span class="jrow-ic">'+subjIcons[lastSt.subj]+'</span><span class="jrow-body"><span class="jrow-t1"></span><span class="jrow-t2"></span></span><span class="jrow-chev">'+chevron+'</span>';
+    card.querySelector(".jrow-t1").textContent = tr(SUBJECT[lastSt.subj]);
+    card.querySelector(".jrow-t2").textContent = tr(CAT[lastSt.cat]) + "（" + done + " / " + qs.length + tr(["問","q","soal","tanong","ข้อ","ခု"]) + "）";
+    card.onclick = ()=> startQuick(lastSt.subj, [lastSt.cat]);
+    sec.appendChild(card);
+    wrap.appendChild(sec);
   }
 
-  // ---- 生活情報への入り口(N4/N3のレベルと関係なく、いつでも見られる) ----
-  const lifeNote = document.createElement("div");
-  lifeNote.style.cssText = "font-size:11px;color:var(--sub,#8a8578);margin-bottom:4px;";
-  lifeNote.textContent = tr(["N4・N3に関係なく、いつでも学習できます","Available anytime, regardless of N4/N3","Tersedia kapan saja, terlepas dari N4/N3","Available anumang oras, kahit N4/N3","ใช้ได้ตลอดเวลา ไม่ว่าจะเป็น N4 หรือ N3", "N4・N3 မည်သည့်အဆင့်ဖြစ်စေ အချိန်မရွေး လေ့လာနိုင်ပါသည်"]);
-  wrap.appendChild(lifeNote);
-  const lifeCard = el('<div class="card jlifecard"></div>');
-  const lifeIcon = document.createElement("div");
-  lifeIcon.style.cssText = "width:32px;height:32px;flex-shrink:0;";
-  lifeIcon.innerHTML = '<svg viewBox="0 0 128 128" width="32" height="32"><circle cx="64" cy="40" r="20" fill="#b8722c"/><path fill="#b8722c" d="M25 108C27 82 42 68 64 68C86 68 101 82 103 108H25Z"/></svg>';
-  lifeCard.appendChild(lifeIcon);
-  const lifeBody = document.createElement("div");
-  lifeBody.style.flex = "1";
-  const lifeTitle = document.createElement("div");
-  lifeTitle.style.cssText = "font-size:13.5px;font-weight:700;";
-  lifeTitle.textContent = tr(["日本での生活について学ぶ","Learn about life in Japan","Belajar tentang kehidupan di Jepang","Alamin ang tungkol sa buhay sa Japan","เรียนรู้เกี่ยวกับการใช้ชีวิตในญี่ปุ่น", "ဂျပန်နိုင်ငံတွင် နေထိုင်မှုအကြောင်း လေ့လာရန်"]);
-  const lifeSub = document.createElement("div");
-  lifeSub.style.cssText = "font-size:11px;color:var(--sub,#8a8578);margin-top:1px;";
-  lifeSub.textContent = tr(["ごみ出し・交通ルール・宿舎マナーなど","Trash, traffic rules, dorm manners, etc.","Sampah, aturan lalu lintas, tata krama asrama, dll.","Basura, traffic rules, dorm manners, atbp.","ขยะ กฎจราจร มารยาทหอพัก และอื่นๆ", "အမှိုက်စွန့်ပစ်ခြင်း၊ ယာဉ်စည်းကမ်း၊ အဆောင်နေထိုင်မှု စည်းကမ်းများ စသည်"]);
-  lifeBody.appendChild(lifeTitle); lifeBody.appendChild(lifeSub);
-  lifeCard.appendChild(lifeBody);
-  const lifeArrow = document.createElement("div");
-  lifeArrow.textContent = "›"; lifeArrow.style.cssText = "color:#b8722c;font-size:18px;";
-  lifeCard.appendChild(lifeArrow);
-  lifeCard.onclick = ()=>{ ST.view = "lifeHome"; render(); };
-  wrap.appendChild(lifeCard);
-
-  wrap.appendChild(el('<hr class="jdivider">'));
-
-  const footer = el('<div class="footerlinks"></div>');
-
-  const settings = loadSettings();
-  const autoPlayTog = el('<div class="togglewrap" style="justify-content:center;opacity:.75;"></div>');
-  const apCb = document.createElement("input");
-  apCb.type = "checkbox"; apCb.checked = settings.autoPlayAudio; apCb.id = "autoPlayCb";
-  apCb.onchange = ()=>{ saveSettings({ autoPlayAudio: apCb.checked }); };
-  const apLbl = document.createElement("label");
-  apLbl.setAttribute("for","autoPlayCb");
-  apLbl.style.fontSize = "12px";
-  apLbl.textContent = tr(T.audioAutoPlaySetting);
-  autoPlayTog.appendChild(apCb); autoPlayTog.appendChild(apLbl);
-  footer.appendChild(autoPlayTog);
-
-  const footerBtnRow = el('<div class="rowbtns"></div>');
-  const logoutBtn = document.createElement("button");
-  logoutBtn.className = "ghost";
-  logoutBtn.textContent = tr(T.logoutBtn);
-  logoutBtn.onclick = async ()=>{
-    await authLogout();
-    ST.view = "login";
-    render();
-  };
-  // 学習記録の消去は動作確認用アカウントのみ。実習生の画面には出さない。
-  if(isTestAccount()){
-    const clearBtn = document.createElement("button");
-    clearBtn.className = "ghost";
-    clearBtn.textContent = tr(T.clearData);
-    clearBtn.onclick = ()=>{
-      ask(tr(T.confirmClear), ()=>{
-        // この端末に保存された学習記録だけを消す。
-        // クラウド側(progress/exam_log等)は組合の管理データなので消さない。
-        try{ localStorage.removeItem(storageKey()); }catch(e){ /* noop */ }
-        memoryFallback = null;
-        finishSession(); ST.view = "home";
-        render();
-      });
-    };
-    footerBtnRow.appendChild(clearBtn);
-  }
-
-  footerBtnRow.appendChild(logoutBtn);
-  footer.appendChild(footerBtnRow);
-  wrap.appendChild(footer);
+  // ---- 模試を受ける ----
+  const mock = el('<button class="jrow jmockcard"></button>');
+  mock.innerHTML = '<span class="jrow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><span class="jrow-body"><span class="jrow-t1"></span><span class="jrow-t2"></span></span><span class="jrow-chev">'+chevron+'</span>';
+  mock.querySelector(".jrow-t1").textContent = tr(T.tabMock);
+  mock.querySelector(".jrow-t2").textContent = tr(T.mockCardSub);
+  mock.onclick = ()=>{ ST.view = "mock"; render(); };
+  wrap.appendChild(mock);
 
   if(storageBroken){
     notify("localStorage unavailable. Progress will not be saved after closing this tab.");
   }
-
   return wrap;
 }
 
 // ---- 学習記録(到達度・今週の状況・弱点・推移・模試の成績・よく間違えている問題) ----
+// 数字カード3枚(学習済み問題数・通算正答率・今週の問題数)。ホームと学習記録の両方で使う。
+function buildSummaryRow(s, weekly){
+  const sec2 = el('<div class="jsummary"></div>');
+  const summaryIcons = {
+    studied: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
+    rate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 5-5"/></svg>',
+    time: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'
+  };
+  const jcell = (icon, num, unit, lbl, extra)=>{
+    const it = el('<div class="jitem"></div>');
+    const top = document.createElement("div");
+    top.className = "jitemtop";
+    const iconBox = document.createElement("div");
+    iconBox.className = "jitemicon";
+    iconBox.innerHTML = icon;
+    const numEl = document.createElement("span");
+    numEl.className = "jnum";
+    numEl.innerHTML = "<b></b><small></small>";
+    numEl.querySelector("b").textContent = num;
+    numEl.querySelector("small").textContent = unit || "";
+    top.appendChild(iconBox); top.appendChild(numEl);
+    it.appendChild(top);
+    const labels = document.createElement("div");
+    labels.className = "jitemlabels";
+    labels.innerHTML = "<span class='jsublabel'>"+lbl+"</span>" + (extra ? "<span class='jsublabel' style='margin-top:2px;color:var(--sub);'>"+extra+"</span>" : "");
+    it.appendChild(labels);
+    return it;
+  };
+  sec2.appendChild(jcell(summaryIcons.studied, s.studied, "/" + s.total, tr(T.studiedCount)));
+  const tstat = translationStats();
+  const jaOnlyExtra = (tstat.tn > 0 && tstat.japaneseOnlyRate !== null) ? tr(T.japaneseOnlyRate) + " " + tstat.japaneseOnlyRate + "%" : null;
+  sec2.appendChild(jcell(summaryIcons.rate, s.studied>0 ? s.rate : "—", s.studied>0 ? "%" : "", tr(T.overallRate), jaOnlyExtra));
+  sec2.appendChild(jcell(summaryIcons.time, weekly.n, tr(["問","q","soal","tanong","ข้อ", "ခု"]), tr(T.weeklyCount)));
+  return sec2;
+}
+
 function renderRecordView(){
   const wrap = document.createElement("div");
   const s = overallStats();
@@ -7159,36 +7401,7 @@ function renderRecordView(){
   wrap.appendChild(el('<hr class="jdivider">'));
 
   // ---- 4. 学習状況サマリー ----
-  const sec2 = el('<div class="jsummary"></div>');
-  const summaryIcons = {
-    studied: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
-    rate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 5-5"/></svg>',
-    time: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'
-  };
-  const jcell = (icon, num, lbl, extra)=>{
-    const it = el('<div class="jitem"></div>');
-    const top = document.createElement("div");
-    top.className = "jitemtop";
-    const iconBox = document.createElement("div");
-    iconBox.className = "jitemicon";
-    iconBox.innerHTML = icon;
-    const numEl = document.createElement("span");
-    numEl.className = "jnum";
-    numEl.textContent = num;
-    top.appendChild(iconBox); top.appendChild(numEl);
-    it.appendChild(top);
-    const labels = document.createElement("div");
-    labels.className = "jitemlabels";
-    labels.innerHTML = "<span class='jsublabel'>"+lbl+"</span>" + (extra ? "<span class='jsublabel' style='margin-top:2px;color:var(--sub);'>"+extra+"</span>" : "");
-    it.appendChild(labels);
-    return it;
-  };
-  sec2.appendChild(jcell(summaryIcons.studied, s.studied+"/"+s.total, tr(T.studiedCount)));
-  const tstat = translationStats();
-  const jaOnlyExtra = (tstat.tn > 0 && tstat.japaneseOnlyRate !== null) ? tr(T.japaneseOnlyRate) + " " + tstat.japaneseOnlyRate + "%" : null;
-  sec2.appendChild(jcell(summaryIcons.rate, s.studied>0 ? s.rate+"%" : "—", tr(T.overallRate), jaOnlyExtra));
-  sec2.appendChild(jcell(summaryIcons.time, weekly.n+tr(["問","q","soal","tanong","ข้อ", "ခု"]), tr(T.weeklyCount)));
-  wrap.appendChild(sec2);
+  wrap.appendChild(buildSummaryRow(s, weekly));
   wrap.appendChild(el('<hr class="jdivider">'));
 
   // ---- 4. 弱点分析 ----
@@ -7408,44 +7621,49 @@ function renderRecordView(){
 function renderPracticeView(){
   const wrap = document.createElement("div");
 
-  ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
-    const h = document.createElement("h2");
-    h.className = "subject";
-    h.textContent = tr(SUBJECT[subj]);
-    wrap.appendChild(h);
+  // ---- N4/N3切り替え ----
+  const levelWrap = el('<div class="lvwrap"></div>');
+  const levelPill = el('<div class="lvpill"></div>');
+  [["n4","N4"],["n3","N3"]].forEach(([lv, label])=>{
+    const btn = document.createElement("button");
+    btn.className = "lvbtn" + (ST.level === lv ? " active" : "");
+    btn.textContent = label;
+    btn.onclick = ()=>{ if(ST.level !== lv){ setLevel(lv); render(); } };
+    levelPill.appendChild(btn);
+  });
+  levelWrap.appendChild(levelPill);
+  wrap.appendChild(levelWrap);
 
-    const cats = [...new Set(ALL_DATA[subj].map(q=>q.c))];
-    const card = el('<div class="card"></div>');
-    cats.forEach(c=>{
-      const rate = catRate(c);
-      const row = el('<div class="fbarwrap"></div>');
-      const rowTop = el('<div class="fbarrow"></div>');
-      const lbl = document.createElement("span"); lbl.className="fbarlabel"; lbl.textContent = tr(CAT[c]);
-      const val = document.createElement("span"); val.className="fbarval"; val.textContent = rate===null? "-" : rate+"%";
-      rowTop.appendChild(lbl); rowTop.appendChild(val);
-      const track = el('<div class="fbartrack"></div>');
-      const bar = document.createElement("div");
-      bar.className = "fbar" + ((rate!==null && rate<65)? " low":"");
-      bar.style.width = (rate||0)+"%";
-      track.appendChild(bar);
-      row.appendChild(rowTop); row.appendChild(track);
-      card.appendChild(row);
-    });
-    const btns = el('<div class="rowbtns" style="margin-top:12px;"></div>');
-    const pBtn = document.createElement("button");
-    pBtn.className = "secondary";
-    pBtn.textContent = tr(T.practiceMode);
-    pBtn.onclick = ()=>{ ST.mode="practice"; ST.subject=subj; ST.selectedCats=[]; ST.view="select"; render(); };
-    btns.appendChild(pBtn);
-    card.appendChild(btns);
-    wrap.appendChild(card);
+  const icons = {
+    moji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    bunpo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>',
+    dokkai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',
+    choukai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'
+  };
+  const chevron = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+  // ---- 4科目(押すと、カテゴリを選べる画面へ) ----
+  ["moji","bunpo","dokkai","choukai"].forEach(subj=>{
+    const r = subjRate(subj);
+    const cats = [...new Set((ALL_DATA[subj] || []).map(q=>q.c))].filter(c=>CAT[c]);
+    const shown = cats.slice(0,3).map(c=>tr(CAT[c])).join("・") + (cats.length > 3 ? " …" : "");
+    const row = el('<button class="jsubj2" data-subj="'+subj+'"></button>');
+    row.innerHTML = '<span class="jsubj2-ic">'+icons[subj]+'</span>'+
+      '<span class="jsubj2-body"><span class="jsubj2-t1"></span><span class="jsubj2-t2"></span>'+
+      '<span class="jsubj2-bar"><span class="jprog-bar"><i style="width:'+(r.rate === null ? 0 : r.rate)+'%"></i></span><b></b></span></span>'+
+      '<span class="jrow-chev">'+chevron+'</span>';
+    row.querySelector(".jsubj2-t1").textContent = tr(SUBJECT[subj]);
+    row.querySelector(".jsubj2-t2").textContent = shown;
+    row.querySelector("b").textContent = r.rate === null ? "—" : r.rate + "%";
+    row.onclick = ()=>{ ST.mode="practice"; ST.subject=subj; ST.selectedCats=[]; ST.view="select"; render(); };
+    wrap.appendChild(row);
   });
 
-  const weakCard = el('<div class="card"></div>');
-  const weakBtn = document.createElement("button");
-  weakBtn.className = "secondary";
-  weakBtn.style.width = "100%";
-  weakBtn.textContent = tr(T.weakReview);
+  // ---- 苦手な問題だけを練習 ----
+  const weakBtn = el('<button class="jsubj2 jweakrow2"></button>');
+  weakBtn.innerHTML = '<span class="jsubj2-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>'+
+    '<span class="jsubj2-body"><span class="jsubj2-t1"></span></span><span class="jrow-chev">'+chevron+'</span>';
+  weakBtn.querySelector(".jsubj2-t1").textContent = tr(T.weakReview);
   weakBtn.onclick = ()=>{
     ST.mode = "practice";
     ST.queue = weakQuestions(10).map(shuffleQuestionOptions);
@@ -7453,8 +7671,19 @@ function renderPracticeView(){
     ST.view = "question";
     render();
   };
-  weakCard.appendChild(weakBtn);
-  wrap.appendChild(weakCard);
+  wrap.appendChild(weakBtn);
+
+  // ---- その他のコンテンツ(生活クイズ。N4・N3に関係なく、いつでも) ----
+  const sec = el('<div class="jsec"></div>');
+  const h = el('<div class="jsec-h"><div class="jsec-t"></div></div>'); h.querySelector(".jsec-t").textContent = tr(T.otherContent);
+  sec.appendChild(h);
+  const life = el('<button class="jrow jlife2"></button>');
+  life.innerHTML = '<span class="jrow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg></span><span class="jrow-body"><span class="jrow-t1"></span><span class="jrow-t2"></span></span><span class="jrow-chev">'+chevron+'</span>';
+  life.querySelector(".jrow-t1").textContent = tr(["日本での生活について学ぶ","Learn about life in Japan","Belajar tentang kehidupan di Jepang","Alamin ang tungkol sa buhay sa Japan","เรียนรู้เกี่ยวกับการใช้ชีวิตในญี่ปุ่น","ဂျပန်နိုင်ငံတွင် နေထိုင်မှုအကြောင်း လေ့လာရန်"]);
+  life.querySelector(".jrow-t2").textContent = tr(["ごみ出し・交通ルール・宿舎マナーなど","Trash, traffic rules, dorm manners, etc.","Sampah, aturan lalu lintas, tata krama asrama, dll.","Basura, traffic rules, dorm manners, atbp.","ขยะ กฎจราจร มารยาทหอพัก และอื่นๆ","အမှိုက်စွန့်ပစ်ခြင်း၊ ယာဉ်စည်းကမ်း၊ အဆောင်နေထိုင်မှု စည်းကမ်းများ စသည်"]);
+  life.onclick = ()=>{ ST.view = "lifeHome"; render(); };
+  sec.appendChild(life);
+  wrap.appendChild(sec);
 
   return wrap;
 }
@@ -7786,9 +8015,10 @@ function renderQuestion(){
     return wrap;
   }
 
-  const top = el('<div class="topbar"></div>');
+  const top = el('<div class="topbar qtop"></div>');
   const backBtn = document.createElement("button");
-  backBtn.className = "ghost"; backBtn.textContent = tr(T.back);
+  backBtn.className = "qback"; backBtn.setAttribute("aria-label", tr(T.back));
+  backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
   backBtn.onclick = ()=>{
     if(ST.mode==="mock"){
       ask(tr(T.quitMock), ()=>{ clearTimer(); finishSession(); ST.view="home"; render(); });
@@ -7797,6 +8027,11 @@ function renderQuestion(){
     }
   };
   top.appendChild(backBtn);
+  // 中央のタイトル(練習モード: 「文法 練習」、模試: 空)
+  const qtitle = document.createElement("div");
+  qtitle.className = "qtitle";
+  if(ST.mode !== "mock") qtitle.textContent = tr(SUBJECT[q.subj] || SUBJECT.moji) + " " + tr(T.practiceWord);
+  top.appendChild(qtitle);
 
   const right = document.createElement("div");
   if(ST.mode==="mock"){
@@ -7851,6 +8086,9 @@ function renderQuestion(){
       if(curBtn) curBtn.scrollIntoView({ block:"nearest", inline:"center" });
     });
   } else {
+    const pbar = el('<div class="qprogbar"><i></i></div>');
+    pbar.querySelector("i").style.width = Math.round((ST.idx+1)/ST.queue.length*100) + "%";
+    wrap.appendChild(pbar);
     const prog = document.createElement("div");
     prog.className = "progress"; prog.style.marginBottom="8px";
     prog.textContent = tr(CAT[q.c]);
@@ -8065,6 +8303,7 @@ function renderQuestion(){
       renderPaired(optBtn, [String(i+1)+"　"+q.o[i][0]], { noTranslation: true });
     } else {
       renderPaired(optBtn, q.o[i], { noFurigana: q.c === "hyoki", noTranslation: true });
+      optBtn.classList.add("numbered"); optBtn.setAttribute("data-n", String(i+1));
     }
     if(alreadyAnswered){
       if(ST.mode==="practice"){
@@ -8108,10 +8347,19 @@ function renderQuestion(){
 
 
   if(showFeedback){
-    const fb = el('<div class="feedback"></div>');
     const correct = ST.answers[ST.idx] === q.a;
-    fb.className = "feedback " + (correct ? "ok":"ng");
-    fb.textContent = (correct ? tr(T.correct) : tr(T.incorrect)) + "　" + tr(T.explanation) + "：" + tr(q.e);
+    const fb = el('<div class="feedback fbcard '+(correct ? "ok" : "ng")+'"></div>');
+    const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17.5 19 7"/></svg>';
+    const crossSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+    fb.innerHTML = '<div class="fbcard-head"><span class="fbcard-ic">'+(correct ? checkSvg : crossSvg)+'</span><b></b></div>'+
+                   '<div class="fbcard-ans"><span class="k"></span><span class="n"></span><span class="v"></span></div>'+
+                   '<div class="fbcard-ex"><div class="h"></div><div class="t"></div></div>';
+    fb.querySelector(".fbcard-head b").textContent = correct ? tr(T.correctBig) : tr(T.wrongBig);
+    fb.querySelector(".fbcard-ans .k").textContent = tr(T.mistakeCorrectAnswer) + "：";
+    fb.querySelector(".fbcard-ans .n").textContent = String(q.a + 1);
+    fb.querySelector(".fbcard-ans .v").textContent = (audioOptions && !revealAudioText) ? "" : q.o[q.a][0];
+    fb.querySelector(".fbcard-ex .h").textContent = tr(T.explanation);
+    fb.querySelector(".fbcard-ex .t").textContent = tr(q.e);
     card.appendChild(fb);
     const fbNote = el('<div class="explanation-note"></div>');
     fbNote.textContent = tr(T.explanationNote);
@@ -8163,7 +8411,8 @@ function renderQuestion(){
   }
   if(ST.idx < ST.queue.length - 1){
     const nextBtn = document.createElement("button");
-    nextBtn.className = "primary"; nextBtn.textContent = tr(T.next);
+    nextBtn.className = "primary";
+    nextBtn.textContent = ST.mode === "mock" ? tr(T.next) : tr(T.nextQuestionBtn) + " →";
     nextBtn.onclick = ()=>{ goToQuestion(ST.idx + 1); };
     nav.appendChild(nextBtn);
   } else {
