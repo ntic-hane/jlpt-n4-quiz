@@ -5534,17 +5534,29 @@ function syncProgress(qid){
     last_answered_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
-  // 直近で不正解だった時の選択肢がローカルに記録されていれば一緒に送る。
-  // (正解が続いている問題ではlastWrongが無いので、このキー自体を省略しサーバー側の値を変えない)
-  if(typeof rec.lastWrong === "number"){
-    body.last_wrong_choice = rec.lastWrong;
+  // 直近で不正解だった時に選んだ選択肢(元データの番号)がローカルに記録されていれば、一緒に送る。
+  // (正解が続いている問題ではlastWrongOrigが無いので、このキー自体を省略しサーバー側の値を変えない)
+  if(typeof rec.lastWrongOrig === "number"){
+    body.last_wrong_orig = rec.lastWrongOrig;
   }
-  fetch(SUPABASE_URL + "/rest/v1/progress?on_conflict=company_id,learner_id,question_id", {
+  const url = SUPABASE_URL + "/rest/v1/progress?on_conflict=company_id,learner_id,question_id";
+  const send = (b)=> fetch(url, {
     method: "POST",
     headers: authedHeaders({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
-    body: JSON.stringify(body)
-  }).then(res=>{
-    if(!res.ok){ res.text().then(t=>console.warn("[sync] progress失敗", res.status, t)); }
+    body: JSON.stringify(b)
+  });
+  send(body).then(res=>{
+    if(res.ok) return;
+    res.text().then(t=>{
+      // データベースにlast_wrong_orig列がまだ無い場合(SQL未実行)は、その列だけ外して送り直す。
+      // 誤答の記録のために、進捗そのものの保存が止まらないようにするため。
+      if(body.last_wrong_orig !== undefined && /last_wrong_orig/.test(t)){
+        const b2 = Object.assign({}, body); delete b2.last_wrong_orig;
+        send(b2).then(r2=>{ if(!r2.ok){ r2.text().then(t2=>console.warn("[sync] progress失敗(再送)", r2.status, t2)); } }).catch(e=>{ console.warn("[sync] progress通信エラー", e); });
+      } else {
+        console.warn("[sync] progress失敗", res.status, t);
+      }
+    });
   }).catch(e=>{ console.warn("[sync] progress通信エラー", e); });
 }
 function syncExam(examgroup, correct, total, pct){
@@ -6140,8 +6152,11 @@ function recordAnswer(qid, isCorrect, subj, translationUsed, selectedIdx){
 
   // 直近で不正解だった時に選んだ選択肢を覚えておく(「よく間違えている問題」の振り返り表示用)。
   // 正解した場合は書き換えない(その問題で最後にどこで間違えたかが分かるようにするため)。
+  // selectedIdxは「元データの選択肢の番号」(origOptIdxで入れ替え前に直したもの)。
+  // 以前のlastWrongは「入れ替え後の画面上の位置」で意味が違い、元の選択肢を引くと別の文字が出る不具合があったため、
+  // 別の名前(lastWrongOrig)に変えて、以前の値は使わない。
   if(!isCorrect && typeof selectedIdx === "number"){
-    d.q[qid].lastWrong = selectedIdx;
+    d.q[qid].lastWrongOrig = selectedIdx;
   }
 
   bumpSession(isCorrect);
@@ -6864,7 +6879,7 @@ function renderHomeView(){
         renderPaired(qEl, x.q.q);
         item.appendChild(qEl);
 
-        if(typeof x.r.lastWrong === "number" && x.q.o[x.r.lastWrong]){
+        if(typeof x.r.lastWrongOrig === "number" && x.q.o[x.r.lastWrongOrig]){
           const yourEl = document.createElement("div");
           yourEl.style.cssText = "font-size:12.5px;color:#c0392b;margin-bottom:4px;";
           const yourLabel = document.createElement("span");
@@ -6872,7 +6887,7 @@ function renderHomeView(){
           yourLabel.textContent = tr(T.mistakeYourAnswer) + "：";
           yourEl.appendChild(yourLabel);
           const yourVal = document.createElement("span");
-          yourVal.textContent = tr(x.q.o[x.r.lastWrong]);
+          yourVal.textContent = tr(x.q.o[x.r.lastWrongOrig]);
           yourEl.appendChild(yourVal);
           item.appendChild(yourEl);
         }
@@ -7268,7 +7283,13 @@ function shuffleQuestionOptions(q){
   const order = shuffle([...Array(q.o.length).keys()]);
   const newOptions = order.map(i=>q.o[i]);
   const newCorrect = order.indexOf(q.a);
-  return Object.assign({}, q, { o: newOptions, a: newCorrect });
+  // _order[画面上の位置] = 元データでの番号。誤答の記録(last_wrong_orig)を、入れ替え前の番号に直すために持たせる。
+  return Object.assign({}, q, { o: newOptions, a: newCorrect, _order: order });
+}
+// 画面上で選んだ位置(i)を、元データの選択肢の番号に直す。
+// 選択肢は表示のたびにランダムに入れ替えるため、画面上の位置のままでは、後から元の選択肢の文字を引けない。
+function origOptIdx(q, i){
+  return (q && Array.isArray(q._order) && typeof q._order[i] === "number") ? q._order[i] : i;
 }
 
 function startPractice(limit){
@@ -7800,7 +7821,7 @@ function renderQuestion(){
       if(ST.mode==="practice" && alreadyAnswered) return; // 練習は一度答えたら確定
       ST.answers[ST.idx] = i;
       if(ST.mode==="practice"){
-        recordAnswer(q.id, i===q.a, q.subj, ST.lang !== "ja", i);
+        recordAnswer(q.id, i===q.a, q.subj, ST.lang !== "ja", origOptIdx(q, i));
       }
       render();
       // 答えたあと、解説が画面の外に出たままだと読んでもらえない。
@@ -7940,7 +7961,7 @@ function submitExam(timeUp){
   ST.queue.forEach((q,i)=>{
     const isC = ST.answers[i] === q.a;
     if(isC) correct++;
-    recordAnswer(q.id, isC, q.subj, false, ST.answers[i]); // 模試モードは翻訳を表示しないため常にfalse
+    recordAnswer(q.id, isC, q.subj, false, origOptIdx(q, ST.answers[i])); // 模試モードは翻訳を表示しないため常にfalse
   });
   const total = ST.queue.length;
   const pct = total? Math.round(correct/total*100) : 0;
