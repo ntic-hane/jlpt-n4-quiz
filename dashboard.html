@@ -455,12 +455,13 @@ button.danger:hover{background:#faf3f0;}
 .mode-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;}
 .mode-badge.mode-practice{background:#e8f3ec;color:#2a7a4a;}
 .mode-badge.mode-mock{background:#e9f0fb;color:#2a5da8;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-card{max-width:380px;}  /* 横幅いっぱいに広がって大きくなりすぎないよう、カード自体の幅を制限(マスは約48px) */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
 .cal-weekday{text-align:center;font-size:11px;color:var(--text-sub);font-weight:700;padding:4px 0;}
-.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;background:var(--bg-alt,#f7f6f2);}
+.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;background:var(--bg-alt,#f7f6f2);}
 .cal-cell.cal-empty{background:transparent;}
 .cal-daynum{font-size:11px;color:var(--text-sub);}
-.cal-dot{width:8px;height:8px;border-radius:50%;margin-top:2px;display:inline-block;}
+.cal-dot{width:7px;height:7px;border-radius:50%;margin-top:2px;display:inline-block;}
 .cal-dot-practice{background:#3d9a5f;}
 .cal-dot-mock{background:#3a6bc2;}
 .cal-dot-both{background:linear-gradient(90deg,#3d9a5f 50%,#3a6bc2 50%);}
@@ -4398,7 +4399,7 @@ function renderLearnerKarte(){
   wrap.appendChild(histCard2);
 
   // ---- 学習カレンダーカード ----
-  const calCard = el('<div class="card"></div>');
+  const calCard = el('<div class="card cal-card"></div>');
   const calTitleRow = el('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"></div>');
   const calTitle = document.createElement("div");
   calTitle.className = "card-title";
