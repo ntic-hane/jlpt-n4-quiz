@@ -516,6 +516,8 @@ button.danger:hover{background:#faf3f0;}
    ===================================================================== */
 :root{
   --nv-bg:#F3F5FA; --nv-navy:#0F1B33; --nv-navy-2:#17274A; --nv-text:#1B2437; --nv-sub:#6B7690; --nv-line:#E6EAF2;
+  --nv-sidebar:#166534; /* PCの左メニューの帯の色(実習生アプリの紺と区別するため、緑) */
+  --nv-sidebar-text:#D4EADB; --nv-sidebar-sub:#A7D3B8;
   --nv-blue:#3B82F6; --nv-blue-bg:#EAF2FF; --nv-green:#22B07D; --nv-green-bg:#E4F6EE;
   --nv-orange:#F59E3A; --nv-orange-bg:#FFF1DE; --nv-purple:#8B5CF6; --nv-purple-bg:#F0EAFF;
   --nv-red:#EF5B6F; --nv-red-bg:#FDEBEE; --nv-gray:#9AA3B5; --nv-gray-bg:#EEF0F5;
@@ -526,13 +528,13 @@ body.shell-on main#app{max-width:none;width:100%;margin:0;padding:0;}
 body.shell-on .tabnav, body.shell-on .subnav, body.shell-on .mobile-bottomnav{display:none !important;}
 
 .shell{display:flex;min-height:100vh;}
-.sb{width:236px;flex:0 0 236px;background:var(--nv-navy);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 12px 14px;box-sizing:border-box;overflow-y:auto;}
+.sb{width:236px;flex:0 0 236px;background:var(--nv-sidebar);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 12px 14px;box-sizing:border-box;overflow-y:auto;}
 .sb-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;cursor:pointer;}
 .sb-brand img{width:40px;height:40px;object-fit:contain;background:transparent;}
 .sb-brand-t1{font-size:15px;font-weight:700;letter-spacing:.2px;line-height:1.2;}
-.sb-brand-t2{font-size:11px;color:#9FB0D6;margin-top:2px;}
+.sb-brand-t2{font-size:11px;color:var(--nv-sidebar-sub);margin-top:2px;}
 .sb-nav{display:flex;flex-direction:column;gap:2px;}
-.sb-item{display:flex;align-items:center;gap:11px;width:100%;border:0;background:transparent;color:#C9D4EE;font-size:14px;font-weight:600;padding:11px 12px;border-radius:10px;cursor:pointer;text-align:left;font-family:inherit;}
+.sb-item{display:flex;align-items:center;gap:11px;width:100%;border:0;background:transparent;color:var(--nv-sidebar-text);font-size:14px;font-weight:600;padding:11px 12px;border-radius:10px;cursor:pointer;text-align:left;font-family:inherit;}
 .sb-item:hover{background:rgba(255,255,255,.06);}
 .sb-item.active{background:var(--nv-blue);color:#fff;}
 .sb-item svg{width:20px;height:20px;flex:0 0 20px;}
@@ -544,7 +546,7 @@ body.shell-on .tabnav, body.shell-on .subnav, body.shell-on .mobile-bottomnav{di
 .sb-user{display:flex;align-items:center;gap:10px;padding:12px 8px 6px;border-top:1px solid rgba(255,255,255,.1);margin-top:10px;}
 .sb-avatar{width:34px;height:34px;border-radius:50%;background:var(--nv-blue);display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 34px;}
 .sb-user-t1{font-size:12px;font-weight:600;word-break:break-all;line-height:1.3;}
-.sb-user-t2{font-size:10.5px;color:#9FB0D6;margin-top:2px;line-height:1.3;}
+.sb-user-t2{font-size:10.5px;color:var(--nv-sidebar-sub);margin-top:2px;line-height:1.3;}
 .sb-logout{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:#F5A3AE;font-size:13px;font-weight:600;padding:9px 12px;border-radius:10px;cursor:pointer;font-family:inherit;}
 .sb-logout:hover{background:rgba(255,255,255,.06);}
 .sb-logout svg{width:18px;height:18px;}
