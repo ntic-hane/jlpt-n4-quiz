@@ -658,6 +658,129 @@ header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
   .v-record > .jmisscard{grid-column:1 / -1;margin-top:10px;}
   .v-record > .jmisscard .k-miss-grid{display:block;}
 }
+
+/* ====================== 学習記録(カード+グラフ) ====================== */
+.v-record > .rc-head{margin:2px 0 12px;font-size:20px;}
+.rcard{background:#fff;border:1px solid var(--nv-line);border-radius:18px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,27,51,.05);min-width:0;}
+.rcard .jsection{padding:0 0 4px;}
+.rcard .jsectiontitle{font-size:16px;margin:0 0 10px;}
+.rcard .jdivider{display:none;}
+.rcard > .card,.rc-miss .jmisscard,.rc-exam .jexamcard{border:0;box-shadow:none;padding:0;margin:0;background:transparent;}
+.rc-title{font-size:16px;font-weight:800;color:var(--nv-text);margin-bottom:12px;}
+.rc-sub{font-size:13px;font-weight:700;color:var(--nv-sub);margin:2px 0 6px;}
+.rc-desc{font-size:12.5px;color:var(--nv-sub);margin:-6px 0 12px;line-height:1.55;}
+.rc-empty{font-size:13px;color:var(--nv-sub);padding:10px 0 4px;line-height:1.6;}
+.rc-kpi .jsummary{padding:0;margin:0;}
+.rc-acct{background:transparent;border:0;box-shadow:none;padding:0;}
+.rc-bar{display:flex;align-items:center;gap:10px;margin:12px 0;}
+.rc-bar .nm{flex:0 0 84px;font-size:13.5px;font-weight:700;color:var(--nv-text);}
+.rc-bar .tr{flex:1;height:10px;background:#E9EDF5;border-radius:999px;overflow:hidden;}
+.rc-bar .tr i{display:block;height:100%;border-radius:999px;}
+.rc-bar b{flex:0 0 42px;text-align:right;font-size:14.5px;font-weight:800;color:var(--nv-text);font-variant-numeric:tabular-nums;}
+/* 最近間違えた問題 */
+.rlist{display:flex;flex-direction:column;gap:10px;}
+.rmiss{border:1px solid var(--nv-line);border-left:4px solid var(--nv-red);border-radius:12px;padding:12px 14px;background:#fff;}
+.rmiss-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.rmiss-top .chip{font-size:11px;font-weight:700;color:var(--nv-blue);background:var(--nv-blue-bg);padding:2px 9px;border-radius:999px;}
+.rmiss-top .dt{font-size:11.5px;color:var(--nv-sub);font-weight:700;}
+.rmiss-q{font-size:14px;font-weight:700;color:var(--nv-text);line-height:1.7;margin-bottom:8px;}
+.rmiss-your,.rmiss-ans{font-size:13px;line-height:1.55;margin-bottom:3px;}
+.rmiss-your{color:#C9344A;} .rmiss-ans{color:#16875F;}
+.rmiss-your b,.rmiss-ans b{font-weight:800;}
+.rmiss-e{font-size:12px;color:var(--nv-sub);line-height:1.6;margin-top:6px;}
+@media (min-width:1100px){
+  .v-record{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start;}
+  .v-record > *{min-width:0;grid-column:span 12;}
+  .v-record > .rcard{margin-bottom:0;}
+  .v-record > .rc-ach{grid-column:span 5;} .v-record > .rc-kpi{grid-column:span 7;}
+  .v-record > .rc-subj,.v-record > .rc-weak,.v-record > .rc-trend,.v-record > .rc-qcount,.v-record > .rc-exam,.v-record > .rc-days{grid-column:span 6;}
+  .v-record > .rc-recent,.v-record > .rc-miss,.v-record > .rc-acct{grid-column:span 12;}
+  .rc-kpi .jsummary{grid-template-columns:repeat(3,minmax(0,1fr));height:100%;align-content:center;}
+  .rc-recent .rlist{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .rc-acct .idcardwrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+}
+
+/* ====================== PC版ホーム(案3): 3列 = 左メニュー | 中央 | 右の記録欄 ====================== */
+.jpc-head,.jpc-bottom,.jpc-right,.jhero2-deco,.jlife-pc,.ptop,.jsec-link-pc{display:none;}
+.jprog .nmwrap{display:flex;flex-direction:column;min-width:0;}
+.jprog .sub,.jprog .go{display:none;}
+@media (min-width:1100px){
+  /* 左メニュー */
+  .psb-sep{height:1px;background:rgba(255,255,255,.12);margin:10px 8px;}
+  .psb-bottom{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-bottom:6px;}
+  .psb-help{color:#CFE0FF;}
+  /* 上のバー */
+  .ptop{display:none;}
+  body.has-psb .ptop{display:flex;position:fixed;top:0;left:236px;right:0;height:64px;align-items:center;justify-content:flex-end;gap:12px;padding:0 40px;z-index:200;background:transparent;}
+  body.has-psb.inq .ptop{display:none;}
+  body.has-psb main{padding-top:74px;}
+  .ptop-wrap{position:relative;}
+  .ptop-btn{display:flex;align-items:center;gap:8px;border:1px solid var(--nv-line);background:#fff;border-radius:14px;padding:8px 14px;font-size:13.5px;font-weight:700;color:var(--nv-text);cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(15,27,51,.05);}
+  .ptop-btn svg{color:var(--nv-sub);}
+  .ptop-user .av{width:30px;height:30px;border-radius:50%;background:var(--nv-blue-bg);color:var(--nv-blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+  .ptop-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:#fff;border:1px solid var(--nv-line);border-radius:14px;box-shadow:0 8px 24px rgba(15,27,51,.14);padding:6px;z-index:300;}
+  .ptop-mi{display:block;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:9px;font-size:13.5px;font-weight:700;color:var(--nv-text);cursor:pointer;font-family:inherit;}
+  .ptop-mi:hover{background:#F3F6FB;} .ptop-mi.active{background:var(--nv-blue-bg);color:var(--nv-blue);} .ptop-mi.danger{color:#D9374E;}
+  .ptop-mh{padding:10px 12px 8px;border-bottom:1px solid var(--nv-line);margin-bottom:4px;} .ptop-mh b{display:block;font-size:14px;} .ptop-mh span{font-size:12px;color:var(--nv-sub);}
+
+  /* ホームの3列 */
+  .v-home{grid-template-columns:repeat(12,minmax(0,1fr));gap:18px 20px;}
+  .v-home > .lvwrap{display:none;}
+  .v-home > .jpc-head{display:flex;grid-column:1 / 9;grid-row:1;align-items:center;justify-content:space-between;gap:20px;}
+  .v-home > .jhero2{grid-column:1 / 9;grid-row:2;position:relative;overflow:hidden;background:linear-gradient(135deg,#EAF2FF 0%,#F4F8FF 100%);border-color:#D6E4FB;}
+  .v-home > .jprogsec{grid-column:1 / 9;grid-row:3;margin-top:0;}
+  .v-home > .jside{grid-column:1 / 9;grid-row:4;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+  .v-home > .jpc-bottom{display:grid;grid-column:1 / 9;grid-row:5;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+  .v-home > .jpc-right{display:flex;flex-direction:column;gap:16px;grid-column:9 / 13;grid-row:1 / span 5;}
+  .jpc-greet .t{font-size:30px;font-weight:800;color:var(--nv-text);letter-spacing:-.3px;}
+  .jpc-greet .s{font-size:14px;color:var(--nv-sub);margin-top:6px;font-weight:600;}
+  .jpc-levels{display:flex;gap:10px;background:#E9EEF7;border-radius:16px;padding:6px;}
+  .jlvcard{display:flex;align-items:center;gap:10px;min-width:130px;border:0;background:transparent;border-radius:12px;padding:10px 16px;cursor:pointer;font-family:inherit;color:var(--nv-sub);text-align:left;}
+  .jlvcard span{display:flex;flex-direction:column;line-height:1.25;} .jlvcard b{font-size:15px;font-weight:800;} .jlvcard i{font-style:normal;font-size:12px;font-weight:600;}
+  .jlvcard.active{background:var(--nv-blue);color:#fff;box-shadow:0 2px 6px rgba(31,78,121,.3);}
+  .jhero2-deco{display:block;position:absolute;right:18px;top:12px;bottom:12px;width:210px;opacity:.9;pointer-events:none;}
+  .jhero2 .jhero2-btn{max-width:300px;}
+  .jsec-link-pc{display:inline-block;} .jprogsec .jsec-h .jsec-link:not(.jsec-link-pc){display:none;}
+  .jprog{display:flex;flex-direction:column;align-items:stretch;padding:16px;gap:0;}
+  .jprog .jprog-top{align-items:flex-start;margin-bottom:12px;}
+  .jprog .sub{display:block;font-size:11.5px;color:var(--nv-sub);font-weight:600;line-height:1.4;margin-top:3px;}
+  .jprog .go{display:block;margin-top:12px;text-align:center;background:var(--nv-blue-bg);color:var(--nv-blue);border-radius:10px;padding:9px;font-size:13px;font-weight:800;}
+  .jside .jsec .jsec-h{display:none;} .jside .jrow{height:100%;} .jlife-pc{display:flex;}
+  .jpc-card{padding:18px 20px;margin:0;}
+  .jpc-card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;} .jpc-card-h b{font-size:16px;font-weight:800;color:var(--nv-text);}
+  .jpc-sel{border:1px solid var(--nv-line);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;background:#fff;color:var(--nv-text);font-family:inherit;}
+  .jkpi3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border:1px solid var(--nv-line);border-radius:14px;padding:12px 6px;margin-bottom:14px;}
+  .jkpi3-c{text-align:center;padding:0 4px;border-right:1px solid var(--nv-line);} .jkpi3-c:last-child{border-right:0;}
+  .jkpi3-c .ic{color:var(--nv-blue);display:flex;justify-content:center;margin-bottom:4px;} .jkpi3-c .ic svg{width:22px;height:22px;}
+  .jkpi3-c .v b{font-size:19px;font-weight:800;color:var(--nv-text);} .jkpi3-c .v small{font-size:11px;color:var(--nv-sub);font-weight:700;margin-left:2px;}
+  .jkpi3-c .l{font-size:11.5px;color:var(--nv-sub);font-weight:600;margin-top:2px;}
+  .jweak3{--sc:var(--sj-moji);--sb:var(--sj-moji-bg);display:flex;align-items:center;gap:12px;padding:10px 6px;border-radius:12px;cursor:pointer;}
+  .jweak3[data-subj="bunpo"]{--sc:var(--sj-bunpo);--sb:var(--sj-bunpo-bg);} .jweak3[data-subj="dokkai"]{--sc:var(--sj-dokkai);--sb:var(--sj-dokkai-bg);} .jweak3[data-subj="choukai"]{--sc:var(--sj-choukai);--sb:var(--sj-choukai-bg);}
+  .jweak3:hover{background:#F6F8FC;} .jweak3 .ic{width:40px;height:40px;border-radius:50%;background:var(--sb);color:var(--sc);display:flex;align-items:center;justify-content:center;flex:0 0 40px;} .jweak3 .ic svg{width:21px;height:21px;}
+  .jweak3 .tx{display:flex;flex-direction:column;min-width:0;} .jweak3 b{font-size:14.5px;font-weight:800;color:var(--nv-text);} .jweak3 i{font-style:normal;font-size:12.5px;color:var(--nv-sub);font-weight:600;line-height:1.45;}
+  .jtable{display:flex;flex-direction:column;}
+  .jtr{display:grid;grid-template-columns:54px 1fr 92px;gap:8px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--nv-line);font-size:13px;color:var(--nv-text);}
+  .jtr:last-child{border-bottom:0;} .jth{font-size:11.5px;color:var(--nv-sub);font-weight:700;background:#F7F9FD;border-radius:8px;border-bottom:0;}
+  .jtr > span:last-child{text-align:right;} .jtr b{font-weight:800;margin-right:6px;} .jtr i{font-style:normal;color:var(--nv-sub);font-weight:700;}
+  .jpass{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center;}
+  .jpass-l b{display:block;font-size:34px;font-weight:800;color:var(--nv-text);margin-top:8px;}
+  .jpass-bar{height:12px;background:#E9EDF5;border-radius:999px;overflow:hidden;} .jpass-bar i{display:block;height:100%;background:var(--nv-blue);border-radius:999px;}
+  .jpass-r{display:flex;flex-direction:column;gap:8px;}
+  .jpass-i{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--nv-sub);}
+  .jpass-i i{width:20px;height:20px;border-radius:50%;border:1.8px solid #C5CEDD;display:flex;align-items:center;justify-content:center;flex:0 0 20px;}
+  .jpass-i.on{color:var(--nv-text);} .jpass-i.on i{background:var(--nv-blue);border-color:var(--nv-blue);}
+  .jpass-note{font-size:11.5px;color:var(--nv-sub);margin-top:12px;line-height:1.55;}
+}
+@media (min-width:1100px){ .jkpi3-c .v b{white-space:nowrap;font-size:17px;} .jkpi3-c .v{white-space:nowrap;} }
+
+/* PC幅が狭いとき(1100〜1399px): 右の記録欄を、中央の下に回して、中央を広く使う */
+@media (min-width:1100px) and (max-width:1399px){
+  .v-home > .jpc-head,.v-home > .jhero2,.v-home > .jprogsec,.v-home > .jside,.v-home > .jpc-bottom{grid-column:1 / -1;}
+  .v-home > .jpc-right{grid-column:1 / -1;grid-row:6;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;}
+  .jhero2-deco{width:170px;opacity:.55;}
+  .v-home > .jhero2{padding-right:190px;}
+}
+@media (min-width:1400px){ .v-home > .jhero2{padding-right:240px;} }
 </style>
 </head>
 <body>
@@ -858,6 +981,34 @@ const T = {
   mockTotalMin: ["制限時間 合計{m}分","Time limit: {m} min in total","Batas waktu: total {m} menit","Time limit: kabuuang {m} min","เวลาจำกัด รวม {m} นาที","အချိန်ကန့်သတ်ချက် စုစုပေါင်း {m} မိနစ်"],
   mockSectionCount: ["{k}つのセクション","{k} sections","{k} bagian","{k} na seksyon","{k} ส่วน","{k} ပိုင်း"],
   mockStartBtn: ["始める","Start","Mulai","Simulan","เริ่ม","စတင်ရန်"],
+  subjAccTitle: ["分野別の正答率","Accuracy by Subject","Akurasi per Bidang","Katumpakan ayon sa Larangan","อัตราถูกต้องแยกตามหมวด","ဘာသာရပ်အလိုက် မှန်ကန်မှုနှုန်း"],
+  qPerDayTitle: ["日ごとの解いた問題数","Questions per Day","Jumlah Soal per Hari","Bilang ng Tanong kada Araw","จำนวนข้อที่ทำต่อวัน","တစ်ရက်လျှင် ဖြေခဲ့သော မေးခွန်းအရေအတွက်"],
+  recentMistakesTitle: ["最近間違えた問題","Recent Mistakes","Soal yang Baru Salah","Mga Kamakailang Mali","ข้อที่ผิดล่าสุด","မကြာသေးမီက မှားခဲ့သော မေးခွန်းများ"],
+  recentMistakesDesc: ["間違えたときに選んだ答えと、正解を確認できます","See the answer you chose and the correct answer","Lihat jawaban yang Anda pilih dan jawaban yang benar","Tingnan ang sagot na pinili mo at ang tamang sagot","ดูคำตอบที่คุณเลือกและคำตอบที่ถูกต้อง","သင်ရွေးခဲ့သော အဖြေနှင့် မှန်ကန်သော အဖြေကို ကြည့်နိုင်ပါသည်"],
+  noRecentMistakes: ["最近間違えた問題はありません。これから間違えた問題が、ここに出ます。","No recent mistakes. Questions you get wrong will appear here.","Belum ada kesalahan terbaru. Soal yang salah akan muncul di sini.","Wala pang kamakailang mali. Lalabas dito ang mga tanong na mali ang sagot mo.","ยังไม่มีข้อที่ผิดล่าสุด ข้อที่ตอบผิดจะแสดงที่นี่","မကြာသေးမီက မှားခဲ့သော မေးခွန်း မရှိသေးပါ။ မှားသော မေးခွန်းများကို ဤနေရာတွင် ပြပါမည်။"],
+  examTrendTitle: ["模試の成績の推移","Mock Exam Score Trend","Tren Nilai Ujian Simulasi","Trend ng Score sa Mock Exam","แนวโน้มคะแนนสอบจำลอง","အစမ်းစာမေးပွဲ ရမှတ် အပြောင်းအလဲ"],
+  welcomeShort: ["おかえりなさい！","Welcome back!","Selamat datang kembali!","Welcome back!","ยินดีต้อนรับกลับมา!","ပြန်လာတာ ကြိုဆိုပါတယ်!"],
+  welcomeSub: ["今日もコツコツ、日本語の力をつけましょう。","Let's build your Japanese skills step by step today.","Mari tingkatkan kemampuan bahasa Jepangmu sedikit demi sedikit hari ini.","Magsanay tayo ng Japanese nang paunti-unti ngayong araw.","วันนี้ก็ค่อย ๆ พัฒนาภาษาญี่ปุ่นไปด้วยกันนะ","ဒီနေ့လည်း ဂျပန်စာကို တဖြည်းဖြည်း တိုးတက်အောင် လေ့ကျင့်ကြစို့။"],
+  inProgressLabel: ["学習中","In progress","Sedang belajar","Nag-aaral","กำลังเรียน","လေ့လာနေသည်"],
+  seeAllQuestions: ["すべての問題を見る","See all questions","Lihat semua soal","Tingnan ang lahat ng tanong","ดูข้อสอบทั้งหมด","မေးခွန်းအားလုံး ကြည့်ရန်"],
+  passProgressTitle: ["{lv} 合格への進捗","Progress to Pass {lv}","Kemajuan Menuju Lulus {lv}","Progreso sa Pagpasa sa {lv}","ความคืบหน้าสู่การสอบผ่าน {lv}","{lv} အောင်မြင်ရေး တိုးတက်မှု"],
+  subjCheckNote: ["目安：正答率70%以上でチェック","Guide: checked at 70%+ accuracy","Acuan: dicentang jika akurasi 70%+","Gabay: may check kung 70%+ ang katumpakan","เกณฑ์: ติ๊กเมื่อถูกต้อง 70% ขึ้นไป","ညွှန်းချက်: မှန်ကန်မှု ၇၀% အထက်တွင် အမှန်ခြစ်ပါမည်"],
+  weakFieldsTitle: ["苦手な分野","Weak Areas","Bidang yang Lemah","Mahihinang Larangan","หมวดที่ยังไม่ถนัด","အားနည်းသော ဘာသာရပ်များ"],
+  weakCatNote: ["（{c}が苦手です）","({c} is a weak point)","({c} masih lemah)","(mahina sa {c})","(ยังไม่ถนัด {c})","({c} တွင် အားနည်းသည်)"],
+  practiceOf: ["{s}の練習","{s} practice","Latihan {s}","Pagsasanay sa {s}","ฝึก{s}","{s} လေ့ကျင့်ခြင်း"],
+  mockOf: ["模試（{s}）","Mock Exam ({s})","Ujian Simulasi ({s})","Mock Exam ({s})","สอบจำลอง ({s})","အစမ်းစာမေးပွဲ ({s})"],
+  colDate: ["日付","Date","Tanggal","Petsa","วันที่","ရက်စွဲ"],
+  colContent: ["内容","Content","Isi","Nilalaman","เนื้อหา","အကြောင်းအရာ"],
+  studyDaysLabel: ["学習した日","Days studied","Hari belajar","Mga araw na nag-aral","วันที่เรียน","လေ့လာခဲ့သောရက်"],
+  studyTimeLabel: ["学習時間","Study time","Waktu belajar","Oras ng pag-aaral","เวลาเรียน","လေ့လာချိန်"],
+  solvedLabel: ["解いた問題","Questions solved","Soal dikerjakan","Mga tanong na nasagot","ข้อที่ทำ","ဖြေခဲ့သော မေးခွန်း"],
+  lastNDays: ["直近{n}日","Last {n} days","{n} hari terakhir","Huling {n} araw","{n} วันล่าสุด","နောက်ဆုံး {n} ရက်"],
+  hourUnit: ["時間","h","jam","oras","ชม.","နာရီ"],
+  helpTitle: ["ヘルプ","Help","Bantuan","Tulong","ความช่วยเหลือ","အကူအညီ"],
+  helpHint: ["わからないことは、メールで質問できます","Email us if you have any questions","Hubungi kami lewat email jika ada pertanyaan","Mag-email sa amin kung may tanong ka","หากมีข้อสงสัย ส่งอีเมลถึงเราได้","မေးစရာရှိပါက အီးမေးလ်ဖြင့် မေးနိုင်ပါသည်"],
+  helpMailBtn: ["メールで質問する","Send an email","Kirim email","Mag-email","ส่งอีเมลสอบถาม","အီးမေးလ်ပို့ရန်"],
+  userSan: ["{n} さん","{n}","{n}","{n}","คุณ {n}","{n}"],
+  noStudyYet: ["まだ学習記録がありません","No study records yet","Belum ada catatan belajar","Wala pang tala ng pag-aaral","ยังไม่มีบันทึกการเรียน","လေ့လာမှု မှတ်တမ်း မရှိသေးပါ"],
   welcomeBack: ["おかえりなさい、{n}さん","Welcome back, {n}!","Selamat datang kembali, {n}!","Welcome back, {n}!","ยินดีต้อนรับกลับมา {n}","{n} ပြန်လာတာ ဝမ်းသာပါတယ်။"],
   weekDaysLabel: ["今週の学習日","Study days this week","Hari belajar minggu ini","Mga araw ng pag-aaral ngayong linggo","วันที่เรียนสัปดาห์นี้","ဒီအပတ် လေ့လာတဲ့ရက်များ"],
   daysUnit: ["日","days","hari","araw","วัน","ရက်"],
@@ -6052,6 +6203,15 @@ function renderSettingsView(){
     wrap.appendChild(acc);
   }
 
+  // ヘルプ(押すと、メールが開く)
+  const helpCard = el('<div class="card jsetcard"></div>');
+  const ht = el('<div class="card-title"></div>'); ht.textContent = tr(T.helpTitle); helpCard.appendChild(ht);
+  const hd = el('<div class="card-desc"></div>'); hd.textContent = tr(T.helpHint); helpCard.appendChild(hd);
+  const hb = document.createElement("button"); hb.type = "button"; hb.className = "primary"; hb.style.width = "100%";
+  hb.textContent = tr(T.helpMailBtn); hb.onclick = ()=> openHelpMail();
+  helpCard.appendChild(hb);
+  wrap.appendChild(helpCard);
+
   const btnRow = el('<div class="rowbtns" style="margin-top:16px;"></div>');
   if(isTestAccount()){
     const clearBtn = document.createElement("button");
@@ -6086,61 +6246,229 @@ function renderSidebar(){
   aside.innerHTML = "";
   if(!loggedIn) return;
 
+  const SVG = (inner)=> '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
   const ic = {
-    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9.5a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>',
-    practice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
-    mock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
-    record: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg>',
-    settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+    home: SVG('<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9.5a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/>'),
+    practice: SVG('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>'),
+    mock: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>'),
+    record: SVG('<line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/>'),
+    life: SVG('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/>'),
+    settings: SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'),
+    help: SVG('<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5"/><line x1="12" y1="17.5" x2="12.01" y2="17.5"/>')
   };
   const brand = el('<div class="psb-brand"></div>');
   brand.innerHTML = '<img src="'+LOGO_WHITE_SRC+'" alt=""><div><div class="t1">N.T.I.C Academy</div><div class="t2">JLPT Navi</div></div>';
   brand.onclick = ()=>{ ST.view = "home"; render(); };
   aside.appendChild(brand);
 
-  const cur = ({ home:"home", practice:"practice", select:"practice", lifeHome:"practice", lifeLesson:"practice", lifeQuiz:"practice", lifeResult:"practice", mock:"mock", result:"mock", record:"record", settings:"settings" })[ST.view] || "home";
-  const nav = el('<nav class="psb-nav"></nav>');
-  [["home",tr(T.tabHome)],["practice",tr(T.tabPractice)],["mock",tr(T.tabMock)],["record",tr(T.tabRecord)]].forEach(([v,label])=>{
+  const cur = ({ home:"home", practice:"practice", select:"practice", mock:"mock", result:"mock", record:"record", settings:"settings",
+                 lifeHome:"life", lifeLesson:"life", lifeQuiz:"life", lifeResult:"life" })[ST.view] || "home";
+  const item = (key, label, onclick, extraCls)=>{
     const b = document.createElement("button");
-    b.type = "button"; b.className = "psb-item" + (cur === v ? " active" : "");
-    b.innerHTML = ic[v] + "<span></span>"; b.querySelector("span").textContent = label;
-    b.onclick = ()=>{ ST.view = v; render(); };
-    nav.appendChild(b);
-  });
+    b.type = "button"; b.className = "psb-item" + (cur === key ? " active" : "") + (extraCls ? " " + extraCls : "");
+    b.innerHTML = ic[key] + "<span></span>"; b.querySelector("span").textContent = label;
+    b.onclick = onclick; return b;
+  };
+  const nav = el('<nav class="psb-nav"></nav>');
+  nav.appendChild(item("home", tr(T.tabHome), ()=>{ ST.view = "home"; render(); }));
+  nav.appendChild(item("practice", tr(T.tabPractice), ()=>{ ST.view = "practice"; render(); }));
+  nav.appendChild(item("mock", tr(T.tabMock), ()=>{ ST.view = "mock"; render(); }));
+  nav.appendChild(item("record", tr(T.tabRecord), ()=>{ ST.view = "record"; render(); }));
+  nav.appendChild(el('<div class="psb-sep"></div>'));
+  nav.appendChild(item("life", tr(LIFE_L.title), ()=>{ ST.view = "lifeHome"; render(); }));
   aside.appendChild(nav);
 
   const bottom = el('<div class="psb-bottom"></div>');
-  const sb = document.createElement("button");
-  sb.type = "button"; sb.className = "psb-item" + (cur === "settings" ? " active" : "");
-  sb.innerHTML = ic.settings + "<span></span>"; sb.querySelector("span").textContent = tr(T.settingsTitle);
-  sb.onclick = ()=>{ ST.view = "settings"; render(); };
-  bottom.appendChild(sb);
-
-  // 言語(短い名前で6つ)
-  const SHORT = { ja:"日本語", en:"English", id:"Indonesia", tl:"Tagalog", th:"ไทย", my:"မြန်မာ" };
-  const lg = el('<div class="psb-lang"></div>');
-  LANGS.forEach(l=>{
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "psb-langbtn" + (ST.lang === l ? " active" : "");
-    b.textContent = SHORT[l] || l; b.onclick = ()=>{ ST.lang = l; render(); };
-    lg.appendChild(b);
-  });
-  bottom.appendChild(lg);
-
-  const nm = AUTH.student && AUTH.student.name ? String(AUTH.student.name) : "";
-  const user = el('<div class="psb-user"></div>');
-  user.innerHTML = '<div class="av"></div><div class="who"><div class="n"></div><div class="c"></div></div>';
-  user.querySelector(".av").textContent = (nm.trim().charAt(0) || "?").toUpperCase();
-  user.querySelector(".n").textContent = nm || "-";
-  user.querySelector(".c").textContent = (AUTH.student && AUTH.student.company_id) ? AUTH.student.company_id : "";
-  bottom.appendChild(user);
-  const lo = document.createElement("button");
-  lo.type = "button"; lo.className = "psb-logout";
-  lo.innerHTML = ic.logout + "<span></span>"; lo.querySelector("span").textContent = tr(T.logoutBtn);
-  lo.onclick = async ()=>{ await authLogout(); ST.view = "login"; render(); };
-  bottom.appendChild(lo);
+  bottom.appendChild(el('<div class="psb-sep"></div>'));
+  bottom.appendChild(item("settings", tr(T.settingsTitle), ()=>{ ST.view = "settings"; render(); }));
+  bottom.appendChild(item("help", tr(T.helpTitle), ()=>{ openHelpMail(); }, "psb-help"));
   aside.appendChild(bottom);
+}
+
+// 日ごとの解いた問題数(棒グラフ)。学習した日が1日もなければ、空文字を返す。
+function svgBarsDaily(arr){
+  if(!arr.some(d=>d.n > 0)) return "";
+  const W = 320, H = 150, padL = 30, padR = 8, padT = 10, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const maxN = Math.max(5, ...arr.map(d=>d.n));
+  const top = Math.ceil(maxN / 5) * 5;
+  const slot = plotW / arr.length, bw = Math.max(3, Math.min(22, slot * 0.62));
+  let svg = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:420px;display:block;margin:0 auto;">';
+  [0, top/2, top].forEach(v=>{
+    const y = padT + plotH - (v/top*plotH);
+    svg += '<line x1="'+padL+'" y1="'+y.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y.toFixed(1)+'" stroke="#e2e8f0" stroke-width="1"/>';
+    svg += '<text x="'+(padL-5)+'" y="'+(y+3).toFixed(1)+'" font-size="9" fill="#8a94a6" text-anchor="end">'+Math.round(v)+'</text>';
+  });
+  arr.forEach((d,i)=>{
+    if(d.n <= 0) return;
+    const h = d.n/top*plotH, x = padL + i*slot + (slot - bw)/2, y = padT + plotH - h;
+    svg += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="3" fill="#1F4E79"/>';
+  });
+  const fmt = (iso)=>{ const p = iso.split("-"); return p[1]+"/"+p[2]; };
+  svg += '<text x="'+padL+'" y="'+(H-5)+'" font-size="9" fill="#8a94a6">'+fmt(arr[0].date)+'</text>';
+  svg += '<text x="'+(W-padR)+'" y="'+(H-5)+'" font-size="9" fill="#8a94a6" text-anchor="end">'+fmt(arr[arr.length-1].date)+'</text>';
+  return svg + '</svg>';
+}
+// 値(0〜100)の折れ線(模試の成績の推移)。点が2つ未満なら、空文字を返す。
+function svgLineValues(vals, labels){
+  if(vals.length < 2) return "";
+  const W = 320, H = 140, padL = 30, padR = 12, padT = 10, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB, step = plotW / (vals.length - 1);
+  let svg = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:420px;display:block;margin:0 auto;">';
+  [0,50,100].forEach(v=>{
+    const y = padT + plotH - (v/100*plotH);
+    svg += '<line x1="'+padL+'" y1="'+y.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y.toFixed(1)+'" stroke="#e2e8f0" stroke-width="1"/>';
+    svg += '<text x="'+(padL-5)+'" y="'+(y+3).toFixed(1)+'" font-size="9" fill="#8a94a6" text-anchor="end">'+v+'</text>';
+  });
+  let path = "";
+  vals.forEach((v,i)=>{ const x = padL + i*step, y = padT + plotH - (v/100*plotH); path += (i ? "L" : "M") + x.toFixed(1) + "," + y.toFixed(1) + " "; });
+  svg += '<path d="'+path+'" fill="none" stroke="#1F4E79" stroke-width="2.2"/>';
+  vals.forEach((v,i)=>{ const x = padL + i*step, y = padT + plotH - (v/100*plotH);
+    svg += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3.4" fill="#1F4E79"/><text x="'+x.toFixed(1)+'" y="'+(y-7).toFixed(1)+'" font-size="9" font-weight="700" fill="#1B2437" text-anchor="middle">'+v+'</text>'; });
+  svg += '<text x="'+padL+'" y="'+(H-5)+'" font-size="9" fill="#8a94a6">'+labels[0]+'</text>';
+  svg += '<text x="'+(W-padR)+'" y="'+(H-5)+'" font-size="9" fill="#8a94a6" text-anchor="end">'+labels[labels.length-1]+'</text>';
+  return svg + '</svg>';
+}
+// 最近間違えた問題(1回の間違いから出る)。その後に正解した問題は除く。
+function recentMistakeList(limit){
+  const d = load(); const items = [];
+  ALL_Q.forEach(q=>{
+    const r = d.q[q.id];
+    if(!r || typeof r.lastWrongOrig !== "number" || !r.lastWrongT) return;
+    if(r.t && r.t - r.lastWrongT > 3000) return;      // 最後に解いたとき正解だった(その後に正解した)問題は除く
+    if(!q.o[r.lastWrongOrig]) return;
+    items.push({ q, r });
+  });
+  items.sort((a,b)=> b.r.lastWrongT - a.r.lastWrongT);
+  return limit ? items.slice(0, limit) : items;
+}
+// 間違えた問題1問ぶんの表示(科目・日付、問題文、選んだ答え、正解、解説)
+function buildMissItem(x){
+  const item = el('<div class="rmiss"></div>');
+  const dt = new Date(x.r.lastWrongT);
+  const top = el('<div class="rmiss-top"><span class="chip"></span><span class="dt"></span></div>');
+  top.querySelector(".chip").textContent = tr(CAT[x.q.c] || SUBJECT[x.q.subj]);
+  top.querySelector(".dt").textContent = (dt.getMonth()+1) + "/" + dt.getDate();
+  item.appendChild(top);
+  const qEl = document.createElement("div"); qEl.className = "rmiss-q"; renderPaired(qEl, x.q.q); item.appendChild(qEl);
+  const mk = (cls, label, val)=>{ const r = el('<div class="'+cls+'"><b></b><span></span></div>'); r.querySelector("b").textContent = label + "："; r.querySelector("span").textContent = val; return r; };
+  item.appendChild(mk("rmiss-your", tr(T.mistakeYourAnswer), optShown(x.q.o[x.r.lastWrongOrig])));
+  item.appendChild(mk("rmiss-ans", tr(T.mistakeCorrectAnswer), optShown(x.q.o[x.q.a])));
+  if(x.q.e){ const e = document.createElement("div"); e.className = "rmiss-e"; e.textContent = tr(x.q.e); item.appendChild(e); }
+  return item;
+}
+
+// ---- ヘルプ: 押すと、NTICの担当者(hane@ntic.jp)宛てのメールが開く ----
+const HELP_MAIL = "hane@ntic.jp";
+function openHelpMail(){
+  const st = AUTH.student || {};
+  const subject = "【JLPTナビ】お問い合わせ（" + (st.company_id || "-") + " / " + (st.name || "-") + "）";
+  const body = "お問い合わせ内容を、こちらにご記入ください。\n\n\n----------------\n企業ID: " + (st.company_id || "-") +
+               "\n実習生: " + (st.name || "-") + "\nアプリ: JLPTナビ\n表示言語: " + ST.lang + "\n----------------";
+  const a = document.createElement("a");
+  a.href = "mailto:" + HELP_MAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+// ---- 本人の学習セッション(学習時間・最近の学習の元データ)。サーバーから読む(本人の分だけ読める設定) ----
+function loadMySessions(force){
+  if(!AUTH.session || !AUTH.student) return;
+  if(ST.sessionsFor !== AUTH.student.id){ ST.sessionsFor = AUTH.student.id; ST.sessionsState = null; ST.mySessions = null; }
+  if(ST.sessionsState === "loading" || (ST.sessionsState === "done" && !force)) return;
+  ST.sessionsState = "loading";
+  fetch(SUPABASE_URL + "/rest/v1/study_sessions?select=level,mode,subject,question_count,correct_count,started_at,duration_seconds&student_id=eq." +
+        encodeURIComponent(AUTH.student.id) + "&order=started_at.desc&limit=400", { headers: authedHeaders() })
+    .then(r=> r.ok ? r.json() : Promise.reject(r.status))
+    .then(rows=>{
+      ST.mySessions = Array.isArray(rows) ? rows : []; ST.sessionsState = "done";
+      if(["home","record"].includes(ST.view)) render();
+    })
+    .catch(e=>{ ST.sessionsState = "error"; console.warn("[sessions] 読み込み失敗", e); });
+}
+// 今のレベルの学習セッションのうち、直近N日分の集計(読み込み前・失敗時はnull)
+function sessionStats(days){
+  if(ST.sessionsState !== "done" || !Array.isArray(ST.mySessions)) return null;
+  const cut = Date.now() - days * 86400000;
+  const rows = ST.mySessions.filter(r=> r.level === ST.level && new Date(r.started_at).getTime() >= cut);
+  return { count: rows.length, seconds: rows.reduce((a,r)=> a + (r.duration_seconds || 0), 0) };
+}
+function fmtDuration(sec){
+  const m = Math.round(sec / 60);
+  const mu = tr(["分","min","menit","min","นาที","မိနစ်"]);
+  if(m < 60) return m + mu;
+  const h = Math.floor(m / 60), mm = m % 60;
+  return h + tr(T.hourUnit) + (mm ? " " + mm + mu : "");
+}
+// そのレベルで解いた問題が1問でもあるか(N3の問題IDは「N3-」で始まる)
+function levelHasStudy(lv){
+  const q = load().q || {};
+  return Object.keys(q).some(id=> (lv === "n3" ? id.startsWith("N3-") : !id.startsWith("N3-")) && q[id] && q[id].n > 0);
+}
+// 直近N日で学習した日数・解いた問題数(端末の記録)
+function periodLocalStats(days){
+  const arr = dailyTrendArray(days);
+  return { days: arr.filter(x=>x.n > 0).length, solved: arr.reduce((a,x)=>a + x.n, 0), arr };
+}
+
+// ---- 上のバー(PC幅だけCSSで表示): 言語・ユーザーメニュー ----
+function renderTopbar(){
+  let bar = document.getElementById("ptop");
+  if(!bar){
+    bar = document.createElement("div"); bar.id = "ptop"; bar.className = "ptop";
+    document.body.insertBefore(bar, document.getElementById("app"));
+    if(!window.__ptopBound){
+      window.__ptopBound = true;
+      document.addEventListener("click", (e)=>{
+        if(ST.pmenu && !e.target.closest("#ptop")){ ST.pmenu = null; renderTopbar(); }
+      });
+    }
+  }
+  bar.innerHTML = "";
+  const loggedIn = !["login","passwordChange"].includes(ST.view);
+  if(!loggedIn) return;
+  const NAMES = { ja:"日本語", en:"English", id:"Bahasa Indonesia", tl:"Tagalog", th:"ภาษาไทย", my:"မြန်မာဘာသာ" };
+  const chev = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+  const globe = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg>';
+
+  // 言語
+  const lw = el('<div class="ptop-wrap"></div>');
+  const lb = document.createElement("button"); lb.type = "button"; lb.className = "ptop-btn";
+  lb.innerHTML = globe + "<span></span>" + chev; lb.querySelector("span").textContent = NAMES[ST.lang] || ST.lang;
+  lb.onclick = (e)=>{ e.stopPropagation(); ST.pmenu = ST.pmenu === "lang" ? null : "lang"; renderTopbar(); };
+  lw.appendChild(lb);
+  if(ST.pmenu === "lang"){
+    const mn = el('<div class="ptop-menu"></div>');
+    LANGS.forEach(l=>{
+      const it = document.createElement("button"); it.type = "button"; it.className = "ptop-mi" + (ST.lang === l ? " active" : "");
+      it.textContent = NAMES[l] || l; it.onclick = ()=>{ ST.pmenu = null; ST.lang = l; render(); };
+      mn.appendChild(it);
+    });
+    lw.appendChild(mn);
+  }
+  bar.appendChild(lw);
+
+  // ユーザー
+  const nm = AUTH.student && AUTH.student.name ? String(AUTH.student.name).trim() : "";
+  const callName = nm ? nm.split(/[\s　]+/)[0] : "";
+  const uw = el('<div class="ptop-wrap"></div>');
+  const ub = document.createElement("button"); ub.type = "button"; ub.className = "ptop-btn ptop-user";
+  ub.innerHTML = '<span class="av"></span><span class="nm"></span>' + chev;
+  ub.querySelector(".av").textContent = (nm.charAt(0) || "?").toUpperCase();
+  ub.querySelector(".nm").textContent = callName ? fmtT(T.userSan, { n: callName }) : "";
+  ub.onclick = (e)=>{ e.stopPropagation(); ST.pmenu = ST.pmenu === "user" ? null : "user"; renderTopbar(); };
+  uw.appendChild(ub);
+  if(ST.pmenu === "user"){
+    const mn = el('<div class="ptop-menu ptop-menu-user"></div>');
+    const hd = el('<div class="ptop-mh"><b></b><span></span></div>');
+    hd.querySelector("b").textContent = nm || "-"; hd.querySelector("span").textContent = (tr(T.companyId) + "：" + ((AUTH.student && AUTH.student.company_id) || "-"));
+    mn.appendChild(hd);
+    const add = (label, fn, cls)=>{ const it = document.createElement("button"); it.type = "button"; it.className = "ptop-mi" + (cls ? " " + cls : ""); it.textContent = label; it.onclick = ()=>{ ST.pmenu = null; fn(); }; mn.appendChild(it); };
+    add(tr(T.helpTitle), ()=>{ renderTopbar(); openHelpMail(); });
+    add(tr(T.settingsTitle), ()=>{ ST.view = "settings"; render(); });
+    add(tr(T.logoutBtn), async ()=>{ await authLogout(); ST.view = "login"; render(); }, "danger");
+    uw.appendChild(mn);
+  }
+  bar.appendChild(uw);
 }
 
 function startQuick(subj, cats){
@@ -6840,6 +7168,7 @@ function recordAnswer(qid, isCorrect, subj, translationUsed, selectedIdx){
   // 別の名前(lastWrongOrig)に変えて、以前の値は使わない。
   if(!isCorrect && typeof selectedIdx === "number"){
     d.q[qid].lastWrongOrig = selectedIdx;
+    d.q[qid].lastWrongT = Date.now();
   }
 
   bumpSession(isCorrect);
@@ -7205,6 +7534,7 @@ function render(){
 
   renderHeader();
   renderSidebar();
+  renderTopbar();
   const app = document.getElementById("app");
   app.innerHTML = "";
 
@@ -7420,6 +7750,7 @@ function renderHomeView(){
   const wrap = document.createElement("div"); wrap.className = "v-home";
   const s = overallStats();
   const notStarted = s.studied === 0;
+  loadMySessions();     // 学習時間・最近の学習の元データ(読み込めたら、自動で、描き直す)
 
   // ---- N4/N3切り替え ----
   const levelWrap = el('<div class="lvwrap"></div>');
@@ -7433,6 +7764,21 @@ function renderHomeView(){
   });
   levelWrap.appendChild(levelPill);
   wrap.appendChild(levelWrap);
+
+  // ---- PCだけ: あいさつ + N4/N3(学習中/未学習)のカード ----
+  const pch = el('<div class="jpc-head"><div class="jpc-greet"><div class="t"></div><div class="s"></div></div><div class="jpc-levels"></div></div>');
+  pch.querySelector(".t").textContent = tr(T.welcomeShort);
+  pch.querySelector(".s").textContent = tr(T.welcomeSub);
+  [["n4","N4"],["n3","N3"]].forEach(([lv, label])=>{
+    const c = document.createElement("button"); c.type = "button";
+    c.className = "jlvcard" + (ST.level === lv ? " active" : "");
+    c.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="14"/><line x1="12" y1="20" x2="12" y2="9"/><line x1="19" y1="20" x2="19" y2="4"/></svg><span><b></b><i></i></span>';
+    c.querySelector("b").textContent = label;
+    c.querySelector("i").textContent = levelHasStudy(lv) ? tr(T.inProgressLabel) : tr(["未学習","Not started","Belum mulai","Hindi pa nasisimulan","ยังไม่ได้เรียน","မလေ့လာရသေး"]);
+    c.onclick = ()=>{ if(ST.level !== lv){ setLevel(lv); render(); } };
+    pch.querySelector(".jpc-levels").appendChild(c);
+  });
+  wrap.appendChild(pch);
 
   const subjIcons = {
     moji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
@@ -7473,6 +7819,7 @@ function renderHomeView(){
   }
   const hero = el('<div class="jhero2" data-subj="'+pickSubj+'"></div>');
   hero.innerHTML =
+    '<div class="jhero2-deco"><svg viewBox="0 0 200 140" width="100%" height="100%"><rect x="38" y="22" width="104" height="100" rx="10" fill="#fff" opacity=".85" transform="rotate(-6 90 72)"/><rect x="52" y="40" width="64" height="8" rx="4" fill="#9DB7DC" transform="rotate(-6 90 72)"/><rect x="52" y="58" width="76" height="6" rx="3" fill="#C9D8EE" transform="rotate(-6 90 72)"/><rect x="52" y="72" width="58" height="6" rx="3" fill="#C9D8EE" transform="rotate(-6 90 72)"/><path d="M128 100 L170 38 L182 46 L140 108 Z" fill="#6E9BD8"/><path d="M128 100 L140 108 L124 116 Z" fill="#1F4E79"/></svg></div>'+
     '<div class="jhero2-label"></div>'+
     '<div class="jhero2-main"><div class="jhero2-icon">'+subjIcons[pickSubj]+'</div><div class="jhero2-text"><div class="jhero2-title"></div><div class="jhero2-sub"></div></div></div>'+
     '<button class="jhero2-btn"><span></span><i>→</i></button>';
@@ -7489,14 +7836,23 @@ function renderHomeView(){
   ph.querySelector(".jsec-t").textContent = tr(T.progressTitle);
   const pl = ph.querySelector(".jsec-link"); pl.textContent = tr(T.seeDetails) + " ›";
   pl.onclick = ()=>{ ST.view = "record"; render(); };
+  const pl2 = ph.querySelector(".jsec-link").cloneNode(false);   // PC: 「すべての問題を見る →」(練習するタブへ)
+  pl2.className = "jsec-link jsec-link-pc"; pl2.textContent = tr(T.seeAllQuestions) + " →";
+  pl2.onclick = ()=>{ ST.view = "practice"; render(); };
+  ph.appendChild(pl2);
+  ph.querySelector(".jsec-t").dataset.alt = "1";
   prog.appendChild(ph);
   const grid = el('<div class="jprog-grid"></div>');
   SUBJS.forEach(subj=>{
     const r = subjRate(subj);
     const t = el('<button class="jprog" data-subj="'+subj+'"></button>');
-    t.innerHTML = '<div class="jprog-top"><span class="ic">'+subjIcons[subj]+'</span><span class="nm"></span></div>'+
-                  '<div class="jprog-row"><div class="jprog-bar"><i style="width:'+(r.rate === null ? 0 : r.rate)+'%"></i></div><b></b></div>';
+    t.innerHTML = '<div class="jprog-top"><span class="ic">'+subjIcons[subj]+'</span><span class="nmwrap"><span class="nm"></span><span class="sub"></span></span></div>'+
+                  '<div class="jprog-row"><div class="jprog-bar"><i style="width:'+(r.rate === null ? 0 : r.rate)+'%"></i></div><b></b></div>'+
+                  '<div class="go"></div>';
     t.querySelector(".nm").textContent = tr(SUBJECT[subj]);
+    const catsOf = [...new Set((ALL_DATA[subj] || []).map(q=>q.c))].filter(c=>CAT[c]);
+    t.querySelector(".sub").textContent = catsOf.slice(0,3).map(c=>tr(CAT[c])).join("・") + (catsOf.length > 3 ? " …" : "");
+    t.querySelector(".go").textContent = tr(T.practiceGo).replace(/\s*[›>]\s*$/, "") + " →";
     t.querySelector("b").textContent = r.rate === null ? "—" : r.rate + "%";
     t.onclick = ()=> startQuick(subj, []);
     grid.appendChild(t);
@@ -7529,19 +7885,117 @@ function renderHomeView(){
   mock.querySelector(".jrow-t2").textContent = tr(T.mockCardSub);
   mock.onclick = ()=>{ ST.view = "mock"; render(); };
   side.appendChild(mock);
+  // ---- 生活クイズ(PCの3枚の行の3枚目) ----
+  const lifeCard = el('<button class="jrow jlife-pc"></button>');
+  lifeCard.style.setProperty("--sc", "#F59E0B"); lifeCard.style.setProperty("--sb", "#FFF3D6");
+  lifeCard.innerHTML = '<span class="jrow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg></span><span class="jrow-body"><span class="jrow-t1"></span><span class="jrow-t2"></span></span><span class="jrow-chev">'+chevron+'</span>';
+  lifeCard.querySelector(".jrow-t1").textContent = tr(["生活クイズ","Life Quiz","Kuis Kehidupan","Life Quiz","ควิซการใช้ชีวิต","နေထိုင်မှု ကွစ်"]);
+  lifeCard.querySelector(".jrow-t2").textContent = tr(["日本での生活に役立つ問題","Questions useful for life in Japan","Soal yang berguna untuk kehidupan di Jepang","Mga tanong na kapaki-pakinabang sa buhay sa Japan","คำถามที่เป็นประโยชน์ต่อการใช้ชีวิตในญี่ปุ่น","ဂျပန်တွင် နေထိုင်ရာ၌ အသုံးဝင်သော မေးခွန်းများ"]);
+  lifeCard.onclick = ()=>{ ST.view = "lifeHome"; render(); };
+  side.appendChild(lifeCard);
   wrap.appendChild(side);
 
-  // ---- PCだけに出す: 数字カードと、学習推移(直近7日)。スマホでは、学習記録のタブにある ----
-  const pcx = el('<div class="jpc-only"></div>');
-  pcx.appendChild(buildSummaryRow(s, weeklyStats()));
-  const tsvg = svgDailyTrend(dailyTrendArray(7));
-  if(tsvg){
-    const tcard = el('<div class="card jtrendcard"></div>');
-    const tt = el('<div class="card-title"></div>'); tt.textContent = tr(T.trendTitle); tcard.appendChild(tt);
-    const tw = document.createElement("div"); tw.innerHTML = tsvg; tcard.appendChild(tw);
-    pcx.appendChild(tcard);
+  // ---- PCだけ: 最近の学習(学習セッション) と N4合格への進捗 ----
+  const bottom = el('<div class="jpc-bottom"></div>');
+  const subjName = (k)=> SUBJECT[k] ? tr(SUBJECT[k]) : (EXAMGROUP_LABEL[k] ? tr(EXAMGROUP_LABEL[k]) : String(k || ""));
+  const recent = el('<div class="rcard jpc-card"></div>');
+  const rh = el('<div class="jpc-card-h"><b></b><button class="jsec-link"></button></div>');
+  rh.querySelector("b").textContent = tr(["最近の学習","Recent Study","Belajar Terbaru","Kamakailang Pag-aaral","การเรียนล่าสุด","မကြာသေးမီ လေ့လာမှု"]);
+  rh.querySelector("button").textContent = tr(T.seeDetails) + " →";
+  rh.querySelector("button").onclick = ()=>{ ST.view = "record"; render(); };
+  recent.appendChild(rh);
+  const sessRows = (ST.sessionsState === "done" && Array.isArray(ST.mySessions)) ? ST.mySessions.filter(r=> r.level === ST.level).slice(0, 4) : null;
+  if(sessRows === null){
+    const ld = el('<div class="rc-empty"></div>'); ld.textContent = ST.sessionsState === "error" ? "—" : "…"; recent.appendChild(ld);
+  } else if(sessRows.length === 0){
+    const em = el('<div class="rc-empty"></div>'); em.textContent = tr(T.noStudyYet); recent.appendChild(em);
+  } else {
+    const tb = el('<div class="jtable"></div>');
+    tb.appendChild(el('<div class="jtr jth"><span></span><span></span><span></span></div>'));
+    tb.firstChild.children[0].textContent = tr(T.colDate); tb.firstChild.children[1].textContent = tr(T.colContent); tb.firstChild.children[2].textContent = tr(T.result);
+    sessRows.forEach(r=>{
+      const dt = new Date(r.started_at);
+      const row = el('<div class="jtr"><span></span><span></span><span><b></b><i></i></span></div>');
+      row.children[0].textContent = (dt.getMonth()+1) + "/" + dt.getDate();
+      row.children[1].textContent = r.mode === "mock" ? fmtT(T.mockOf, { s: subjName(r.subject) }) : fmtT(T.practiceOf, { s: subjName(r.subject) });
+      const pct = r.question_count > 0 ? Math.round(r.correct_count / r.question_count * 100) : 0;
+      row.children[2].querySelector("b").textContent = r.correct_count + " / " + r.question_count;
+      row.children[2].querySelector("i").textContent = pct + "%";
+      tb.appendChild(row);
+    });
+    recent.appendChild(tb);
   }
-  wrap.appendChild(pcx);
+  bottom.appendChild(recent);
+
+  const passC = el('<div class="rcard jpc-card"></div>');
+  const ach = achievementScore();
+  const ph2 = el('<div class="jpc-card-h"><b></b></div>'); ph2.querySelector("b").textContent = fmtT(T.passProgressTitle, { lv: ST.level === "n3" ? "N3" : "N4" });
+  passC.appendChild(ph2);
+  const pbody = el('<div class="jpass"><div class="jpass-l"><div class="jpass-bar"><i></i></div><b></b></div><div class="jpass-r"></div></div>');
+  pbody.querySelector(".jpass-bar i").style.width = Math.min(100, ach.score || 0) + "%";
+  pbody.querySelector(".jpass-l b").textContent = (ach.score || 0) + "%";
+  const chk = pbody.querySelector(".jpass-r");
+  ["moji","bunpo","dokkai","choukai"].forEach(sj=>{
+    const rr = subjRate(sj); const okk = rr.rate !== null && rr.rate >= 70;
+    const li = el('<div class="jpass-i'+(okk ? ' on' : '')+'"><i></i><span></span></div>');
+    li.querySelector("i").innerHTML = okk ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17.5 19 7"/></svg>' : "";
+    li.querySelector("span").textContent = tr(SUBJECT[sj]);
+    chk.appendChild(li);
+  });
+  passC.appendChild(pbody);
+  const pnote = el('<div class="jpass-note"></div>'); pnote.textContent = tr(T.subjCheckNote) + "　/　" + tr(T.passLine);
+  passC.appendChild(pnote);
+  bottom.appendChild(passC);
+  wrap.appendChild(bottom);
+
+  // ---- PCだけ: 右の列(学習の記録・苦手な分野) ----
+  const right = el('<div class="jpc-right"></div>');
+  const days = ST.homeDays === 7 ? 7 : 30;
+  const rec = el('<div class="rcard jpc-card"></div>');
+  const rech = el('<div class="jpc-card-h"><b></b><select class="jpc-sel"></select></div>');
+  rech.querySelector("b").textContent = tr(T.recordTitle);
+  const sel = rech.querySelector("select");
+  [7,30].forEach(n=>{ const o = document.createElement("option"); o.value = String(n); o.textContent = fmtT(T.lastNDays, { n }); if(n === days) o.selected = true; sel.appendChild(o); });
+  sel.onchange = ()=>{ ST.homeDays = Number(sel.value); render(); };
+  rec.appendChild(rech);
+  const pls = periodLocalStats(days), ss = sessionStats(days);
+  const kp = el('<div class="jkpi3"></div>');
+  const kcell = (icon, val, unit, lbl)=>{ const c = el('<div class="jkpi3-c"><div class="ic"></div><div class="v"><b></b><small></small></div><div class="l"></div></div>'); c.querySelector(".ic").innerHTML = icon; c.querySelector("b").textContent = val; c.querySelector("small").textContent = unit || ""; c.querySelector(".l").textContent = lbl; return c; };
+  kp.appendChild(kcell('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>', pls.days, tr(T.daysUnit), tr(T.studyDaysLabel)));
+  kp.appendChild(kcell('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>', ss ? fmtDuration(ss.seconds) : "—", "", tr(T.studyTimeLabel)));
+  kp.appendChild(kcell('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', pls.solved, tr(["問","q","soal","tanong","ข้อ","ခု"]), tr(T.solvedLabel)));
+  rec.appendChild(kp);
+  const tsvg = svgDailyTrend(pls.arr);
+  if(tsvg){
+    const ct = el('<div class="rc-sub"></div>'); ct.textContent = tr(["正答率の推移","Accuracy Trend","Tren Akurasi","Trend ng Katumpakan","แนวโน้มอัตราถูกต้อง","မှန်ကန်မှုနှုန်း အပြောင်းအလဲ"]);
+    const cw = document.createElement("div"); cw.innerHTML = tsvg; rec.appendChild(ct); rec.appendChild(cw);
+  }
+  right.appendChild(rec);
+
+  // 苦手な分野: 正答率が低い科目を3つ、その科目の中で、一番低いカテゴリつき
+  const weakC = el('<div class="rcard jpc-card"></div>');
+  const wh = el('<div class="jpc-card-h"><b></b><button class="jsec-link"></button></div>');
+  wh.querySelector("b").textContent = tr(T.weakFieldsTitle); wh.querySelector("button").textContent = tr(T.seeDetails) + " →";
+  wh.querySelector("button").onclick = ()=>{ ST.view = "record"; render(); };
+  weakC.appendChild(wh);
+  const ranked = SUBJS.map(sj=>({ sj, r: subjRate(sj) })).filter(x=>x.r.rate !== null).sort((x,y)=> x.r.rate - y.r.rate).slice(0,3);
+  if(ranked.length === 0){
+    const em = el('<div class="rc-empty"></div>'); em.textContent = tr(T.noStudyYet); weakC.appendChild(em);
+  } else {
+    ranked.forEach(x=>{
+      const agg = {};
+      (ALL_DATA[x.sj] || []).forEach(q=>{ const rr = dq[q.id]; if(!rr || !rr.n) return; if(!agg[q.c]) agg[q.c] = { n:0, c:0 }; agg[q.c].n += rr.n; agg[q.c].c += rr.c; });
+      let wc = null; Object.keys(agg).forEach(cat=>{ if(agg[cat].n >= 3 && CAT[cat]){ const rt = agg[cat].c / agg[cat].n; if(!wc || rt < wc.rt) wc = { cat, rt }; } });
+      const it = el('<div class="jweak3" data-subj="'+x.sj+'"><span class="ic"></span><span class="tx"><b></b><i></i></span></div>');
+      it.querySelector(".ic").innerHTML = subjIcons[x.sj];
+      it.querySelector("b").textContent = tr(SUBJECT[x.sj]);
+      it.querySelector("i").textContent = fmtT(T.rateLine, { r: x.r.rate }) + (wc ? fmtT(T.weakCatNote, { c: tr(CAT[wc.cat]) }) : "");
+      it.onclick = ()=> startQuick(x.sj, wc ? [wc.cat] : []);
+      weakC.appendChild(it);
+    });
+  }
+  right.appendChild(weakC);
+  wrap.appendChild(right);
 
   if(storageBroken){
     notify("localStorage unavailable. Progress will not be saved after closing this tab.");
@@ -7593,11 +8047,7 @@ function renderRecordView(){
   const weekly = weeklyStats();
   const weakest = weakestSubject();
   const notStarted = s.studied === 0;
-
-  // ---- 学習の記録(ダッシュボード)。入口より下に置く ----
-  const recHead = el('<div class="jsectiontitle" style="margin-top:4px;"></div>');
-  recHead.textContent = tr(T.recordTitle);
-  wrap.appendChild(recHead);
+  const recDays = ST.recDays === 30 ? 30 : 7;
 
   let statusText, statusAttn;
   if(notStarted){
@@ -7612,6 +8062,21 @@ function renderRecordView(){
     statusText = tr(T.statusVeryBad); statusAttn = true;
   }
 
+
+  // 画面のカード(中身が空になった場合は、出さない)
+  const addCard = (cls, build)=>{
+    const holder = el('<div class="rcard '+cls+'"></div>');
+    (function(wrap){ build(wrap); })(holder);
+    if(holder.childNodes.length > 0) wrap.appendChild(holder);
+    return holder;
+  };
+
+  const recHead = el('<div class="jsectiontitle rc-head"></div>');
+  recHead.textContent = tr(T.recordTitle);
+  wrap.appendChild(recHead);
+
+  // ---- 学習到達度 ----
+  addCard('rc-ach', function(wrap){
   // ---- 3. 学習到達度 ----
   const sec1 = el('<div class="jsection"></div>');
   const lbl1 = el('<div class="jlabel"></div>'); lbl1.textContent = (ST.level === "n3" ? "N3" : "N4") + tr(T.achieveTitle);
@@ -7639,12 +8104,29 @@ function renderRecordView(){
     sec1.appendChild(passLineNote);
   }
   wrap.appendChild(sec1);
-  wrap.appendChild(el('<hr class="jdivider">'));
 
-  // ---- 4. 学習状況サマリー ----
-  wrap.appendChild(buildSummaryRow(s, weekly));
-  wrap.appendChild(el('<hr class="jdivider">'));
 
+  });
+
+  // ---- 数字カード(学習済み・通算正答率・今週) ----
+  addCard('rc-kpi', function(wrap){ wrap.appendChild(buildSummaryRow(s, weekly)); });
+
+  // ---- 分野別の正答率(科目の色つきの横棒) ----
+  addCard('rc-subj', function(wrap){
+    const t = el('<div class="rc-title"></div>'); t.textContent = tr(T.subjAccTitle); wrap.appendChild(t);
+    const COL = { moji:"var(--sj-moji)", bunpo:"var(--sj-bunpo)", dokkai:"var(--sj-dokkai)", choukai:"var(--sj-choukai)" };
+    ["moji","bunpo","dokkai","choukai"].forEach(sj=>{
+      const r = subjRate(sj);
+      const row = el('<div class="rc-bar"><span class="nm"></span><span class="tr"><i></i></span><b></b></div>');
+      row.querySelector(".nm").textContent = tr(SUBJECT[sj]);
+      const fill = row.querySelector("i"); fill.style.width = (r.rate === null ? 0 : r.rate) + "%"; fill.style.background = COL[sj];
+      row.querySelector("b").textContent = r.rate === null ? "—" : r.rate + "%";
+      wrap.appendChild(row);
+    });
+  });
+
+  // ---- 弱点分析 ----
+  addCard('rc-weak', function(wrap){
   // ---- 4. 弱点分析 ----
   // 正答率が低い科目に加えて、「正答率は高いが翻訳への依存度が高い」科目も検出する
   const weakSubjects = ["moji","bunpo","dokkai","choukai"]
@@ -7679,6 +8161,11 @@ function renderRecordView(){
     wrap.appendChild(el('<hr class="jdivider">'));
   }
 
+
+  });
+
+  // ---- 学習推移(正答率の折れ線。7日・30日の切り替え) ----
+  addCard('rc-trend', function(wrap){
   // ---- 5. 学習推移 ----
   const recDays = ST.recDays === 30 ? 30 : 7;
   const trendArr = dailyTrendArray(recDays);
@@ -7703,23 +8190,19 @@ function renderRecordView(){
     wrap.appendChild(el('<hr class="jdivider">'));
   }
 
-  // ---- 6. 最近の学習 ----
-  const recentDays = dailyTrendArray(14).filter(d=>d.n>0).reverse().slice(0,4);
-  if(recentDays.length > 0){
-    const sec6 = el('<div class="jsection"></div>');
-    const lbl6 = el('<div class="jsectiontitle"></div>'); lbl6.textContent = tr(T.recentTitle);
-    sec6.appendChild(lbl6);
-    recentDays.forEach(d=>{
-      const row = el('<div class="jrecentrow"></div>');
-      const dt = new Date(d.date);
-      row.innerHTML = "<span>"+(dt.getMonth()+1)+"/"+dt.getDate()+"</span><span>"+d.n+tr(["問","q","soal","tanong","ข้อ", "ခု"])+"</span><span>"+(d.rate===null?"—":d.rate+"%")+"</span>";
-      sec6.appendChild(row);
-    });
-    wrap.appendChild(sec6);
-    wrap.appendChild(el('<hr class="jdivider">'));
-  }
 
+  });
 
+  // ---- 日ごとの解いた問題数(棒グラフ) ----
+  addCard('rc-qcount', function(wrap){
+    const svg = svgBarsDaily(dailyTrendArray(recDays));
+    if(!svg) return;
+    const t = el('<div class="rc-title"></div>'); t.textContent = tr(T.qPerDayTitle) + "（" + tr(recDays === 30 ? T.period30 : T.period7) + "）"; wrap.appendChild(t);
+    const w = document.createElement("div"); w.innerHTML = svg; wrap.appendChild(w);
+  });
+
+  // ---- 模試の成績(推移のグラフ + 一覧) ----
+  addCard('rc-exam', function(wrap){
   // ---- 模試の成績(端末に残る直近の模試。新しい順に最大5件) ----
   {
     const examCard = el('<div class="card jexamcard"></div>');
@@ -7743,6 +8226,59 @@ function renderRecordView(){
     wrap.appendChild(examCard);
   }
 
+
+    const exams = ((load().exams) || []).slice().sort((x,y)=> x.d - y.d).slice(-8);
+    if(exams.length >= 2){
+      const fmtD = (t)=>{ const dt = new Date(t); return (dt.getMonth()+1) + "/" + dt.getDate(); };
+      const svg = svgLineValues(exams.map(e=>e.pct), exams.map(e=>fmtD(e.d)));
+      const card = wrap.querySelector(".jexamcard");
+      if(svg && card){
+        const ct = el('<div class="rc-sub"></div>'); ct.textContent = tr(T.examTrendTitle);
+        const cw = document.createElement("div"); cw.innerHTML = svg; cw.style.marginBottom = "10px";
+        const title = card.querySelector(".card-title");
+        if(title){ title.after(ct); ct.after(cw); } else { card.prepend(cw); card.prepend(ct); }
+      }
+    }
+  });
+
+  // ---- 最近の学習 ----
+  addCard('rc-days', function(wrap){
+  // ---- 6. 最近の学習 ----
+  const recentDays = dailyTrendArray(14).filter(d=>d.n>0).reverse().slice(0,4);
+  if(recentDays.length > 0){
+    const sec6 = el('<div class="jsection"></div>');
+    const lbl6 = el('<div class="jsectiontitle"></div>'); lbl6.textContent = tr(T.recentTitle);
+    sec6.appendChild(lbl6);
+    recentDays.forEach(d=>{
+      const row = el('<div class="jrecentrow"></div>');
+      const dt = new Date(d.date);
+      row.innerHTML = "<span>"+(dt.getMonth()+1)+"/"+dt.getDate()+"</span><span>"+d.n+tr(["問","q","soal","tanong","ข้อ", "ခု"])+"</span><span>"+(d.rate===null?"—":d.rate+"%")+"</span>";
+      sec6.appendChild(row);
+    });
+    wrap.appendChild(sec6);
+    wrap.appendChild(el('<hr class="jdivider">'));
+  }
+
+
+
+  });
+
+  // ---- 最近間違えた問題(1回の間違いから出る。選んだ答えつき) ----
+  addCard('rc-recent', function(wrap){
+    const t = el('<div class="rc-title"></div>'); t.textContent = tr(T.recentMistakesTitle); wrap.appendChild(t);
+    const d = el('<div class="rc-desc"></div>'); d.textContent = tr(T.recentMistakesDesc); wrap.appendChild(d);
+    const list = recentMistakeList(8);
+    if(list.length === 0){
+      const e = el('<div class="rc-empty"></div>'); e.textContent = tr(T.noRecentMistakes); wrap.appendChild(e);
+    } else {
+      const g = el('<div class="rlist"></div>');
+      list.forEach(x=> g.appendChild(buildMissItem(x)));
+      wrap.appendChild(g);
+    }
+  });
+
+  // ---- よく間違えている問題(3回以上解いて、間違いがある問題) ----
+  addCard('rc-miss', function(wrap){
   // ---- よく間違えている問題(振り返り用。端末内の学習記録だけで完結、通信不要) ----
   {
     const mistakeCard = el('<div class="card jmisscard" style="margin-top:14px;"></div>');
@@ -7825,6 +8361,11 @@ function renderRecordView(){
     wrap.appendChild(mistakeCard);
   }
 
+
+  });
+
+  // ---- アカウント(企業ID・実習生ID) ----
+  addCard('rc-acct', function(wrap){
   // ---- アカウント(企業ID・実習生ID) ----
   // ---- 0. 実習生氏名・所属企業(目立たせるため一番上に表示) ----
   if(AUTH.student){
@@ -7856,9 +8397,10 @@ function renderRecordView(){
   }
 
 
+  });
+
   return wrap;
 }
-
 function renderPracticeView(){
   const wrap = document.createElement("div"); wrap.className = "v-practice";
 
