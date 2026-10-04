@@ -550,6 +550,114 @@ header h1{display:flex;flex-direction:column;justify-content:center;line-height:
 header h1 .appTitleTop{display:block;font-size:11px;font-weight:800;color:var(--nv-sub);letter-spacing:.4px;}
 header h1 .appTitleMain{font-size:23px;font-weight:800;color:var(--nv-blue);letter-spacing:-.3px;margin-top:1px;}
 header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
+
+/* ====================== PC版(幅1100px以上): 左メニュー + 横に広い画面 ====================== */
+.psb{display:none;}
+.jpc-only{display:none;}
+@media (min-width:1100px){
+  .psb{display:none;}
+  body.has-psb .psb{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:236px;background:#0F1B33;color:#fff;padding:18px 12px 14px;box-sizing:border-box;z-index:300;overflow-y:auto;}
+  body.has-psb header{display:none;}
+  body.has-psb .tabbar{display:none;}
+  body.has-psb main{max-width:none;margin:0 0 0 236px;padding:26px 40px 56px;}
+  body.has-psb.inq .psb{display:none;}
+  body.has-psb.inq main{margin-left:0;}
+  main > div{max-width:780px;margin-left:auto;margin-right:auto;}
+  main > .v-home,main > .v-practice,main > .v-mock,main > .v-record{max-width:1120px;}
+  .psb-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 20px;cursor:pointer;}
+  .psb-brand img{width:40px;height:40px;object-fit:contain;}
+  .psb-brand .t1{font-size:15px;font-weight:800;letter-spacing:.2px;line-height:1.2;}
+  .psb-brand .t2{font-size:11px;color:#9FB0D6;margin-top:2px;}
+  .psb-nav{display:flex;flex-direction:column;gap:4px;}
+  .psb-item{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:#C9D4EE;font-size:14.5px;font-weight:700;padding:12px 14px;border-radius:12px;cursor:pointer;text-align:left;font-family:inherit;}
+  .psb-item svg{width:20px;height:20px;flex:0 0 20px;}
+  .psb-item:hover{background:rgba(255,255,255,.07);}
+  .psb-item.active{background:var(--nv-blue);color:#fff;}
+  .psb-bottom{margin-top:auto;display:flex;flex-direction:column;gap:10px;}
+  .psb-lang{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px 2px;}
+  .psb-langbtn{border:1px solid rgba(255,255,255,.16);background:transparent;color:#C9D4EE;border-radius:9px;padding:7px 4px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .psb-langbtn.active{background:#fff;color:#0F1B33;border-color:#fff;}
+  .psb-user{display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid rgba(255,255,255,.12);margin-top:4px;}
+  .psb-user .av{width:36px;height:36px;border-radius:50%;background:var(--nv-blue);display:flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 36px;}
+  .psb-user .n{font-size:13px;font-weight:800;line-height:1.25;word-break:break-all;}
+  .psb-user .c{font-size:11.5px;color:#9FB0D6;margin-top:1px;}
+  .psb-logout{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:#F5A3AE;font-size:13px;font-weight:700;padding:9px 12px;border-radius:10px;cursor:pointer;font-family:inherit;}
+  .psb-logout svg{width:18px;height:18px;}
+  .psb-logout:hover{background:rgba(255,255,255,.06);}
+
+  /* --- ホーム --- */
+  .v-home{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;align-items:start;}
+  .v-home > .lvwrap{grid-column:1 / -1;justify-content:flex-start;margin:0;}
+  .v-home > .jhero2{grid-column:1 / 9;margin:0;padding:24px 26px;}
+  .v-home > .jhero2 .jhero2-label{font-size:18px;}
+  .v-home > .jhero2 .jhero2-icon{width:64px;height:64px;flex-basis:64px;}
+  .v-home > .jhero2 .jhero2-icon svg{width:32px;height:32px;}
+  .v-home > .jhero2 .jhero2-title{font-size:26px;}
+  .v-home > .jhero2 .jhero2-sub{font-size:14.5px;}
+  .v-home > .jhero2 .jhero2-btn{max-width:340px;padding:16px;font-size:16.5px;margin-top:4px;}
+  .v-home > .jside{grid-column:9 / 13;display:flex;flex-direction:column;gap:12px;}
+  .v-home > .jside .jsec{margin-top:0;}
+  .v-home > .jside .jmockcard{margin-top:0;}
+  .v-home > .jprogsec{grid-column:1 / -1;margin-top:0;}
+  .jprog-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;}
+  .jprog{padding:18px;}
+  .jprog .nm{font-size:16px;} .jprog-row b{font-size:17px;}
+  .v-home > .jpc-only{grid-column:1 / -1;display:grid;grid-template-columns:5fr 7fr;gap:20px;align-items:stretch;}
+  .v-home > .jpc-only .jsummary{grid-template-columns:1fr;gap:12px;padding:0;margin:0;}
+  .v-home > .jpc-only .jsummary .jitem{display:flex;align-items:center;gap:14px;padding:14px 16px;}
+  .v-home > .jpc-only .jsummary .jitemtop{flex-direction:row;align-items:center;}
+  .jtrendcard{margin:0;}
+
+  /* --- 練習する --- */
+  .v-practice{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+  .v-practice > .lvwrap,.v-practice > .jsec{grid-column:1 / -1;margin:0;}
+  .v-practice > .lvwrap{justify-content:flex-start;}
+  .v-practice > .jsubj2{margin-bottom:0;padding:18px;}
+  .v-practice > .jsec .jrow{max-width:520px;}
+
+  /* --- 模試 --- */
+  .v-mock{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch;}
+  .v-mock > .lvwrap,.v-mock > .jmockintro,.v-mock > .jmocknote,.v-mock > .jsec{grid-column:1 / -1;margin:0;}
+  .v-mock > .lvwrap{justify-content:flex-start;}
+  .v-mock > .jmocksec{margin-bottom:0;flex-wrap:wrap;padding:20px;align-content:flex-start;}
+  .v-mock > .jmocksec .jsubj2-body{flex-basis:calc(100% - 80px);}
+  .v-mock > .jmocksec .jmock-go{margin-top:10px;margin-left:66px;}
+  .v-mock > .jsec .jexamcard{max-width:640px;}
+
+  /* --- 学習記録 --- */
+  .v-record{display:grid;grid-template-columns:1fr 1fr;gap:6px 36px;align-items:start;}
+  .v-record > *{min-width:0;}
+  .v-record > .jsectiontitle{grid-column:1 / -1;}
+  .v-record > .jdivider{display:none;}
+  .v-record > .jexamcard,.v-record > .card{margin-top:0;}
+  .v-record > .card:last-child,.v-record > .idcardwrap{grid-column:1 / -1;}
+
+  /* --- 設定 --- */
+  .v-settings{max-width:680px;}
+  .v-settings .jlanggrid{grid-template-columns:repeat(3,1fr);}
+
+  /* --- 問題画面(左メニューを隠し、中央に大きく) --- */
+  .qcard{padding:28px 32px;}
+  .qtext{font-size:22px;line-height:1.9;}
+  .opt.numbered{padding:16px 20px;font-size:18px;}
+  .qnav-fixed{max-width:780px;border-radius:16px 16px 0 0;}
+  .qtop{margin-top:6px;}
+}
+
+@media (min-width:1100px){
+  body.has-psb main{width:auto;}
+  .v-home > .lvwrap{grid-row:1;}
+  .v-home > .jhero2{grid-row:2;}
+  .v-home > .jside{grid-row:2;}
+  .v-home > .jprogsec{grid-row:3;}
+  .v-home > .jpc-only{grid-row:4;}
+}
+
+@media (min-width:1100px){
+  .psb-item.active{background:#2C6AA3;}
+  .v-record > .jmisscard{grid-column:1 / -1;margin-top:10px;}
+  .v-record > .jmisscard .k-miss-grid{display:block;}
+}
 </style>
 </head>
 <body>
@@ -5895,7 +6003,7 @@ function optShown(o){
 }
 // ---- 設定画面(言語・聴解の音声自動再生・アカウント・ログアウト) ----
 function renderSettingsView(){
-  const wrap = document.createElement("div");
+  const wrap = document.createElement("div"); wrap.className = "v-settings";
   const top = el('<div class="topbar"></div>');
   const backBtn = document.createElement("button");
   backBtn.className = "ghost"; backBtn.textContent = tr(T.back);
@@ -5962,6 +6070,77 @@ function renderSettingsView(){
   btnRow.appendChild(logoutBtn);
   wrap.appendChild(btnRow);
   return wrap;
+}
+
+// ---- PC用の左メニュー(幅1100px以上のときだけ、CSSで表示される) ----
+const LOGO_WHITE_SRC = "data:image/png;base64,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";
+function renderSidebar(){
+  let aside = document.getElementById("psb");
+  if(!aside){
+    aside = document.createElement("aside");
+    aside.id = "psb"; aside.className = "psb";
+    document.body.insertBefore(aside, document.body.firstChild);
+  }
+  const loggedIn = !["login","passwordChange"].includes(ST.view);
+  try{ document.body.classList.toggle("has-psb", loggedIn); }catch(e){ /* noop */ }
+  aside.innerHTML = "";
+  if(!loggedIn) return;
+
+  const ic = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9.5a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>',
+    practice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
+    mock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+    record: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg>',
+    settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+  };
+  const brand = el('<div class="psb-brand"></div>');
+  brand.innerHTML = '<img src="'+LOGO_WHITE_SRC+'" alt=""><div><div class="t1">N.T.I.C Academy</div><div class="t2">JLPT Navi</div></div>';
+  brand.onclick = ()=>{ ST.view = "home"; render(); };
+  aside.appendChild(brand);
+
+  const cur = ({ home:"home", practice:"practice", select:"practice", lifeHome:"practice", lifeLesson:"practice", lifeQuiz:"practice", lifeResult:"practice", mock:"mock", result:"mock", record:"record", settings:"settings" })[ST.view] || "home";
+  const nav = el('<nav class="psb-nav"></nav>');
+  [["home",tr(T.tabHome)],["practice",tr(T.tabPractice)],["mock",tr(T.tabMock)],["record",tr(T.tabRecord)]].forEach(([v,label])=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "psb-item" + (cur === v ? " active" : "");
+    b.innerHTML = ic[v] + "<span></span>"; b.querySelector("span").textContent = label;
+    b.onclick = ()=>{ ST.view = v; render(); };
+    nav.appendChild(b);
+  });
+  aside.appendChild(nav);
+
+  const bottom = el('<div class="psb-bottom"></div>');
+  const sb = document.createElement("button");
+  sb.type = "button"; sb.className = "psb-item" + (cur === "settings" ? " active" : "");
+  sb.innerHTML = ic.settings + "<span></span>"; sb.querySelector("span").textContent = tr(T.settingsTitle);
+  sb.onclick = ()=>{ ST.view = "settings"; render(); };
+  bottom.appendChild(sb);
+
+  // 言語(短い名前で6つ)
+  const SHORT = { ja:"日本語", en:"English", id:"Indonesia", tl:"Tagalog", th:"ไทย", my:"မြန်မာ" };
+  const lg = el('<div class="psb-lang"></div>');
+  LANGS.forEach(l=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "psb-langbtn" + (ST.lang === l ? " active" : "");
+    b.textContent = SHORT[l] || l; b.onclick = ()=>{ ST.lang = l; render(); };
+    lg.appendChild(b);
+  });
+  bottom.appendChild(lg);
+
+  const nm = AUTH.student && AUTH.student.name ? String(AUTH.student.name) : "";
+  const user = el('<div class="psb-user"></div>');
+  user.innerHTML = '<div class="av"></div><div class="who"><div class="n"></div><div class="c"></div></div>';
+  user.querySelector(".av").textContent = (nm.trim().charAt(0) || "?").toUpperCase();
+  user.querySelector(".n").textContent = nm || "-";
+  user.querySelector(".c").textContent = (AUTH.student && AUTH.student.company_id) ? AUTH.student.company_id : "";
+  bottom.appendChild(user);
+  const lo = document.createElement("button");
+  lo.type = "button"; lo.className = "psb-logout";
+  lo.innerHTML = ic.logout + "<span></span>"; lo.querySelector("span").textContent = tr(T.logoutBtn);
+  lo.onclick = async ()=>{ await authLogout(); ST.view = "login"; render(); };
+  bottom.appendChild(lo);
+  aside.appendChild(bottom);
 }
 
 function startQuick(subj, cats){
@@ -7025,6 +7204,7 @@ function render(){
   }
 
   renderHeader();
+  renderSidebar();
   const app = document.getElementById("app");
   app.innerHTML = "";
 
@@ -7237,7 +7417,7 @@ function renderPasswordChange(){
 }
 
 function renderHomeView(){
-  const wrap = document.createElement("div");
+  const wrap = document.createElement("div"); wrap.className = "v-home";
   const s = overallStats();
   const notStarted = s.studied === 0;
 
@@ -7304,7 +7484,7 @@ function renderHomeView(){
   wrap.appendChild(hero);
 
   // ---- 学習の進捗(4科目。押すと、その科目の10問がすぐ始まる) ----
-  const prog = el('<div class="jsec"></div>');
+  const prog = el('<div class="jsec jprogsec"></div>');
   const ph = el('<div class="jsec-h"><div class="jsec-t"></div><button class="jsec-link"></button></div>');
   ph.querySelector(".jsec-t").textContent = tr(T.progressTitle);
   const pl = ph.querySelector(".jsec-link"); pl.textContent = tr(T.seeDetails) + " ›";
@@ -7324,6 +7504,8 @@ function renderHomeView(){
   prog.appendChild(grid);
   wrap.appendChild(prog);
 
+  const side = el('<div class="jside"></div>');
+
   // ---- 前回の続き(最後に学習したカテゴリ。解いた問題数/全問題数) ----
   if(lastSt && lastSt.cat && CAT[lastSt.cat]){
     const qs = (ALL_DATA[lastSt.subj] || []).filter(q=>q.c === lastSt.cat);
@@ -7337,7 +7519,7 @@ function renderHomeView(){
     card.querySelector(".jrow-t2").textContent = tr(CAT[lastSt.cat]) + "（" + done + " / " + qs.length + tr(["問","q","soal","tanong","ข้อ","ခု"]) + "）";
     card.onclick = ()=> startQuick(lastSt.subj, [lastSt.cat]);
     sec.appendChild(card);
-    wrap.appendChild(sec);
+    side.appendChild(sec);
   }
 
   // ---- 模試を受ける ----
@@ -7346,7 +7528,20 @@ function renderHomeView(){
   mock.querySelector(".jrow-t1").textContent = tr(T.tabMock);
   mock.querySelector(".jrow-t2").textContent = tr(T.mockCardSub);
   mock.onclick = ()=>{ ST.view = "mock"; render(); };
-  wrap.appendChild(mock);
+  side.appendChild(mock);
+  wrap.appendChild(side);
+
+  // ---- PCだけに出す: 数字カードと、学習推移(直近7日)。スマホでは、学習記録のタブにある ----
+  const pcx = el('<div class="jpc-only"></div>');
+  pcx.appendChild(buildSummaryRow(s, weeklyStats()));
+  const tsvg = svgDailyTrend(dailyTrendArray(7));
+  if(tsvg){
+    const tcard = el('<div class="card jtrendcard"></div>');
+    const tt = el('<div class="card-title"></div>'); tt.textContent = tr(T.trendTitle); tcard.appendChild(tt);
+    const tw = document.createElement("div"); tw.innerHTML = tsvg; tcard.appendChild(tw);
+    pcx.appendChild(tcard);
+  }
+  wrap.appendChild(pcx);
 
   if(storageBroken){
     notify("localStorage unavailable. Progress will not be saved after closing this tab.");
@@ -7392,7 +7587,7 @@ function buildSummaryRow(s, weekly){
 }
 
 function renderRecordView(){
-  const wrap = document.createElement("div");
+  const wrap = document.createElement("div"); wrap.className = "v-record";
   const s = overallStats();
   const ach = achievementScore();
   const weekly = weeklyStats();
@@ -7550,7 +7745,7 @@ function renderRecordView(){
 
   // ---- よく間違えている問題(振り返り用。端末内の学習記録だけで完結、通信不要) ----
   {
-    const mistakeCard = el('<div class="card" style="margin-top:14px;"></div>');
+    const mistakeCard = el('<div class="card jmisscard" style="margin-top:14px;"></div>');
     const mTitle = document.createElement("div");
     mTitle.className = "card-title";
     mTitle.textContent = tr(T.mistakeCardTitle);
@@ -7665,7 +7860,7 @@ function renderRecordView(){
 }
 
 function renderPracticeView(){
-  const wrap = document.createElement("div");
+  const wrap = document.createElement("div"); wrap.className = "v-practice";
 
   // ---- N4/N3切り替え ----
   const levelWrap = el('<div class="lvwrap"></div>');
@@ -7735,7 +7930,7 @@ function renderPracticeView(){
 }
 
 function renderMockView(){
-  const wrap = document.createElement("div");
+  const wrap = document.createElement("div"); wrap.className = "v-mock";
   const groups = ["moji","bunpo_dokkai","choukai"];
   const mins = examGroupMin();
   const lvLabel = ST.level === "n3" ? "N3" : "N4";
