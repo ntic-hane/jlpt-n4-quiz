@@ -542,6 +542,14 @@ body.inq header{display:none;}
 .jresitem-q{font-size:14px;font-weight:700;color:var(--nv-text);line-height:1.6;}
 .jresitem-e{font-size:12.5px;color:var(--nv-sub);line-height:1.65;margin-top:6px;}
 .jresitem-e b{font-weight:800;color:var(--nv-text);}
+
+/* ヘッダー: ロゴと「N.T.I.C Academy」の文字を戻す(ロゴ | N.T.I.C Academy / JLPTナビ | 言語・歯車) */
+.orgLogo{display:block;width:40px;height:auto;flex:0 0 40px;}
+header .headerTop{gap:10px;align-items:center;}
+header h1{display:flex;flex-direction:column;justify-content:center;line-height:1.15;min-width:0;flex:1;}
+header h1 .appTitleTop{display:block;font-size:11px;font-weight:800;color:var(--nv-sub);letter-spacing:.4px;}
+header h1 .appTitleMain{font-size:23px;font-weight:800;color:var(--nv-blue);letter-spacing:-.3px;margin-top:1px;}
+header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
 </style>
 </head>
 <body>
