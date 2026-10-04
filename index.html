@@ -781,6 +781,13 @@ header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
   .v-home > .jhero2{padding-right:190px;}
 }
 @media (min-width:1400px){ .v-home > .jhero2{padding-right:240px;} }
+
+/* 国旗(上のバー・設定画面) */
+.ptop-btn .langflag,.ptop-mi .langflag,.jlangbtn .langflag{display:inline-block;width:20px;height:20px;border-radius:50%;overflow:hidden;border:1px solid var(--nv-line);flex:0 0 auto;}
+.ptop-btn .langflag svg,.ptop-mi .langflag svg,.jlangbtn .langflag svg{display:block;}
+.ptop-mi{display:flex;align-items:center;gap:10px;}
+.jlangbtn{display:flex;align-items:center;justify-content:center;gap:8px;}
+.ptop-menu{min-width:230px;} .ptop-mi .lname{white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -6173,7 +6180,7 @@ function renderSettingsView(){
   LANGS.forEach(l=>{
     const b = document.createElement("button");
     b.type = "button"; b.className = "jlangbtn" + (ST.lang === l ? " active" : "");
-    b.textContent = NAMES[l] || l;
+    b.innerHTML = langFlagBadge(l) + "<span class='lname'></span>"; b.querySelector(".lname").textContent = NAMES[l] || l;
     b.onclick = ()=>{ ST.lang = l; render(); };
     lg.appendChild(b);
   });
@@ -6433,14 +6440,15 @@ function renderTopbar(){
   // 言語
   const lw = el('<div class="ptop-wrap"></div>');
   const lb = document.createElement("button"); lb.type = "button"; lb.className = "ptop-btn";
-  lb.innerHTML = globe + "<span></span>" + chev; lb.querySelector("span").textContent = NAMES[ST.lang] || ST.lang;
+  lb.innerHTML = langFlagBadge(ST.lang) + "<span class='lname'></span>" + chev; lb.querySelector(".lname").textContent = NAMES[ST.lang] || ST.lang;
   lb.onclick = (e)=>{ e.stopPropagation(); ST.pmenu = ST.pmenu === "lang" ? null : "lang"; renderTopbar(); };
   lw.appendChild(lb);
   if(ST.pmenu === "lang"){
     const mn = el('<div class="ptop-menu"></div>');
     LANGS.forEach(l=>{
       const it = document.createElement("button"); it.type = "button"; it.className = "ptop-mi" + (ST.lang === l ? " active" : "");
-      it.textContent = NAMES[l] || l; it.onclick = ()=>{ ST.pmenu = null; ST.lang = l; render(); };
+      it.innerHTML = langFlagBadge(l) + "<span class='lname'></span>"; it.querySelector(".lname").textContent = NAMES[l] || l;
+      it.onclick = ()=>{ ST.pmenu = null; ST.lang = l; render(); };
       mn.appendChild(it);
     });
     lw.appendChild(mn);
@@ -7405,6 +7413,22 @@ function attachSwipeNav(targetEl, onSwipeLeft, onSwipeRight){
   }, { passive: true });
 }
 
+// ---- 言語の国旗(自前のSVG)。ヘッダー・上のバー・設定画面で共通に使う ----
+  // どの環境でも同じ見た目になるよう自前のSVGで描画する(dashboard.htmlのNATIONALITY_FLAG_SVGと同じ方針)。
+const LANG_FLAG_SVG = {
+  ja: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#fff"/><circle cx="9" cy="6.5" r="3.7" fill="#bc002d"/></svg>',
+  en: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#00247d"/><path d="M0,0 18,13 M18,0 0,13" stroke="#fff" stroke-width="2.6"/><path d="M0,0 18,13 M18,0 0,13" stroke="#cf142b" stroke-width="1"/><path d="M9,0 9,13 M0,6.5 18,6.5" stroke="#fff" stroke-width="4.4"/><path d="M9,0 9,13 M0,6.5 18,6.5" stroke="#cf142b" stroke-width="2.6"/></svg>',
+  id: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="6.5" fill="#ce1126"/><rect y="6.5" width="18" height="6.5" fill="#fff"/></svg>',
+  tl: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#0038a8"/><rect y="6.5" width="18" height="6.5" fill="#ce1126"/><polygon points="0,0 8,6.5 0,13" fill="#fff"/><circle cx="3.6" cy="6.5" r="1.3" fill="#fcd116"/></svg>',
+  th: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#fff"/><rect y="0" width="18" height="2.6" fill="#a51931"/><rect y="2.6" width="18" height="2.4" fill="#fff"/><rect y="5" width="18" height="3" fill="#2d2a4a"/><rect y="8" width="18" height="2.4" fill="#fff"/><rect y="10.4" width="18" height="2.6" fill="#a51931"/></svg>',
+  my: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="4.34" fill="#fecb00"/><rect y="4.33" width="18" height="4.34" fill="#34b233"/><rect y="8.66" width="18" height="4.34" fill="#ea2839"/><polygon points="9,1.6 10.25,5.25 14.1,5.3 11.05,7.65 12.15,11.35 9,9.15 5.85,11.35 6.95,7.65 3.9,5.3 7.75,5.25" fill="#fff"/></svg>'
+};
+// 丸バッジ(円形に切り抜いた枠)で国旗SVGを包む。該当が無ければ空文字。
+function langFlagBadge(lang){
+  const svg = LANG_FLAG_SVG[lang];
+  return svg ? "<span class='langflag'>"+svg+"</span>" : "";
+}
+
 function renderHeader(){
   {
     const fullTitle = tr(T.appName); // 例: "N.T.I.C Academy JLPTナビ"
@@ -7438,20 +7462,6 @@ function renderHeader(){
   bar.innerHTML = "";
 
   // 絵文字国旗(🇯🇵等)はOS・ブラウザ(特にWindows)によってただの文字列にしか見えないことがあるため、
-  // どの環境でも同じ見た目になるよう自前のSVGで描画する(dashboard.htmlのNATIONALITY_FLAG_SVGと同じ方針)。
-  const LANG_FLAG_SVG = {
-    ja: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#fff"/><circle cx="9" cy="6.5" r="3.7" fill="#bc002d"/></svg>',
-    en: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#00247d"/><path d="M0,0 18,13 M18,0 0,13" stroke="#fff" stroke-width="2.6"/><path d="M0,0 18,13 M18,0 0,13" stroke="#cf142b" stroke-width="1"/><path d="M9,0 9,13 M0,6.5 18,6.5" stroke="#fff" stroke-width="4.4"/><path d="M9,0 9,13 M0,6.5 18,6.5" stroke="#cf142b" stroke-width="2.6"/></svg>',
-    id: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="6.5" fill="#ce1126"/><rect y="6.5" width="18" height="6.5" fill="#fff"/></svg>',
-    tl: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#0038a8"/><rect y="6.5" width="18" height="6.5" fill="#ce1126"/><polygon points="0,0 8,6.5 0,13" fill="#fff"/><circle cx="3.6" cy="6.5" r="1.3" fill="#fcd116"/></svg>',
-    th: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="13" fill="#fff"/><rect y="0" width="18" height="2.6" fill="#a51931"/><rect y="2.6" width="18" height="2.4" fill="#fff"/><rect y="5" width="18" height="3" fill="#2d2a4a"/><rect y="8" width="18" height="2.4" fill="#fff"/><rect y="10.4" width="18" height="2.6" fill="#a51931"/></svg>',
-    my: '<svg width="100%" height="100%" viewBox="0 0 18 13" preserveAspectRatio="xMidYMid slice"><rect width="18" height="4.34" fill="#fecb00"/><rect y="4.33" width="18" height="4.34" fill="#34b233"/><rect y="8.66" width="18" height="4.34" fill="#ea2839"/><polygon points="9,1.6 10.25,5.25 14.1,5.3 11.05,7.65 12.15,11.35 9,9.15 5.85,11.35 6.95,7.65 3.9,5.3 7.75,5.25" fill="#fff"/></svg>'
-  };
-  // 丸バッジ(円形に切り抜いた枠)で国旗SVGを包む。該当が無ければ空文字。
-  function langFlagBadge(lang){
-    const svg = LANG_FLAG_SVG[lang];
-    return svg ? "<span class='langflag'>"+svg+"</span>" : "";
-  }
 
   const LANG_META = {
     ja: { name:"日本語" },
