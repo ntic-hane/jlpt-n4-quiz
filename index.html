@@ -482,10 +482,22 @@ header h1{cursor:pointer;}
 .jlife2{--sc:#F59E0B;--sb:#FFF3D6;}
 
 /* ====================== 問題画面(案2): ヘッダー・進捗の棒・番号つきの選択肢・結果カード ====================== */
-.qtop{display:grid !important;grid-template-columns:44px 1fr 64px;align-items:center;gap:4px;margin:2px 0 6px;}
+.qtop{display:grid !important;grid-template-columns:44px 1fr auto;align-items:center;gap:4px;margin:2px 0 6px;}
 .qback{width:40px;height:40px;border:0;background:transparent;color:var(--nv-text);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
 .qtitle{text-align:center;font-size:17px;font-weight:800;color:var(--nv-text);}
 .qtop .progress{text-align:right;font-weight:800;color:var(--nv-sub);font-size:14px;}
+.qright{display:flex;align-items:center;gap:8px;justify-content:flex-end;}
+.qlangwrap{position:relative;}
+.qlangbtn{display:flex;align-items:center;gap:4px;border:1.5px solid var(--nv-line);background:#fff;border-radius:99px;padding:3px 8px 3px 4px;cursor:pointer;font-family:inherit;color:var(--nv-text);}
+.qlangbtn .langflag{display:inline-block;width:20px;height:20px;border-radius:50%;overflow:hidden;}
+.qlangbtn .langflag svg{display:block;}
+.qlangmenu{position:absolute;top:calc(100% + 6px);right:0;width:max-content;min-width:190px;background:#fff;border:1px solid var(--nv-line);border-radius:14px;box-shadow:0 8px 24px rgba(15,27,51,.18);padding:6px;z-index:400;}
+.qlangitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:9px;font-size:13.5px;font-weight:700;color:var(--nv-text);cursor:pointer;font-family:inherit;white-space:nowrap;}
+.qlangitem.active{background:#EEF4FF;color:var(--nv-blue);}
+.qlangitem .langflag{display:inline-block;width:20px;height:20px;border-radius:50%;overflow:hidden;}
+.qlangitem .langflag svg,.qlangbtn .langflag svg{display:block;width:20px;height:20px;}
+.qlangitem .langflag,.qlangbtn .langflag{flex:0 0 20px;}
+.qlangitem .qn{flex:1 1 auto;}
 .qprogbar{height:7px;background:#E1E7F0;border-radius:999px;overflow:hidden;margin:0 0 12px;}
 .qprogbar i{display:block;height:100%;background:var(--nv-blue);border-radius:999px;}
 .opt.numbered{display:flex;align-items:center;gap:14px;text-align:left;padding:13px 16px;border-radius:14px;}
@@ -6838,6 +6850,7 @@ let ST = {
   answers: {},          // idx -> selected option index
   answered: {},          // idx -> bool (practice mode immediate feedback shown)
   revealed: {},          // idx -> bool (聴解:発話表現/即時応答で文字を表示済みか)
+  qlangOpen: false,      // 問題画面の言語メニューを開いているか
   mockTimerSec: 0,
   mockTimerHandle: null,
   mockTimeUp: false,
@@ -9057,6 +9070,36 @@ function renderQuestion(){
   top.appendChild(qtitle);
 
   const right = document.createElement("div");
+  right.className = "qright";
+  // 勉強中でも言語を切り替えられるようにする言語ボタン(問題画面は上のヘッダーを隠しているため、ここに置く)。
+  // 問題番号・回答済みの状態・模試のタイマーは ST/別ハンドルに保持されているので、切り替えても保たれる。
+  {
+    const QNAMES = { ja:"日本語", en:"English", id:"Bahasa Indonesia", tl:"Tagalog", th:"ภาษาไทย", my:"မြန်မာဘာသာ" };
+    const lw = document.createElement("div"); lw.className = "qlangwrap";
+    const lb = document.createElement("button"); lb.type = "button"; lb.className = "qlangbtn";
+    lb.setAttribute("aria-label", "Language");
+    lb.innerHTML = langFlagBadge(ST.lang) + '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    lb.onclick = (e)=>{ e.stopPropagation(); ST.qlangOpen = !ST.qlangOpen; render(); };
+    lw.appendChild(lb);
+    if(ST.qlangOpen){
+      const menu = document.createElement("div"); menu.className = "qlangmenu";
+      LANGS.forEach(l=>{
+        const it = document.createElement("button"); it.type = "button";
+        it.className = "qlangitem" + (ST.lang === l ? " active" : "");
+        it.innerHTML = langFlagBadge(l) + "<span class='qn'></span>"; it.querySelector(".qn").textContent = QNAMES[l] || l;
+        it.onclick = (e)=>{ e.stopPropagation(); ST.qlangOpen = false; ST.lang = l; render(); };
+        menu.appendChild(it);
+      });
+      lw.appendChild(menu);
+      if(!window.__qlangOutside){
+        window.__qlangOutside = true;
+        document.addEventListener("click", (e)=>{
+          if(ST.qlangOpen && ST.view === "question" && !e.target.closest(".qlangwrap")){ ST.qlangOpen = false; render(); }
+        });
+      }
+    }
+    right.appendChild(lw);
+  }
   if(ST.mode==="mock"){
     const timer = document.createElement("span");
     timer.className = "timer"; timer.id = "timerDisplay";

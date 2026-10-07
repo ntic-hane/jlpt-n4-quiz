@@ -890,6 +890,53 @@ let session = null; // {access_token, refresh_token, expires_at, loginId, email}
 
 function el(html){ const d=document.createElement("div"); d.innerHTML=html; return d.firstElementChild; }
 
+// ---- 企業の検索窓(2026/10/7追加) ----
+// 企業プルダウンは件数が多く探しづらいため、プルダウンの絞り込み用テキスト窓を付ける。
+// 全角/半角・大文字/小文字は区別しない。企業名または企業IDの一部で絞り込み、現在選択中の企業は常に残す。
+// 1社だけ残った状態でEnterを押すと、その企業を選択する。
+function attachCompanySearch(select, firstLabel, extraStyle){
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "企業名・IDで検索（例：ナラザキ）";
+  input.setAttribute("aria-label", "企業を検索");
+  input.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff;" + (extraStyle || "width:100%;max-width:420px;display:block;margin-bottom:8px;");
+  const norm = (t)=> String(t == null ? "" : t).normalize("NFKC").toLowerCase();
+  let hits = [];
+  const refill = ()=>{
+    const q = norm(input.value).trim();
+    const cur = dashState.companyFilter;
+    select.innerHTML = "";
+    hits = [];
+    const first = document.createElement("option");
+    first.value = "";
+    select.appendChild(first);
+    dashState.companies.slice()
+      .sort((a,b)=> a.company_name.localeCompare(b.company_name,"ja"))
+      .forEach(c=>{
+        const match = !q || norm(c.company_name).includes(q) || norm(c.company_id).includes(q);
+        if(match) hits.push(c);
+        if(!match && c.company_id !== cur) return;
+        const opt = document.createElement("option");
+        opt.value = c.company_id;
+        opt.textContent = c.company_name + "（" + c.company_id + "）";
+        if(cur === c.company_id) opt.selected = true;
+        select.appendChild(opt);
+      });
+    first.textContent = q ? (hits.length + "件ヒット（" + firstLabel + "）") : firstLabel;
+    if(!cur) first.selected = true;
+  };
+  input.addEventListener("input", refill);
+  input.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" && hits.length === 1){
+      e.preventDefault();
+      select.value = hits[0].company_id;
+      if(typeof select.onchange === "function") select.onchange();
+    }
+  });
+  return input;
+}
+
+
 // ==== ログインID→メールアドレスの自動判定変換(2026/8/30新設) ====
 // このダッシュボードには2種類の利用者がログインしてくる。
 //   ・NTIC管理者(ntic_admin)  : 組合で発行された実際のメールアドレスでログインする
@@ -3528,6 +3575,64 @@ function buildSummaryContent(wrap, tab){
     wrap.appendChild(companyWpCard);
   }
 
+  // ==== 企業ランキング(companiesタブ。NTIC管理者のみ。2026/10/7新設) ====
+  // 順位 = 学習の実施率 = 「対象期間内に学習した人」÷「アカウント発行済み・実習中の人」。
+  // アカウント未発行の人は学習できないので分母に入れない。デモ企業(cDEMO)は除外。人数が少ない企業(1〜2名)は
+  // 1人の動きで率が大きく変わるため、順位は付けるが「少人数」の目印を付ける。
+  if(tab === "companies" && scope.isAdmin){
+    const rkDays = dashState.rankPeriod || 30;
+    const rkSince = Date.now() - rkDays*86400000;
+    const rkMap = {};
+    learners.forEach(l=>{
+      if(l.company_id === "cDEMO") return;
+      if(!l.ntlpRegistered) return;
+      const g = rkMap[l.company_id] || (rkMap[l.company_id] = { name: l.companyName || l.company_id, total:0, active:0, progSum:0, rateSum:0, rateN:0 });
+      g.total += 1;
+      if(l.lastSeen && new Date(l.lastSeen).getTime() >= rkSince) g.active += 1;
+      g.progSum += (l.progressPct || 0);
+      if(l.n > 0){ g.rateSum += l.rate; g.rateN += 1; }
+    });
+    const rkRows = Object.values(rkMap).map(g=>({
+      name:g.name, total:g.total, active:g.active,
+      pct: g.total ? Math.round(g.active/g.total*100) : 0,
+      avgProg: g.total ? Math.round(g.progSum/g.total) : 0,
+      avgRate: g.rateN ? Math.round(g.rateSum/g.rateN) : null
+    })).sort((a,b)=> b.pct - a.pct || b.total - a.total || a.name.localeCompare(b.name,"ja"));
+    const rkCard = el('<div class="card dash-sec-company"></div>');
+    const rkHead = el('<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;"></div>');
+    const rkTitle = el('<div class="card-title" style="margin:0;"></div>'); rkTitle.textContent = "企業ランキング（学習の実施率）";
+    rkHead.appendChild(rkTitle);
+    const rkBtns = el('<div style="display:flex;gap:6px;"></div>');
+    [[7,"直近1週間"],[30,"直近1か月"]].forEach(([d,lb])=>{
+      const b = el('<button type="button"></button>'); b.textContent = lb;
+      b.style.cssText = "padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid "+(rkDays===d?"#16A34A":"#E7ECF2")+";background:"+(rkDays===d?"#16A34A":"#fff")+";color:"+(rkDays===d?"#fff":"#64748B")+";";
+      b.onclick = ()=>{ dashState.rankPeriod = d; render(); };
+      rkBtns.appendChild(b);
+    });
+    rkHead.appendChild(rkBtns);
+    rkCard.appendChild(rkHead);
+    rkCard.appendChild(el('<div style="font-size:11.5px;color:var(--nv-sub,#64748B);line-height:1.6;margin-bottom:8px;">実施率＝'+rkDays+'日以内に学習した人 ÷ アカウント発行済み・実習中の人。デモ企業は除外。（少人数）は対象が1〜2名で、1人の動きで率が大きく変わります。このランキングは管理者にだけ表示されます。</div>'));
+    const rkTbl = el('<div style="overflow:auto;max-height:520px;"></div>');
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#64748B;font-size:11.5px;">'+
+      '<th style="padding:6px;">順位</th><th style="padding:6px;">企業</th><th style="padding:6px;text-align:right;">実施率</th><th style="padding:6px;text-align:right;">学習した人/対象</th><th style="padding:6px;text-align:right;">平均進捗</th><th style="padding:6px;text-align:right;">平均正答率</th></tr></thead><tbody>';
+    let prevPct = null, prevRank = 0;
+    rkRows.forEach((r,i)=>{
+      const rank = (r.pct === prevPct) ? prevRank : i+1; prevPct = r.pct; prevRank = rank;
+      const small = r.total <= 2 ? ' <span style="font-size:10.5px;font-weight:700;color:#B45309;background:#FFFBEB;border-radius:99px;padding:1px 7px;">少人数</span>' : '';
+      html += '<tr style="border-top:1px solid #E7ECF2;"><td style="padding:7px 6px;font-weight:800;">'+rank+'</td>'+
+        '<td style="padding:7px 6px;">'+escapeHtml(r.name)+small+'</td>'+
+        '<td style="padding:7px 6px;text-align:right;font-weight:800;color:'+(r.pct>=70?'#16A34A':r.pct>=40?'#B45309':'#DC2626')+';">'+r.pct+'%</td>'+
+        '<td style="padding:7px 6px;text-align:right;">'+r.active+' / '+r.total+'</td>'+
+        '<td style="padding:7px 6px;text-align:right;">'+r.avgProg+'%</td>'+
+        '<td style="padding:7px 6px;text-align:right;">'+(r.avgRate===null?'—':r.avgRate+'%')+'</td></tr>';
+    });
+    html += '</tbody></table>';
+    if(!rkRows.length) html = '<div style="color:#64748B;font-size:12.5px;">対象の企業がありません</div>';
+    rkTbl.innerHTML = html;
+    rkCard.appendChild(rkTbl);
+    wrap.appendChild(rkCard);
+  }
+
   // ==== ⑤ 企業マッピング状況(「◯%」を主役にした構成。完了なら緑、未完了ならオレンジ。
   //      overview(概要)・companies(企業・事業所)、両方のタブに出す ====
   if((tab === "overview" || tab === "companies") && scope.isAdmin){
@@ -3668,6 +3773,7 @@ function buildSummaryContent(wrap, tab){
       dashState.companyPage = 0;
       render();
     };
+    selCard.appendChild(attachCompanySearch(companySelectC, "企業を選択してください"));
     selCard.appendChild(companySelectC);
     wrap.appendChild(selCard);
   }
@@ -4685,6 +4791,7 @@ function renderDashboard(){
         companySelect.appendChild(opt);
       });
       companySelect.onchange = ()=>{ dashState.companyFilter = companySelect.value; dashState.workplaceFilter = ""; dashState.companyPage = 0; refreshWorkplaceFilterOptions(); renderSummaryOnly(); renderTableOnly(); renderBulkBar(); };
+      filters.appendChild(attachCompanySearch(companySelect, "すべての企業", "flex:1;min-width:160px;"));
       filters.appendChild(companySelect);
     }
     // 事業所フィルタ(Phase 3.5): ntic_admin・company_ownerのみ表示。
