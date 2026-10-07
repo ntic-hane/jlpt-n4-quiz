@@ -4847,6 +4847,41 @@ function renderDashboard(){
       workplaceSelect.onchange = ()=>{ dashState.workplaceFilter = workplaceSelect.value; renderTableOnly(); renderBulkBar(); };
       filters.appendChild(workplaceSelect);
     }
+    // 在留区分・国籍・並び順(通訳・企業支援が国別/区分別に管理しやすいように)
+    const selStyle = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;min-width:130px;background:#fff;";
+    const programSelect = document.createElement("select");
+    programSelect.style.cssText = selStyle;
+    [["","技能実習・特定技能"],["gino","技能実習のみ"],["tokutei","特定技能のみ"]].forEach(([v,t])=>{
+      const o = document.createElement("option"); o.value = v; o.textContent = t;
+      if((dashState.programFilter||"") === v) o.selected = true;
+      programSelect.appendChild(o);
+    });
+    programSelect.onchange = ()=>{ dashState.programFilter = programSelect.value; dashState.companyPage = 0; renderSummaryOnly(); renderTableOnly(); renderBulkBar(); };
+    filters.appendChild(programSelect);
+
+    const natSelect = document.createElement("select");
+    natSelect.style.cssText = selStyle;
+    const natCount = {};
+    buildLearnerSummary().filter(l=>!l.isFinished).forEach(l=>{ const k = l.nationality || "（不明）"; natCount[k] = (natCount[k]||0)+1; });
+    const natOpt0 = document.createElement("option"); natOpt0.value = ""; natOpt0.textContent = "すべての国籍"; natSelect.appendChild(natOpt0);
+    Object.keys(natCount).sort((a,b)=>natCount[b]-natCount[a]).forEach(k=>{
+      const o = document.createElement("option"); o.value = k; o.textContent = k + "（" + natCount[k] + "）";
+      if(dashState.nationalityFilter === k) o.selected = true;
+      natSelect.appendChild(o);
+    });
+    natSelect.onchange = ()=>{ dashState.nationalityFilter = natSelect.value; dashState.companyPage = 0; renderSummaryOnly(); renderTableOnly(); renderBulkBar(); };
+    filters.appendChild(natSelect);
+
+    const sortSelect = document.createElement("select");
+    sortSelect.style.cssText = selStyle;
+    [["","並び順：標準（期生・号）"],["nationality","並び順：国籍→区分→期生"],["program","並び順：区分→国籍→期生"]].forEach(([v,t])=>{
+      const o = document.createElement("option"); o.value = v; o.textContent = t;
+      if((dashState.sortColumn||"") === v) o.selected = true;
+      sortSelect.appendChild(o);
+    });
+    sortSelect.onchange = ()=>{ dashState.sortColumn = sortSelect.value || null; dashState.sortDirection = "asc"; renderTableOnly(); };
+    filters.appendChild(sortSelect);
+
     const refreshBtn = document.createElement("button");
     refreshBtn.className = "primary"; refreshBtn.textContent = "更新";
     refreshBtn.onclick = ()=>{ dashState._fetchTriggered = false; loadDashboardData(); };
@@ -5543,6 +5578,13 @@ function getFilteredLearners(){
   }
   // 実習終了済みの実習生はダッシュボードの対象外(現在学習中の実習生のみを扱う運用のため)
   learners = learners.filter(l=>!l.isFinished);
+  // 在留区分(技能実習 / 特定技能)と国籍での絞り込み(通訳・企業支援の管理用)
+  if(dashState.programFilter){
+    learners = learners.filter(l=> (l.program || "gino") === dashState.programFilter);
+  }
+  if(dashState.nationalityFilter){
+    learners = learners.filter(l=> (l.nationality || "（不明）") === dashState.nationalityFilter);
+  }
   return learners;
 }
 
@@ -5908,12 +5950,14 @@ function buildLearnerRow(l, scopeForTable){
   return tr;
 }
 
+function filterAutoOpen(){ return !!(dashState.programFilter || dashState.nationalityFilter); }
+function isOpenState(map, key){ return map[key] !== undefined ? !!map[key] : filterAutoOpen(); }
 function toggleCompanyExpand(companyId){
-  dashState.expandedCompanies[companyId] = !dashState.expandedCompanies[companyId];
+  dashState.expandedCompanies[companyId] = !isOpenState(dashState.expandedCompanies, companyId);
   renderTableOnly();
 }
 function toggleWorkplaceExpand(key){
-  dashState.expandedWorkplaces[key] = !dashState.expandedWorkplaces[key];
+  dashState.expandedWorkplaces[key] = !isOpenState(dashState.expandedWorkplaces, key);
   renderTableOnly();
 }
 
@@ -5925,6 +5969,8 @@ const SORT_GETTERS = {
   name: l => l.learnerName || "",
   learnerId: l => l.learner_id || "",
   period: l => kiseiSortKey(l)*10 + goSortKey(l),
+  nationality: l => (l.nationality || "ﾟ") + "|" + (l.program === "tokutei" ? "2" : "1") + "|" + String(kiseiSortKey(l)).padStart(4,"0") + "|" + (l.learnerName||""),
+  program: l => (l.program === "tokutei" ? "2" : "1") + "|" + (l.nationality || "ﾟ") + "|" + String(kiseiSortKey(l)).padStart(4,"0") + "|" + (l.learnerName||""),
   questions: l => l.questionsStudied || 0,
   rate: l => l.n > 0 ? l.c / l.n : -1,
   lastSeen: l => l.lastSeen ? new Date(l.lastSeen).getTime() : -1,
@@ -6254,7 +6300,7 @@ function renderTableOnly(){
   pagedCompanyIds.forEach(companyId=>{
     const g = companyGroups[companyId];
     const companyLearnerCount = Object.values(g.workplaceMap).reduce((s,wg)=>s+wg.learners.length, 0);
-    const isExpanded = soleCompany ? true : !!dashState.expandedCompanies[companyId];
+    const isExpanded = soleCompany ? true : isOpenState(dashState.expandedCompanies, companyId);
     // 事業所が2つ以上ある企業だけ、「事業所ごと／まとめて」の切り替えを出す
     // (社長など、全事業所のスタッフを一気に見たい人向け。店長など事業所が1つしかない人には出す意味がない)
     const workplaceCount = Object.keys(g.workplaceMap).length;
@@ -6308,7 +6354,7 @@ function renderTableOnly(){
     workplaceKeys.forEach(wpKey=>{
       const wg = g.workplaceMap[wpKey];
       const fullKey = companyId + "::" + wpKey;
-      const wpExpanded = soleWorkplace ? true : !!dashState.expandedWorkplaces[fullKey];
+      const wpExpanded = soleWorkplace ? true : isOpenState(dashState.expandedWorkplaces, fullKey);
 
       const wpHeader = document.createElement("div");
       wpHeader.className = "tree-workplace-header";
