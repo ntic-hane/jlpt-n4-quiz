@@ -1019,7 +1019,7 @@ function renderHeaderUserInfo(){
 
   const scope = sessionScope();
   let roleText = "";
-  if(scope.isAdmin) roleText = "NTIC管理者・全社閲覧";
+  if(scope.isAdmin) roleText = scope.isSuper ? "NTIC管理者・全社閲覧" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）";
   else if(scope.role === "company_owner") roleText = "企業代表・自社全事業所閲覧";
   else if(scope.role === "workplace_manager") roleText = "事業所担当者・担当事業所のみ閲覧";
   else if(scope.role === "company_user_pending") roleText = "権限確認中...";
@@ -1263,7 +1263,11 @@ function sessionScope(){
   const meta = (payload.app_metadata) || {};
   const jwtRole = meta.role || null;
   if(jwtRole === "ntic_admin"){
-    return { isAdmin: true, role: "ntic_admin", companyId: null };
+    return { isAdmin: true, isSuper: true, role: "ntic_admin", companyId: null };
+  }
+  // 企業支援担当者: 全社の閲覧と店舗移動はできるが、アカウントの発行・再発行・無効化・CSV取込・学習データ削除はできない(DB側でも禁止)
+  if(jwtRole === "ntic_staff"){
+    return { isAdmin: true, isSuper: false, isStaff: true, role: "ntic_staff", companyId: null };
   }
   if(jwtRole === "company_user"){
     // JWTには"company_user"という粗い印だけを持たせている(認証=JWT、権限=DBの方針)。
@@ -2707,7 +2711,7 @@ function doLogout(){
 }
 
 function roleTextOf(scope){
-  if(scope.isAdmin) return "NTIC管理者・全社閲覧";
+  if(scope.isAdmin) return scope.isSuper ? "NTIC管理者・全社閲覧" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）";
   if(scope.role === "company_owner") return "企業代表・自社全事業所閲覧";
   if(scope.role === "workplace_manager") return "事業所担当者・担当事業所のみ閲覧";
   if(scope.role === "company_user_pending") return "権限確認中...";
@@ -3368,7 +3372,7 @@ function buildSummaryContent(wrap, tab){
   }
 
   // NTLPアカウント発行可能は最上段から外し、小さなリンク行として登録状況の近くに残す(管理者のみ)。
-  if(scope.isAdmin && canIssue.length > 0 && tab === "overview"){
+  if(scope.isSuper && canIssue.length > 0 && tab === "overview"){
     const issueLink = el('<div class="issue-link-row"></div>');
     issueLink.innerHTML = "<span>"+STAT_ICONS.idCard+"</span><span>アカウント発行可能な実習生が <b>"+fmtNum(canIssue.length)+"人</b> います</span>";
     issueLink.classList.add("dash-sec-kpi");
@@ -3592,15 +3596,33 @@ function buildSummaryContent(wrap, tab){
       g.progSum += (l.progressPct || 0);
       if(l.n > 0){ g.rateSum += l.rate; g.rateN += 1; }
     });
+    const RK_METRICS = {
+      pct:     { label:"学習の実施率", get:r=>r.pct },
+      avgRate: { label:"平均正答率",   get:r=>r.avgRate },
+      avgProg: { label:"平均進捗率",   get:r=>r.avgProg },
+      active:  { label:"学習した人数", get:r=>r.active },
+      total:   { label:"対象人数",     get:r=>r.total },
+      name:    { label:"企業名",       get:r=>r.name }
+    };
+    const rkKey = RK_METRICS[dashState.rankSort] ? dashState.rankSort : "pct";
+    const rkAsc = dashState.rankDir === "asc";
+    const rkM = RK_METRICS[rkKey];
     const rkRows = Object.values(rkMap).map(g=>({
       name:g.name, total:g.total, active:g.active,
       pct: g.total ? Math.round(g.active/g.total*100) : 0,
       avgProg: g.total ? Math.round(g.progSum/g.total) : 0,
       avgRate: g.rateN ? Math.round(g.rateSum/g.rateN) : null
-    })).sort((a,b)=> b.pct - a.pct || b.total - a.total || a.name.localeCompare(b.name,"ja"));
+    })).sort((a,b)=>{
+      if(rkKey === "name"){ const c = a.name.localeCompare(b.name,"ja"); return rkAsc ? c : -c; }
+      const va = rkM.get(a), vb = rkM.get(b);
+      if(va === null && vb !== null) return 1;      // 正答率が未計測の企業は常に最下位
+      if(vb === null && va !== null) return -1;
+      const d = (va===null && vb===null) ? 0 : (rkAsc ? va-vb : vb-va);
+      return d || b.total - a.total || a.name.localeCompare(b.name,"ja");
+    });
     const rkCard = el('<div class="card dash-sec-company"></div>');
     const rkHead = el('<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;"></div>');
-    const rkTitle = el('<div class="card-title" style="margin:0;"></div>'); rkTitle.textContent = "企業ランキング（学習の実施率）";
+    const rkTitle = el('<div class="card-title" style="margin:0;"></div>'); rkTitle.textContent = "企業ランキング（"+rkM.label+(rkKey==="name"?"":(rkAsc?"・低い順":"・高い順"))+"）";
     rkHead.appendChild(rkTitle);
     const rkBtns = el('<div style="display:flex;gap:6px;"></div>');
     [[7,"直近1週間"],[30,"直近1か月"]].forEach(([d,lb])=>{
@@ -3611,13 +3633,28 @@ function buildSummaryContent(wrap, tab){
     });
     rkHead.appendChild(rkBtns);
     rkCard.appendChild(rkHead);
-    rkCard.appendChild(el('<div style="font-size:11.5px;color:var(--nv-sub,#64748B);line-height:1.6;margin-bottom:8px;">実施率＝'+rkDays+'日以内に学習した人 ÷ アカウント発行済み・実習中の人。デモ企業は除外。（少人数）は対象が1〜2名で、1人の動きで率が大きく変わります。このランキングは管理者にだけ表示されます。</div>'));
+    // 並び替え: 指標を選ぶ + 高い順/低い順
+    const rkCtl = el('<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"></div>');
+    [["pct","実施率"],["avgRate","正答率"],["avgProg","進捗率"],["active","学習した人数"],["total","対象人数"],["name","企業名"]].forEach(([k,lb])=>{
+      const on = rkKey===k;
+      const b = el('<button type="button"></button>'); b.textContent = lb;
+      b.style.cssText = "padding:5px 11px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid "+(on?"#2563EB":"#E7ECF2")+";background:"+(on?"#2563EB":"#fff")+";color:"+(on?"#fff":"#334155")+";";
+      b.onclick = ()=>{ if(dashState.rankSort===k || (!dashState.rankSort && k==="pct")){ dashState.rankDir = rkAsc ? "desc" : "asc"; } else { dashState.rankSort = k; dashState.rankDir = (k==="name") ? "asc" : "desc"; } render(); };
+      rkCtl.appendChild(b);
+    });
+    const dirB = el('<button type="button"></button>'); dirB.textContent = rkAsc ? "▲ 低い順" : "▼ 高い順";
+    dirB.style.cssText = "padding:5px 11px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #E7ECF2;background:#fff;color:#334155;margin-left:4px;";
+    dirB.onclick = ()=>{ dashState.rankDir = rkAsc ? "desc" : "asc"; render(); };
+    rkCtl.appendChild(dirB);
+    rkCard.appendChild(rkCtl);
+    rkCard.appendChild(el('<div style="font-size:11.5px;color:var(--nv-sub,#64748B);line-height:1.6;margin-bottom:8px;">実施率＝'+rkDays+'日以内に学習した人 ÷ アカウント発行済み・実習中の人。デモ企業は除外。（少人数）は対象が1〜2名で、1人の動きで率が大きく変わります。このランキングは管理者・企業支援担当者にだけ表示されます。</div>'));
     const rkTbl = el('<div style="overflow:auto;max-height:520px;"></div>');
     let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#64748B;font-size:11.5px;">'+
       '<th style="padding:6px;">順位</th><th style="padding:6px;">企業</th><th style="padding:6px;text-align:right;">実施率</th><th style="padding:6px;text-align:right;">学習した人/対象</th><th style="padding:6px;text-align:right;">平均進捗</th><th style="padding:6px;text-align:right;">平均正答率</th></tr></thead><tbody>';
-    let prevPct = null, prevRank = 0;
+    let prevV = undefined, prevRank = 0;
     rkRows.forEach((r,i)=>{
-      const rank = (r.pct === prevPct) ? prevRank : i+1; prevPct = r.pct; prevRank = rank;
+      const cv = rkM.get(r);
+      const rank = (rkKey!=="name" && cv === prevV) ? prevRank : i+1; prevV = cv; prevRank = rank;
       const small = r.total <= 2 ? ' <span style="font-size:10.5px;font-weight:700;color:#B45309;background:#FFFBEB;border-radius:99px;padding:1px 7px;">少人数</span>' : '';
       html += '<tr style="border-top:1px solid #E7ECF2;"><td style="padding:7px 6px;font-weight:800;">'+rank+'</td>'+
         '<td style="padding:7px 6px;">'+escapeHtml(r.name)+small+'</td>'+
@@ -3669,7 +3706,7 @@ function buildSummaryContent(wrap, tab){
   // 118社・243事業所を1件ずつ手作業で発行するのは現実的ではないため、
   // 「まだアカウントが無い企業・事業所」だけを対象に一括発行する。
   // 押す前に対象件数を表示し、確認してから実行する2段構えにしている。
-  if(tab === "companies" && scope.isAdmin){
+  if(tab === "companies" && scope.isSuper){
     const bulkCard = el('<div class="card dash-sec-company"></div>');
     const bulkTitle = el('<div class="card-title"></div>');
     bulkTitle.textContent = "企業代表・事業所担当者アカウントの一括発行";
@@ -3827,6 +3864,7 @@ function buildSummaryContent(wrap, tab){
       wrap.appendChild(companyCard);
       } // ← サマリーKPIここまで(学習者0人の企業では出さない)
 
+      if(scope.isSuper){
       // ==== 企業代表・事業所担当者アカウントの発行(この企業限定) ====
       const issueCard = el('<div class="card dash-sec-company"></div>');
       const issueTitle = el('<div class="card-title"></div>');
@@ -4008,6 +4046,7 @@ function buildSummaryContent(wrap, tab){
         }
       }
       loadCompanyUsersList();
+      }
     }
   }
 
@@ -4827,14 +4866,14 @@ function renderDashboard(){
       card.appendChild(note);
     }
 
-    if(scope.isAdmin){
+    if(scope.isSuper){
       const bulkBarWrap = document.createElement("div");
       bulkBarWrap.id = "bulkBarWrap";
       card.appendChild(bulkBarWrap);
     }
 
     // ==== Dekisugi CSV取込カード(NTIC管理者のみ、2026/8/30新設) ====
-    if(scope.isAdmin){
+    if(scope.isSuper){
       wrap.appendChild(buildImportCard());
     }
 
@@ -4920,7 +4959,7 @@ function renderLearnerKarte(){
   backBtn.onclick = ()=> closeKarte();
   topRow.appendChild(backBtn);
 
-  if(karteScope.isAdmin){
+  if(karteScope.isSuper){
     const delBtn = document.createElement("button");
     delBtn.className = "danger";
     delBtn.textContent = "この学習者のデータを削除";
@@ -4976,7 +5015,7 @@ function renderLearnerKarte(){
 
   // パスワードリセット(NTIC管理者のみ・既にNTLP登録済みの人だけ対象)。
   // 「本人が紙を無くした」等、発行後に繰り返し起こりうる運用のための機能。
-  if(karteScope.isAdmin && l.ntlpRegistered){
+  if(karteScope.isSuper && l.ntlpRegistered){
     const resetBtn = document.createElement("button");
     resetBtn.className = "secondary";
     resetBtn.textContent = "パスワードをリセット";
@@ -5772,7 +5811,7 @@ function buildLearnerRow(l, scopeForTable){
   let ntlpCell;
   if(l.ntlpRegistered){
     ntlpCell = "<span class='badge high'>登録済</span>";
-  } else if(scopeForTable.isAdmin && l.canIssueAccount){
+  } else if(scopeForTable.isSuper && l.canIssueAccount){
     ntlpCell = "<span class='badge mid' style='margin-right:6px;'>未登録</span>";
   } else if(!l.companyMapped || !l.dekisugiCompanyId){
     ntlpCell = "<span class='badge mid' title='企業マッピング未設定のため発行できません'>未登録</span>";
@@ -5797,7 +5836,7 @@ function buildLearnerRow(l, scopeForTable){
 
   const ntlpTd = document.createElement("td");
   ntlpTd.innerHTML = ntlpCell;
-  if(scopeForTable.isAdmin && l.canIssueAccount){
+  if(scopeForTable.isSuper && l.canIssueAccount){
     const issueBtn = document.createElement("button");
     issueBtn.className = "secondary";
     issueBtn.style.cssText = "padding:4px 10px;font-size:11.5px;";
@@ -5825,7 +5864,7 @@ function buildLearnerRow(l, scopeForTable){
   }
 
   let checkboxTd = null;
-  if(scopeForTable.isAdmin){
+  if(scopeForTable.isSuper){
     checkboxTd = document.createElement("td");
     if(l.canIssueAccount){
       const cb = document.createElement("input");
@@ -6024,7 +6063,7 @@ function renderStudentTableBlock(learners, pageKey, scopeForTable){
   body.className = "tree-workplace-body";
 
   const table = document.createElement("table");
-  const checkboxHeader = scopeForTable.isAdmin;
+  const checkboxHeader = !!scopeForTable.isSuper;
   table.appendChild(buildSortableThead(checkboxHeader));
   const tbody = document.createElement("tbody");
   pageLearners.forEach(l=> tbody.appendChild(buildLearnerRow(l, scopeForTable)));
