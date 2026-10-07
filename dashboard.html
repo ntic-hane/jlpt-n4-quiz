@@ -1019,7 +1019,7 @@ function renderHeaderUserInfo(){
 
   const scope = sessionScope();
   let roleText = "";
-  if(scope.isAdmin) roleText = scope.isSuper ? "NTIC管理者・全社閲覧" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）";
+  if(scope.isAdmin) roleText = scope.isSuper ? "NTIC管理者・全社閲覧" : scope.isViewer ? "全社閲覧のみ（変更不可）" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）";
   else if(scope.role === "company_owner") roleText = "企業代表・自社全事業所閲覧";
   else if(scope.role === "workplace_manager") roleText = "事業所担当者・担当事業所のみ閲覧";
   else if(scope.role === "company_user_pending") roleText = "権限確認中...";
@@ -1268,6 +1268,10 @@ function sessionScope(){
   // 企業支援担当者: 全社の閲覧と店舗移動はできるが、アカウントの発行・再発行・無効化・CSV取込・学習データ削除はできない(DB側でも禁止)
   if(jwtRole === "ntic_staff"){
     return { isAdmin: true, isSuper: false, isStaff: true, role: "ntic_staff", companyId: null };
+  }
+  // 閲覧専用(全社を見られるが、店舗移動も含め一切変更できない。DB側でも禁止)
+  if(jwtRole === "ntic_viewer"){
+    return { isAdmin: true, isSuper: false, isViewer: true, role: "ntic_viewer", companyId: null };
   }
   if(jwtRole === "company_user"){
     // JWTには"company_user"という粗い印だけを持たせている(認証=JWT、権限=DBの方針)。
@@ -2711,7 +2715,7 @@ function doLogout(){
 }
 
 function roleTextOf(scope){
-  if(scope.isAdmin) return scope.isSuper ? "NTIC管理者・全社閲覧" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）";
+  if(scope.isAdmin) return scope.isSuper ? "NTIC管理者・全社閲覧" : scope.isViewer ? "全社閲覧のみ（変更不可）" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）";
   if(scope.role === "company_owner") return "企業代表・自社全事業所閲覧";
   if(scope.role === "workplace_manager") return "事業所担当者・担当事業所のみ閲覧";
   if(scope.role === "company_user_pending") return "権限確認中...";
@@ -3581,14 +3585,14 @@ function buildSummaryContent(wrap, tab){
 
   // ==== 企業ランキング(companiesタブ。NTIC管理者のみ。2026/10/7新設) ====
   // 順位 = 学習の実施率 = 「対象期間内に学習した人」÷「アカウント発行済み・実習中の人」。
-  // アカウント未発行の人は学習できないので分母に入れない。デモ企業(cDEMO)は除外。人数が少ない企業(1〜2名)は
+  // アカウント未発行の人は学習できないので分母に入れない。デモ企業(cDEMO)・社内学習(cNTIC)は除外。人数が少ない企業(1〜2名)は
   // 1人の動きで率が大きく変わるため、順位は付けるが「少人数」の目印を付ける。
   if(tab === "companies" && scope.isAdmin){
     const rkDays = dashState.rankPeriod || 30;
     const rkSince = Date.now() - rkDays*86400000;
     const rkMap = {};
     learners.forEach(l=>{
-      if(l.company_id === "cDEMO") return;
+      if(l.company_id === "cDEMO" || l.company_id === "cNTIC") return; // デモ・社内学習は除外
       if(!l.ntlpRegistered) return;
       const g = rkMap[l.company_id] || (rkMap[l.company_id] = { name: l.companyName || l.company_id, total:0, active:0, progSum:0, rateSum:0, rateN:0 });
       g.total += 1;
@@ -5072,7 +5076,7 @@ function renderLearnerKarte(){
   wpValue.className = "k-wp-v";
   wpValue.textContent = (l.workplaces && l.workplaces.length) ? l.workplaces.map(w=>w.workplace_name).join("・") : "未設定";
   wpBox.appendChild(wpValue);
-  if(karteScope.isAdmin){
+  if(karteScope.isAdmin && !karteScope.isViewer){
     const wpEditBtn = document.createElement("button");
     wpEditBtn.className = "secondary k-wp-btn";
     wpEditBtn.textContent = "変更";
