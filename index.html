@@ -482,8 +482,9 @@ header h1{cursor:pointer;}
 .jlife2{--sc:#F59E0B;--sb:#FFF3D6;}
 
 /* ====================== 問題画面(案2): ヘッダー・進捗の棒・番号つきの選択肢・結果カード ====================== */
-.qtop{display:grid !important;grid-template-columns:44px 1fr auto;align-items:center;gap:4px;margin:2px 0 6px;}
-.qback{width:40px;height:40px;border:0;background:transparent;color:var(--nv-text);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.qtop{display:grid !important;grid-template-columns:auto 1fr auto;align-items:center;gap:4px;margin:2px 0 6px;}
+.qback{min-width:40px;height:40px;border:0;background:transparent;color:var(--nv-text);border-radius:12px;display:flex;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:0 10px 0 4px;font-size:14px;font-weight:800;}
+.qback span{white-space:nowrap;}
 .qtitle{text-align:center;font-size:17px;font-weight:800;color:var(--nv-text);}
 .qtop .progress{text-align:right;font-weight:800;color:var(--nv-sub);font-size:14px;}
 .qright{display:flex;align-items:center;gap:8px;justify-content:flex-end;}
@@ -6137,7 +6138,10 @@ let AUTH = {
 function loginIdToEmail(loginId){
   // ログインIDの大文字・小文字表記ゆれを吸収するため、常に小文字化してから内部メールアドレスを組み立てる。
   // (アカウント発行時も、必ずこの関数と同じ小文字化ルールでメールアドレスを作成すること)
-  return loginId.trim().toLowerCase() + AUTH_EMAIL_DOMAIN;
+  const id = loginId.trim().toLowerCase();
+  // メールアドレス形式のID(管理者がメールアドレスで発行されている場合)は、そのまま使う。
+  if(id.indexOf("@") > -1) return id;
+  return id + AUTH_EMAIL_DOMAIN;
 }
 
 function decodeJwtPayload(token){
@@ -6290,11 +6294,13 @@ async function establishSession(){
   const payload = decodeJwtPayload(session.access_token);
   AUTH.mustChangePassword = !!(payload.user_metadata && payload.user_metadata.must_change_password);
 
-  // 企業担当者(company_user)・NTIC管理者(ntic_admin)のIDは、実習生アプリでは使えない。
+  // 企業担当者(company_user)のIDは、実習生アプリでは使えない。
   // 認証基盤(Supabase Auth)が同じなので、IDとパスワードが合えば認証自体は通ってしまうため、ここで弾く。
-  // (企業のお客様が、実習生用のQRから入って、企業IDでログインしてしまう取り違えが実際に起きた)
+  // (企業のお客様が、実習生用のQRから入って、企業IDでログインしてしまう取り違えが実际に起きた)
+  // NTIC管理者(ntic_admin)は、組合職員(ntic_staff/ntic_viewer)と同じく、実習生の行(students)を持つ場合のみ使える。
+  // 実習生の行が無ければ、下の本人特定で弾かれる。
   const jwtRole = payload.app_metadata && payload.app_metadata.role;
-  if(jwtRole === "company_user" || jwtRole === "ntic_admin"){
+  if(jwtRole === "company_user"){
     LAST_LOGIN_DENY = "staff";
     await authLogout();
     return null;
@@ -9054,7 +9060,7 @@ function renderQuestion(){
   const top = el('<div class="topbar qtop"></div>');
   const backBtn = document.createElement("button");
   backBtn.className = "qback"; backBtn.setAttribute("aria-label", tr(T.back));
-  backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+  backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>' + escapeHtml(tr(T.tabHome)) + '</span>';
   backBtn.onclick = ()=>{
     if(ST.mode==="mock"){
       ask(tr(T.quitMock), ()=>{ clearTimer(); finishSession(); ST.view="home"; render(); });
