@@ -1003,8 +1003,16 @@ function render(){
   // 動かさない。そこで動かすと操作のたびに画面が跳ねて使いにくくなる。
   const screen = currentScreenKey();
   if(screen !== lastRenderedScreen){
+    const prevScreen = lastRenderedScreen;
     lastRenderedScreen = screen;
-    requestAnimationFrame(()=>{ window.scrollTo({ top: 0, behavior: "auto" }); });
+    // 個人カルテから「戻る」で一覧に戻るときは、カルテを開く前の位置に戻す。
+    // 先頭へ飛ばすと、さっきまで見ていた企業とは別の企業が表示されてしまうため。
+    let targetY = 0;
+    if(prevScreen === "karte" && screen !== "karte" && typeof karteReturnY === "number"){
+      targetY = karteReturnY;
+    }
+    if(screen !== "karte") karteReturnY = null;
+    requestAnimationFrame(()=>{ window.scrollTo({ top: targetY, behavior: "auto" }); });
   }
 }
 
@@ -1043,6 +1051,7 @@ function renderHeaderUserInfo(){
   box.appendChild(avatar);
 }
 
+let karteReturnY = null;
 // ---- 個人カルテの開閉をブラウザ履歴に積む ----
 // このアプリは1ページのSPAで、何もしないとブラウザ履歴が一切増えないため、
 // カルテを開いた状態でマウスの戻るボタン(やスマホのスワイプバック)を押すと
@@ -1050,6 +1059,7 @@ function renderHeaderUserInfo(){
 // 「戻る」操作がまずカルテを閉じる動作になるようにする(ブラウザ標準のスワイプバックにも
 // 同じ仕組みで反応するようになる)。
 function openKarte(company_id, learner_id){
+  karteReturnY = window.scrollY || 0; // 戻ったときに同じ位置へ戻すため、開く前のスクロール位置を覚えておく
   dashState.selectedLearner = { company_id, learner_id };
   dashState.karteLevel = "n4"; // 別の学習者のカルテを開くたびN4表示にリセットする
   dashState.karteMissQShowCount = { moji:5, bunpo:5, dokkai:5, choukai:5 }; // 「よく間違えている問題」の表示件数もリセットする
