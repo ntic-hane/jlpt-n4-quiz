@@ -9859,15 +9859,32 @@ const NO_FIELDS = [
   NO_OTHER, NO_UNSURE
 ];
 // 資格(持っている/取りたい 共通の選択肢)
+// 試験名は公的資料の表記: 特定技能・育成就労の評価試験名=出入国在留管理庁・厚労省の専門家会議資料、
+// 介護=厚労省の介護分野ページ、自動車整備=国交省の自動車整備分野ページ。上記で確認できた分野だけを入れている。
+// 他の分野の試験名は未確認のため「その他（自分で書く）」で受ける。日本語以外の表示は「英語名（日本語名）」。
+const NG_JP = ["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"];
+const NG_EXAM = ["技能評価試験（共通）","Skills evaluation tests (common)","Ujian evaluasi keterampilan (umum)","Skills evaluation tests (karaniwan)","การสอบประเมินทักษะ (ทั่วไป)","ကျွမ်းကျင်မှု စစ်ဆေးမှု (ဘုံ)"];
+const NG_KAIGO = ["介護","Nursing care","Perawatan lansia (Kaigo)","Nursing care","การดูแลผู้สูงอายุ (Kaigo)","ပြုစုစောင့်ရှောက်မှု (Kaigo)"];
+const NG_AUTO = ["自動車整備","Automobile maintenance","Perawatan otomotif","Automobile maintenance","การซ่อมบำรุงรถยนต์","ကား ပြုပြင်ထိန်းသိမ်းမှု"];
+const NG_OTHERS = ["そのほか","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"];
 const NO_CERT = [
-  { c:"n5", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N5","JLPT N5","JLPT N5","JLPT N5","JLPT N5","JLPT N5"] },
-  { c:"n4", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N4","JLPT N4","JLPT N4","JLPT N4","JLPT N4","JLPT N4"] },
-  { c:"n3", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N3","JLPT N3","JLPT N3","JLPT N3","JLPT N3","JLPT N3"] },
-  { c:"n2", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N2","JLPT N2","JLPT N2","JLPT N2","JLPT N2","JLPT N2"] },
-  { c:"n1", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N1","JLPT N1","JLPT N1","JLPT N1","JLPT N1","JLPT N1"] },
-  { c:"gino", g:["そのほか","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"], t:["技能検定","Skills test (Ginou Kentei)","Ujian keterampilan (Ginou Kentei)","Skills test (Ginou Kentei)","การทดสอบทักษะ (Ginou Kentei)","ကျွမ်းကျင်မှုစာမေးပွဲ (Ginou Kentei)"] },
-  { c:"sswtest", g:["そのほか","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"], t:["特定技能の評価試験","SSW skills evaluation test","Ujian evaluasi SSW","SSW skills evaluation test","การสอบประเมินทักษะ SSW","SSW ကျွမ်းကျင်မှု စစ်ဆေးမှု"] },
-  { c:"license", g:["そのほか","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"], t:["運転免許","Driver's license","SIM (surat izin mengemudi)","Driver's license","ใบขับขี่","ယာဉ်မောင်းလိုင်စင်"] },
+  { c:"n5", g:NG_JP, t:["JLPT N5","JLPT N5","JLPT N5","JLPT N5","JLPT N5","JLPT N5"] },
+  { c:"n4", g:NG_JP, t:["JLPT N4","JLPT N4","JLPT N4","JLPT N4","JLPT N4","JLPT N4"] },
+  { c:"n3", g:NG_JP, t:["JLPT N3","JLPT N3","JLPT N3","JLPT N3","JLPT N3","JLPT N3"] },
+  { c:"n2", g:NG_JP, t:["JLPT N2","JLPT N2","JLPT N2","JLPT N2","JLPT N2","JLPT N2"] },
+  { c:"n1", g:NG_JP, t:["JLPT N1","JLPT N1","JLPT N1","JLPT N1","JLPT N1","JLPT N1"] },
+  { c:"jft", g:NG_JP, bi:true, t:["日本語基礎テスト（JFT-Basic）","Japan Foundation Test for Basic Japanese (JFT-Basic)","Japan Foundation Test for Basic Japanese (JFT-Basic)","Japan Foundation Test for Basic Japanese (JFT-Basic)","Japan Foundation Test for Basic Japanese (JFT-Basic)","Japan Foundation Test for Basic Japanese (JFT-Basic)"] },
+  { c:"e_ssw1", g:NG_EXAM, bi:true, t:["特定技能1号評価試験","SSW No.1 evaluation test","SSW No.1 evaluation test","SSW No.1 evaluation test","SSW No.1 evaluation test","SSW No.1 evaluation test"] },
+  { c:"e_ssw2", g:NG_EXAM, bi:true, t:["特定技能2号評価試験","SSW No.2 evaluation test","SSW No.2 evaluation test","SSW No.2 evaluation test","SSW No.2 evaluation test","SSW No.2 evaluation test"] },
+  { c:"e_iku1", g:NG_EXAM, bi:true, t:["育成就労評価試験（初級）","Ikusei Shuro evaluation test (basic level)","Ikusei Shuro evaluation test (basic level)","Ikusei Shuro evaluation test (basic level)","Ikusei Shuro evaluation test (basic level)","Ikusei Shuro evaluation test (basic level)"] },
+  { c:"e_iku2", g:NG_EXAM, bi:true, t:["育成就労評価試験（専門級）","Ikusei Shuro evaluation test (specialist level)","Ikusei Shuro evaluation test (specialist level)","Ikusei Shuro evaluation test (specialist level)","Ikusei Shuro evaluation test (specialist level)","Ikusei Shuro evaluation test (specialist level)"] },
+  { c:"k_skill", g:NG_KAIGO, bi:true, t:["介護技能評価試験","Nursing care skills evaluation test","Nursing care skills evaluation test","Nursing care skills evaluation test","Nursing care skills evaluation test","Nursing care skills evaluation test"] },
+  { c:"k_jp", g:NG_KAIGO, bi:true, t:["介護日本語評価試験","Nursing care Japanese evaluation test","Nursing care Japanese evaluation test","Nursing care Japanese evaluation test","Nursing care Japanese evaluation test","Nursing care Japanese evaluation test"] },
+  { c:"k_shoninsha", g:NG_KAIGO, bi:true, t:["介護職員初任者研修","Introductory training for care workers","Introductory training for care workers","Introductory training for care workers","Introductory training for care workers","Introductory training for care workers"] },
+  { c:"k_fukushi", g:NG_KAIGO, bi:true, t:["介護福祉士","Certified care worker","Certified care worker","Certified care worker","Certified care worker","Certified care worker"] },
+  { c:"a_ssw1", g:NG_AUTO, bi:true, t:["自動車整備分野特定技能1号評価試験","Automobile maintenance SSW No.1 evaluation test","Automobile maintenance SSW No.1 evaluation test","Automobile maintenance SSW No.1 evaluation test","Automobile maintenance SSW No.1 evaluation test","Automobile maintenance SSW No.1 evaluation test"] },
+  { c:"gino", g:NG_OTHERS, bi:true, t:["技能検定","National skills test (Ginou Kentei)","National skills test (Ginou Kentei)","National skills test (Ginou Kentei)","National skills test (Ginou Kentei)","National skills test (Ginou Kentei)"] },
+  { c:"license", g:NG_OTHERS, bi:true, t:["運転免許","Driver's license","Driver's license","Driver's license","Driver's license","Driver's license"] },
   NO_OTHER, NO_NONE
 ];
 const NQ = [
