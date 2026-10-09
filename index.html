@@ -802,6 +802,56 @@ header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
 .jlangbtn{display:flex;align-items:center;justify-content:center;gap:8px;}
 .ptop-menu{min-width:230px;} .ptop-mi .lname{white-space:nowrap;}
 </style>
+<style>
+/* わたしの日本ノート */
+.v-note{max-width:640px;margin:0 auto;padding-bottom:40px;}
+.nt-title{font-size:20px;font-weight:800;color:var(--nv-text);margin:4px 0 14px;}
+.nt-msg{padding:40px 0;text-align:center;color:var(--nv-sub);font-size:14px;}
+.nt-card{background:#fff;border:1px solid var(--nv-line);border-radius:16px;padding:16px;margin-bottom:12px;}
+.nt-center{text-align:center;padding:28px 18px;}
+.nt-h{font-size:12.5px;font-weight:800;color:var(--nv-sub);letter-spacing:.2px;margin-bottom:8px;}
+.nt-p{font-size:14.5px;line-height:1.7;color:var(--nv-text);margin-bottom:14px;}
+.nt-sub{font-size:13.5px;color:var(--nv-sub);line-height:1.6;}
+.nt-goal{font-size:16px;font-weight:800;color:var(--nv-text);padding:10px 12px;margin-bottom:6px;background:#DDF6F1;border-radius:12px;line-height:1.5;}
+.nt-chip{display:inline-block;font-size:13.5px;font-weight:700;color:var(--nv-text);background:#EEF2F7;border-radius:999px;padding:6px 12px;margin:0 6px 6px 0;line-height:1.4;}
+.nt-memo{font-size:13.5px;color:var(--nv-text);background:#F7F8FB;border-radius:10px;padding:9px 11px;margin-top:6px;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.nt-ok{font-size:12.5px;font-weight:800;color:#16875F;margin-top:8px;}
+.nt-row{display:flex;justify-content:space-between;gap:10px;font-size:14px;align-items:baseline;}
+.nt-row b{font-weight:800;color:var(--nv-text);} .nt-row span{font-weight:800;color:var(--nv-blue);}
+.nt-primary{display:block;width:100%;border:0;border-radius:14px;background:var(--nv-blue);color:#fff;font:inherit;font-size:15.5px;font-weight:800;padding:14px 16px;cursor:pointer;margin-top:6px;}
+.nt-primary:disabled{opacity:.6;cursor:default;}
+.nt-secondary{flex:1;border:1.5px solid var(--nv-line);border-radius:14px;background:#fff;color:var(--nv-text);font:inherit;font-size:14px;font-weight:700;padding:12px 10px;cursor:pointer;}
+.nt-actions{display:flex;gap:10px;margin-top:4px;}
+.nt-nav{display:flex;gap:10px;margin-top:14px;} .nt-nav .nt-primary{flex:1.4;margin-top:0;}
+.nt-head{display:flex;align-items:center;justify-content:space-between;margin:2px 0 8px;}
+.nt-back{border:0;background:transparent;color:var(--nv-blue);font:inherit;font-size:14px;font-weight:700;padding:8px 4px;cursor:pointer;}
+.nt-step{font-size:13px;font-weight:800;color:var(--nv-sub);}
+.nt-bar{height:6px;background:#E9EDF5;border-radius:999px;overflow:hidden;margin-bottom:18px;} .nt-bar i{display:block;height:100%;background:var(--nv-blue);border-radius:999px;}
+.nt-q{font-size:19px;font-weight:800;color:var(--nv-text);line-height:1.5;margin-bottom:4px;}
+.nt-qja{font-size:12.5px;color:var(--nv-sub);margin-bottom:6px;}
+.nt-hint{font-size:12.5px;color:var(--nv-sub);line-height:1.6;margin:4px 0 12px;}
+.nt-privacy{font-size:12.5px;font-weight:700;color:#8A5A00;background:#FFF1DE;border-radius:10px;padding:9px 11px;margin:6px 0 12px;line-height:1.55;}
+.nt-auto{font-size:12.5px;color:var(--nv-sub);background:#F0F4FA;border-radius:10px;padding:8px 11px;margin:6px 0 12px;}
+.nt-label{font-size:12.5px;font-weight:700;color:var(--nv-sub);margin:10px 0 4px;}
+.nt-text{width:100%;box-sizing:border-box;border:1.5px solid var(--nv-line);border-radius:12px;padding:10px 12px;font:inherit;font-size:14.5px;line-height:1.55;resize:vertical;margin-bottom:10px;background:#fff;color:var(--nv-text);}
+.nt-text:focus{outline:none;border-color:var(--nv-blue);}
+.nt-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1.5px solid var(--nv-line);border-radius:14px;background:#fff;color:var(--nv-text);font:inherit;font-size:15px;line-height:1.45;padding:13px 14px;margin-bottom:8px;cursor:pointer;}
+.nt-opt.on{border-color:var(--nv-blue);background:var(--nv-blue-bg);font-weight:700;}
+.nt-mark{flex:0 0 20px;width:20px;height:20px;border-radius:50%;border:2px solid #BCC6D8;box-sizing:border-box;position:relative;}
+.nt-mark.sq{border-radius:6px;}
+.nt-opt.on .nt-mark{border-color:var(--nv-blue);background:var(--nv-blue);}
+.nt-opt.on .nt-mark::after{content:"";position:absolute;left:5px;top:1.5px;width:5px;height:10px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:rotate(45deg);}
+.nt-lab{flex:1;min-width:0;word-break:break-word;}
+.nt-err{color:#C9344A;font-size:13px;font-weight:700;margin:8px 0;}
+.nt-cons{background:#fff;border:1px solid var(--nv-line);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+.nt-cons-l{font-size:14.5px;font-weight:700;margin-bottom:8px;line-height:1.5;}
+.nt-seg{display:flex;gap:8px;} .nt-seg button{flex:1;border:1.5px solid var(--nv-line);background:#fff;border-radius:10px;font:inherit;font-size:14px;font-weight:700;padding:9px 6px;color:var(--nv-sub);cursor:pointer;}
+.nt-seg button.on{border-color:var(--nv-blue);background:var(--nv-blue);color:#fff;}
+.nt-done-ic{width:56px;height:56px;border-radius:50%;background:#E4F6EE;color:#16875F;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.jnote{margin-bottom:12px;}
+.nt-select{display:block;width:100%;box-sizing:border-box;border:1.5px solid var(--nv-line);border-radius:12px;padding:12px 12px;font:inherit;font-size:15px;line-height:1.4;background:#fff;color:var(--nv-text);margin-bottom:10px;}
+.nt-select:focus{outline:none;border-color:var(--nv-blue);}
+</style>
 </head>
 <body>
 <header>
@@ -6487,6 +6537,7 @@ function renderSidebar(){
     practice: SVG('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>'),
     mock: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>'),
     record: SVG('<line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/>'),
+    note: SVG('<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M8 7h8"/><path d="M8 11h6"/>'),
     life: SVG('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/>'),
     settings: SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'),
     help: SVG('<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5"/><line x1="12" y1="17.5" x2="12.01" y2="17.5"/>')
@@ -6497,7 +6548,7 @@ function renderSidebar(){
   aside.appendChild(brand);
 
   const cur = ({ home:"home", practice:"practice", select:"practice", mock:"mock", result:"mock", record:"record", settings:"settings",
-                 lifeHome:"life", lifeLesson:"life", lifeQuiz:"life", lifeResult:"life" })[ST.view] || "home";
+                 lifeHome:"life", lifeLesson:"life", lifeQuiz:"life", lifeResult:"life", noteHome:"note", noteWizard:"note", noteDone:"note", noteReview:"note", noteReviewDone:"note" })[ST.view] || "home";
   const item = (key, label, onclick, extraCls)=>{
     const b = document.createElement("button");
     b.type = "button"; b.className = "psb-item" + (cur === key ? " active" : "") + (extraCls ? " " + extraCls : "");
@@ -6510,6 +6561,7 @@ function renderSidebar(){
   nav.appendChild(item("mock", tr(T.tabMock), ()=>{ ST.view = "mock"; render(); }));
   nav.appendChild(item("record", tr(T.tabRecord), ()=>{ ST.view = "record"; render(); }));
   nav.appendChild(el('<div class="psb-sep"></div>'));
+  nav.appendChild(item("note", tr(NL.title), ()=>{ ST.view = "noteHome"; render(); }));
   nav.appendChild(item("life", tr(LIFE_L.title), ()=>{ ST.view = "lifeHome"; render(); }));
   aside.appendChild(nav);
 
@@ -7777,7 +7829,7 @@ function render(){
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  const showTabs = ["home","practice","mock","record","lifeHome"].includes(ST.view);
+  const showTabs = ["home","practice","mock","record","lifeHome","noteHome"].includes(ST.view);
   if(showTabs) app.appendChild(buildTabBar());
 
   if(ST.view === "login") app.appendChild(renderLogin());
@@ -7791,6 +7843,11 @@ function render(){
   else if(ST.view === "question") app.appendChild(renderQuestion());
   else if(ST.view === "result") app.appendChild(renderResult());
   else if(ST.view === "lifeHome") app.appendChild(renderLifeHomeView());
+  else if(ST.view === "noteHome") app.appendChild(renderNoteHome());
+  else if(ST.view === "noteWizard") app.appendChild(renderNoteWizard());
+  else if(ST.view === "noteDone") app.appendChild(renderNoteDone());
+  else if(ST.view === "noteReview") app.appendChild(renderNoteReview());
+  else if(ST.view === "noteReviewDone") app.appendChild(renderNoteReviewDone());
   else if(ST.view === "lifeLesson") app.appendChild(renderLifeLessonView());
   else if(ST.view === "lifeQuiz") app.appendChild(renderLifeQuizView());
   else if(ST.view === "lifeResult") app.appendChild(renderLifeResultView());
@@ -8068,6 +8125,7 @@ function renderHomeView(){
   hero.querySelector(".jhero2-btn span").textContent = tr(T.startStudyBtn);
   hero.querySelector(".jhero2-btn").onclick = ()=> startQuick(pickSubj, pickCats);
   wrap.appendChild(hero);
+  wrap.appendChild(noteBuildHomeCard());
 
   // ---- 学習の進捗(4科目。押すと、その科目の10問がすぐ始まる) ----
   const prog = el('<div class="jsec jprogsec"></div>');
@@ -9659,6 +9717,644 @@ const LIFE_L = {
   notStarted: ["未受講","Not started","Belum mulai","Hindi pa nasimulan","ยังไม่ได้เรียน", "မတက်ရောက်ရသေး"],
   next: ["次へ","Next","Selanjutnya","Susunod","ถัดไป", "နောက်တစ်ခု"]
 };
+
+// ============================================================
+// わたしの日本ノート(目的・目標・半年ごとの振り返り)
+// 言語の並びは LANGS と同じ: ja, en, id, tl, th, my
+// 質問・選択肢はコード(c)で保存し、文言は画面で言語ごとに出す。
+// ============================================================
+const NL = {
+  title: ["わたしの日本ノート","My Japan Note","Catatan Jepang Saya","Aking Japan Note","สมุดบันทึกญี่ปุ่นของฉัน","ကျွန်ုပ်၏ ဂျပန်မှတ်စု"],
+  subtitle: ["日本に来た目的と、これからの目標を書きます","Write why you came to Japan and your goals","Tulis tujuan Anda datang ke Jepang dan target Anda","Isulat kung bakit ka pumunta sa Japan at ang mga layunin mo","เขียนเหตุผลที่มาญี่ปุ่นและเป้าหมายของคุณ","ဂျပန်ကို လာရသည့် ရည်ရွယ်ချက်နှင့် ပန်းတိုင်များကို ရေးပါ"],
+  intro: ["あなたが日本で成長するための、あなた自身のノートです。正しい答えはありません。わからないときは「まだ分からない」でかまいません。","This is your own note for growing in Japan. There are no right answers. If you are not sure, choose \"Not sure yet\".","Ini catatan Anda sendiri untuk berkembang di Jepang. Tidak ada jawaban yang benar. Jika belum tahu, pilih \"Belum tahu\".","Ito ang sarili mong note para umunlad sa Japan. Walang maling sagot. Kung hindi ka sigurado, piliin ang \"Hindi pa sigurado\".","นี่คือสมุดบันทึกของคุณเองเพื่อการเติบโตในญี่ปุ่น ไม่มีคำตอบที่ถูกหรือผิด ถ้ายังไม่แน่ใจ เลือก \"ยังไม่แน่ใจ\" ได้","ဤသည်မှာ ဂျပန်မှာ တိုးတက်ရန် သင့်ကိုယ်ပိုင် မှတ်စုဖြစ်သည်။ အဖြေမှန်မရှိပါ။ မသေချာလျှင် \"မသေချာသေးပါ\" ကို ရွေးပါ။"],
+  start: ["はじめのノートを書く（2〜3分）","Write your first note (2–3 min)","Tulis catatan pertama (2–3 menit)","Isulat ang unang note (2–3 min)","เขียนบันทึกแรก (2–3 นาที)","ပထမမှတ်စု ရေးမည် (၂–၃ မိနစ်)"],
+  cont: ["つづきを書く","Continue writing","Lanjutkan menulis","Ipagpatuloy ang pagsulat","เขียนต่อ","ဆက်ရေးမည်"],
+  next: ["次へ","Next","Berikutnya","Susunod","ถัดไป","နောက်တစ်ခု"],
+  back: ["もどる","Back","Kembali","Bumalik","ย้อนกลับ","နောက်သို့"],
+  later: ["あとで答える","Answer later","Jawab nanti","Sagutin mamaya","ตอบทีหลัง","နောက်မှ ဖြေမည်"],
+  save: ["保存する","Save","Simpan","I-save","บันทึก","သိမ်းမည်"],
+  saving: ["保存しています…","Saving…","Menyimpan…","Sine-save…","กำลังบันทึก…","သိမ်းနေသည်…"],
+  saveFail: ["保存できませんでした。通信を確認して、もう一度押してください。","Could not save. Check your connection and try again.","Gagal menyimpan. Periksa koneksi dan coba lagi.","Hindi na-save. Tingnan ang koneksyon at subukan ulit.","บันทึกไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่","သိမ်း၍မရပါ။ အင်တာနက်ကို စစ်ပြီး ထပ်ကြိုးစားပါ။"],
+  loadFail: ["読み込めませんでした。もう一度開いてください。","Could not load. Please open it again.","Gagal memuat. Silakan buka lagi.","Hindi na-load. Pakibuksan ulit.","โหลดไม่ได้ กรุณาเปิดใหม่","ဖွင့်၍မရပါ။ ထပ်ဖွင့်ပါ။"],
+  loading: ["読み込み中…","Loading…","Memuat…","Naglo-load…","กำลังโหลด…","ဖွင့်နေသည်…"],
+  optional: ["（あれば）","(optional)","(jika ada)","(kung mayroon)","(ถ้ามี)","(ရှိလျှင်)"],
+  ph: ["短く書いてください（100字まで）","Write briefly (up to 100 characters)","Tulis singkat (maks. 100 karakter)","Isulat nang maikli (hanggang 100 karakter)","เขียนสั้น ๆ (ไม่เกิน 100 ตัวอักษร)","တိုတိုရေးပါ (စာလုံး ၁၀၀ အထိ)"],
+  pickMax: ["{n}つまで選べます","Choose up to {n}","Pilih maksimal {n}","Pumili ng hanggang {n}","เลือกได้สูงสุด {n} ข้อ","အများဆုံး {n} ခု ရွေးနိုင်သည်"],
+  pickMany: ["いくつでも選べます","You can choose more than one","Boleh pilih lebih dari satu","Maaari kang pumili ng higit sa isa","เลือกได้หลายข้อ","တစ်ခုထက်မက ရွေးနိုင်သည်"],
+  choose: ["選んでください","Choose","Pilih","Pumili","เลือก","ရွေးပါ"],
+  slotN: ["{n}つめ","#{n}","Ke-{n}","Ika-{n}","ข้อ {n}","{n} ခု မြောက်"],
+  otherWrite: ["「その他」の内容を書いてください","Please write your \"Other\" answer","Tulis jawaban \"Lainnya\"","Isulat ang sagot mo sa \"Iba pa\"","เขียนคำตอบ \"อื่น ๆ\"","\"အခြား\" အဖြေကို ရေးပါ"],
+  pickOne: ["ひとつ選んでください","Choose one","Pilih satu","Pumili ng isa","เลือกหนึ่งข้อ","တစ်ခု ရွေးပါ"],
+  lifePrivacy: ["この答えは、NTICの担当者だけが見ます。会社には見えません。","Only NTIC staff can see this. Your company cannot see it.","Jawaban ini hanya dilihat staf NTIC. Perusahaan tidak bisa melihatnya.","Staff lang ng NTIC ang makakakita nito. Hindi ito makikita ng kumpanya.","เฉพาะเจ้าหน้าที่ NTIC เท่านั้นที่เห็นคำตอบนี้ บริษัทมองไม่เห็น","ဤအဖြေကို NTIC ဝန်ထမ်းများသာ မြင်ရသည်။ ကုမ္ပဏီက မမြင်ရပါ။"],
+  talk: ["このことを、担当者と話したい","I want to talk about this with a staff member","Saya ingin membicarakan ini dengan staf","Gusto kong pag-usapan ito kasama ang staff","อยากคุยเรื่องนี้กับเจ้าหน้าที่","ဤအကြောင်းကို ဝန်ထမ်းနှင့် ပြောချင်သည်"],
+  // ホーム
+  goalsNow: ["いまの目標","My goals now","Target saya sekarang","Mga layunin ko ngayon","เป้าหมายตอนนี้","ယခု ပန်းတိုင်များ"],
+  purposeH: ["日本に来た目的","Why I came to Japan","Tujuan datang ke Jepang","Bakit ako pumunta sa Japan","เหตุผลที่มาญี่ปุ่น","ဂျပန်ကို လာရသည့် ရည်ရွယ်ချက်"],
+  notSet: ["まだ決まっていません","Not decided yet","Belum ditentukan","Hindi pa natutukoy","ยังไม่ได้กำหนด","မသတ်မှတ်ရသေးပါ"],
+  confirmed: ["面談で確認済み","Checked with staff","Sudah dicek dengan staf","Natingnan na kasama ang staff","ยืนยันกับเจ้าหน้าที่แล้ว","ဝန်ထမ်းနှင့် စစ်ဆေးပြီး"],
+  nextMeet: ["次の面談","Next meeting with staff","Pertemuan berikutnya dengan staf","Susunod na pulong kasama ang staff","การพบเจ้าหน้าที่ครั้งต่อไป","နောက်တစ်ကြိမ် ဝန်ထမ်းနှင့် တွေ့ဆုံမည့်ရက်"],
+  meetNote: ["面談のまとめ","Notes from the meeting","Ringkasan pertemuan","Buod ng pulong","สรุปการพบ","တွေ့ဆုံမှု အကျဉ်းချုပ်"],
+  studyH: ["JLPTナビの学習","Your JLPT Navi study","Belajar di JLPT Navi","Pag-aaral sa JLPT Navi","การเรียนใน JLPT Navi","JLPT Navi လေ့လာမှု"],
+  studyLine: ["{s}問を学習・正答率 {r}%","{s} questions studied, {r}% correct","{s} soal dipelajari, benar {r}%","{s} na tanong ang napag-aralan, {r}% tama","เรียนแล้ว {s} ข้อ ตอบถูก {r}%","မေးခွန်း {s} ခု လေ့လာပြီး မှန်ကန်မှု {r}%"],
+  editAns: ["答えを見直す","Review my answers","Tinjau jawaban saya","Suriin ang aking mga sagot","ทบทวนคำตอบ","အဖြေများ ပြန်ကြည့်မည်"],
+  reviewH: ["半年ごとのふりかえり","Half-year review","Tinjauan setiap setengah tahun","Half-year na review","ทบทวนทุกครึ่งปี","ခြောက်လတစ်ကြိမ် ပြန်လည်သုံးသပ်ချက်"],
+  reviewWhen: ["ふりかえりの目安: {d}ごろ","Review around: {d}","Perkiraan tinjauan: sekitar {d}","Review sa mga: {d}","ทบทวนประมาณ: {d}","ပြန်လည်သုံးသပ်ရန် ခန့်မှန်းရက်: {d} ခန့်"],
+  reviewStart: ["ふりかえりを始める","Start the review","Mulai tinjauan","Simulan ang review","เริ่มทบทวน","ပြန်လည်သုံးသပ်ချက် စတင်မည်"],
+  reviewReady: ["ふりかえりの時期です。5分ほどで終わります。","It is time for your review. It takes about 5 minutes.","Saatnya tinjauan. Sekitar 5 menit.","Oras na para sa review. Mga 5 minuto lang.","ถึงเวลาทบทวนแล้ว ใช้เวลาประมาณ 5 นาที","ပြန်လည်သုံးသပ်ချိန် ရောက်ပြီ။ ၅ မိနစ်ခန့် ကြာမည်။"],
+  needFirst: ["まず、はじめのノートを書いてください。","Please write your first note first.","Silakan tulis catatan pertama dulu.","Isulat muna ang unang note.","กรุณาเขียนบันทึกแรกก่อน","ပထမမှတ်စုကို အရင်ရေးပါ။"],
+  // 共有
+  gA: ["日本に来た目的","Why I came to Japan","Tujuan datang ke Jepang","Bakit ako pumunta sa Japan","เหตุผลที่มาญี่ปุ่น","ဂျပန်ကို လာရသည့် ရည်ရွယ်ချက်"],
+  gB: ["日本にいる間の目標","My goals while in Japan","Target saya selama di Jepang","Mga layunin ko habang nasa Japan","เป้าหมายระหว่างอยู่ญี่ปุ่น","ဂျပန်မှာ နေစဉ် ပန်းတိုင်များ"],
+  gD: ["いまの自分（日本語・仕事・資格）","Where I am now (Japanese, work, qualifications)","Kondisi saya sekarang (bahasa Jepang, pekerjaan, sertifikat)","Kalagayan ko ngayon (Japanese, trabaho, kwalipikasyon)","ตัวฉันตอนนี้ (ภาษาญี่ปุ่น งาน ใบรับรอง)","ယခု ကျွန်ုပ် (ဂျပန်စာ၊ အလုပ်၊ လက်မှတ်)"],
+  gE: ["会社でやりたいこと","What I want to do at my company","Yang ingin saya lakukan di perusahaan","Gusto kong gawin sa kumpanya","สิ่งที่อยากทำที่บริษัท","ကုမ္ပဏီတွင် လုပ်ချင်သည့်အရာ"],
+  show: ["見せる","Show","Tampilkan","Ipakita","แสดง","ပြမည်"],
+  hide: ["見せない","Don't show","Jangan tampilkan","Huwag ipakita","ไม่แสดง","မပြပါ"],
+  doneTitle: ["ノートを保存しました","Your note is saved","Catatan tersimpan","Na-save ang note mo","บันทึกแล้ว","မှတ်စု သိမ်းပြီးပါပြီ"],
+  doneBody: ["面談のとき、担当者といっしょに見ます。","You will look at it together with a staff member at your meeting.","Anda akan melihatnya bersama staf saat pertemuan.","Titingnan ninyo ito kasama ang staff sa pulong.","จะดูร่วมกับเจ้าหน้าที่ในการพบ","တွေ့ဆုံသည့်အခါ ဝန်ထမ်းနှင့်အတူ ကြည့်ပါမည်။"],
+  toNote: ["ノートへ","Go to my note","Ke catatan saya","Pumunta sa note ko","ไปที่สมุดบันทึก","မှတ်စုသို့"],
+  // 振り返り
+  rvGoals: ["前の目標は、どうなりましたか？","How did your earlier goals go?","Bagaimana target Anda sebelumnya?","Kumusta ang mga naunang layunin mo?","เป้าหมายครั้งก่อนเป็นอย่างไรบ้าง?","ယခင်ပန်းတိုင်များ ဘယ်လိုရှိသလဲ။"],
+  rvDiff: ["いま、いちばん困っていることは何ですか？","What is the hardest thing for you right now?","Apa yang paling menyulitkan Anda sekarang?","Ano ang pinakamahirap para sa iyo ngayon?","ตอนนี้เรื่องที่ลำบากที่สุดคืออะไร?","ယခု အခက်ခဲဆုံးက ဘာလဲ။"],
+  rvGrow: ["いちばん成長したと感じることは何ですか？","What do you feel you have grown the most in?","Dalam hal apa Anda merasa paling berkembang?","Saan mo nararamdamang pinakamalaki ang iyong pag-unlad?","คุณรู้สึกว่าเติบโตขึ้นมากที่สุดเรื่องอะไร?","အတိုးတက်ဆုံးဟု ခံစားရသည်က ဘာလဲ။"],
+  rvNext: ["これからの6か月の目標を選んでください","Choose your goals for the next 6 months","Pilih target untuk 6 bulan ke depan","Pumili ng mga layunin para sa susunod na 6 na buwan","เลือกเป้าหมายสำหรับ 6 เดือนข้างหน้า","နောက် ၆ လအတွက် ပန်းတိုင်များ ရွေးပါ"],
+  rvDone: ["ふりかえりを保存しました。次の6か月、がんばりましょう！","Your review is saved. Let's do our best for the next 6 months!","Tinjauan tersimpan. Mari berusaha 6 bulan ke depan!","Na-save ang review. Magsikap tayo sa susunod na 6 na buwan!","บันทึกการทบทวนแล้ว มาตั้งใจกันอีก 6 เดือนข้างหน้า!","ပြန်လည်သုံးသပ်ချက် သိမ်းပြီး။ နောက် ၆ လ အတူကြိုးစားကြစို့။"],
+  noGoals: ["前の目標はありません。次へ進んでください。","There were no earlier goals. Please go on.","Tidak ada target sebelumnya. Silakan lanjut.","Walang naunang layunin. Magpatuloy.","ไม่มีเป้าหมายครั้งก่อน ไปต่อได้เลย","ယခင်ပန်းတိုင် မရှိပါ။ ဆက်သွားပါ။"],
+  step: ["{i} / {n}","{i} / {n}","{i} / {n}","{i} / {n}","{i} / {n}","{i} / {n}"]
+};
+
+// 共通の選択肢
+const NO_UNSURE = { c:"unsure", t:["まだ分からない","Not sure yet","Belum tahu","Hindi pa sigurado","ยังไม่แน่ใจ","မသေချာသေးပါ"], x:1 };
+const NO_OTHER  = { c:"other",  t:["その他","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"], x:2 };
+const NO_NONE   = { c:"none",   t:["特になし","Nothing in particular","Tidak ada","Wala naman","ไม่มี","မရှိပါ"], x:1 };
+const NO_CERT_BASE = { c:"cert", t:["資格を取りたい","Get a qualification","Mendapat sertifikat","Kumuha ng kwalipikasyon","สอบใบรับรอง/คุณวุฒิ","အရည်အချင်းလက်မှတ် ရယူချင်သည်"] };
+const NO_SSW = { c:"ssw", t:["特定技能になりたい","Move to Specified Skilled Worker (SSW)","Menjadi Tokutei Ginou (SSW)","Maging Specified Skilled Worker (SSW)","เปลี่ยนเป็นทักษะเฉพาะทาง (SSW)","အထူးကျွမ်းကျင်လုပ်သား (SSW) ဖြစ်ချင်သည်"] };
+const NO_LEADER = { c:"leader", t:["リーダーになりたい","Become a leader","Menjadi pemimpin","Maging lider","เป็นหัวหน้า","ခေါင်းဆောင် ဖြစ်ချင်သည်"] };
+const NO_DIFF = [
+  { c:"lang",   t:["言葉","Language","Bahasa","Wika","ภาษา","ဘာသာစကား"] },
+  { c:"work",   t:["仕事","Work","Pekerjaan","Trabaho","งาน","အလုပ်"] },
+  { c:"money",  t:["お金","Money","Uang","Pera","เงิน","ငွေကြေး"] },
+  { c:"home",   t:["住まい","Housing","Tempat tinggal","Tirahan","ที่พัก","နေအိမ်"] },
+  { c:"health", t:["健康","Health","Kesehatan","Kalusugan","สุขภาพ","ကျန်းမာရေး"] },
+  { c:"people", t:["人間関係","Relationships","Hubungan dengan orang lain","Relasyon sa ibang tao","ความสัมพันธ์กับคนอื่น","လူမှုဆက်ဆံရေး"] },
+  NO_NONE, NO_OTHER
+];
+const NO_GROW = [
+  { c:"g_jp",     t:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"] },
+  { c:"g_work",   t:["仕事","Work","Pekerjaan","Trabaho","งาน","အလုပ်"] },
+  { c:"g_life",   t:["日本の生活","Life in Japan","Kehidupan di Jepang","Buhay sa Japan","ชีวิตในญี่ปุ่น","ဂျပန်ဘဝ"] },
+  { c:"g_people", t:["人との関係","Relationships","Hubungan dengan orang","Relasyon sa mga tao","ความสัมพันธ์กับผู้คน","လူမှုဆက်ဆံရေး"] },
+  { c:"g_money",  t:["お金・貯金","Money and savings","Uang dan tabungan","Pera at ipon","เงินและเงินออม","ငွေကြေးနှင့် စုငွေ"] },
+  { c:"g_confid", t:["自信","Confidence","Percaya diri","Tiwala sa sarili","ความมั่นใจ","ယုံကြည်မှု"] },
+  NO_UNSURE
+];
+const NO_FUTURE = [
+  { c:"stay",    t:["日本で働き続けたい","Keep working in Japan","Terus bekerja di Jepang","Patuloy na magtrabaho sa Japan","ทำงานที่ญี่ปุ่นต่อไป","ဂျပန်မှာ ဆက်အလုပ်လုပ်ချင်သည်"] },
+  NO_SSW,
+  { c:"up",      t:["日本でキャリアアップしたい","Advance my career in Japan","Meningkatkan karier di Jepang","Umasenso sa career sa Japan","ก้าวหน้าในอาชีพที่ญี่ปุ่น","ဂျပန်မှာ အလုပ်အကိုင် တိုးတက်ချင်သည်"] },
+  NO_CERT_BASE,
+  { c:"home",    t:["母国へ帰って仕事をしたい","Return home and work","Pulang dan bekerja di negara asal","Umuwi at magtrabaho sa sariling bansa","กลับประเทศแล้วทำงาน","မိမိနိုင်ငံပြန်ပြီး အလုပ်လုပ်ချင်သည်"] },
+  { c:"usehome", t:["日本で学んだ技術を母国で活かしたい","Use skills learned in Japan back home","Memanfaatkan keterampilan dari Jepang di negara asal","Gamitin sa sariling bansa ang natutunan sa Japan","ใช้ทักษะที่เรียนในญี่ปุ่นในประเทศตัวเอง","ဂျပန်မှာ သင်ယူခဲ့သော ကျွမ်းကျင်မှုကို မိမိနိုင်ငံမှာ အသုံးချချင်သည်"] },
+  NO_UNSURE, NO_OTHER
+];
+const NO_GOALS_B = [
+  { c:"jpup",    t:["日本語をもっと上手にしたい","Get better at Japanese","Ingin lebih mahir bahasa Jepang","Gumaling pa sa Japanese","อยากเก่งภาษาญี่ปุ่นขึ้น","ဂျပန်စာ ပိုကောင်းလာချင်သည်"] },
+  { c:"solo",    t:["仕事を一人でできるようになりたい","Be able to do my work alone","Bisa bekerja sendiri","Magawa ang trabaho nang mag-isa","ทำงานคนเดียวได้","အလုပ်ကို တစ်ယောက်တည်း လုပ်နိုင်ချင်သည်"] },
+  { c:"teach",   t:["後輩を教えられるようになりたい","Be able to teach newcomers","Bisa mengajari junior","Makapagturo sa mga bago","สอนรุ่นน้องได้","လူသစ်များကို သင်ပေးနိုင်ချင်သည်"] },
+  NO_CERT_BASE,
+  NO_SSW,
+  { c:"care",    t:["介護福祉士を目指したい","Aim to become a certified care worker","Ingin menjadi perawat lansia bersertifikat","Gustong maging certified care worker","อยากเป็นผู้ดูแลผู้สูงอายุที่มีใบรับรอง (ไคโกะฟุคุชิชิ)","အသိအမှတ်ပြု စောင့်ရှောက်မှုလုပ်သား (ကိုင်ဂို ဖူကူရှီရှိ) ဖြစ်ချင်သည်"] },
+  NO_LEADER,
+  { c:"save",    t:["貯金したい","Save money","Menabung","Mag-ipon","เก็บเงิน","ငွေစုချင်သည်"] },
+  { c:"workway", t:["日本の仕事のやり方を学びたい","Learn how work is done in Japan","Belajar cara kerja di Jepang","Matutunan ang paraan ng trabaho sa Japan","เรียนรู้วิธีทำงานแบบญี่ปุ่น","ဂျပန်အလုပ်လုပ်ပုံကို သင်ယူချင်သည်"] },
+  NO_UNSURE
+];
+const NG_COMMON = ["共通","Common","Umum","Karaniwan","ทั่วไป","ဘုံ"];
+const NG_CAREER = ["資格・進路","Qualifications and career","Sertifikat dan karier","Kwalipikasyon at karera","คุณวุฒิและเส้นทางอาชีพ","အရည်အချင်းနှင့် အလုပ်လမ်းကြောင်း"];
+// 分野名は出入国在留管理庁の資料(育成就労17分野+特定技能のみの自動車運送業・航空)の表記。
+// ja以外は英語名を暫定で入れ、画面では「英語名（日本語名）」と並べて出す。母語訳は未確認(要ネイティブ確認)。
+const NO_FIELDS = [
+  { c:"f_kaigo", bi:true, t:["介護","Nursing care","Nursing care","Nursing care","Nursing care","Nursing care"] },
+  { c:"f_bc", bi:true, t:["ビルクリーニング","Building cleaning","Building cleaning","Building cleaning","Building cleaning","Building cleaning"] },
+  { c:"f_kensetsu", bi:true, t:["建設","Construction","Construction","Construction","Construction","Construction"] },
+  { c:"f_ship", bi:true, t:["造船・舶用工業","Shipbuilding and marine machinery","Shipbuilding and marine machinery","Shipbuilding and marine machinery","Shipbuilding and marine machinery","Shipbuilding and marine machinery"] },
+  { c:"f_auto", bi:true, t:["自動車整備","Automobile maintenance","Automobile maintenance","Automobile maintenance","Automobile maintenance","Automobile maintenance"] },
+  { c:"f_hotel", bi:true, t:["宿泊","Lodging","Lodging","Lodging","Lodging","Lodging"] },
+  { c:"f_agri", bi:true, t:["農業","Agriculture","Agriculture","Agriculture","Agriculture","Agriculture"] },
+  { c:"f_fish", bi:true, t:["漁業","Fisheries","Fisheries","Fisheries","Fisheries","Fisheries"] },
+  { c:"f_food_serv", bi:true, t:["外食業","Restaurants and food service","Restaurants and food service","Restaurants and food service","Restaurants and food service","Restaurants and food service"] },
+  { c:"f_forest", bi:true, t:["林業","Forestry","Forestry","Forestry","Forestry","Forestry"] },
+  { c:"f_wood", bi:true, t:["木材産業","Wood industry","Wood industry","Wood industry","Wood industry","Wood industry"] },
+  { c:"f_mfg", bi:true, t:["工業製品製造業","Industrial product manufacturing","Industrial product manufacturing","Industrial product manufacturing","Industrial product manufacturing","Industrial product manufacturing"] },
+  { c:"f_rail", bi:true, t:["鉄道","Railways","Railways","Railways","Railways","Railways"] },
+  { c:"f_food_mfg", bi:true, t:["飲食料品製造業","Food and beverage manufacturing","Food and beverage manufacturing","Food and beverage manufacturing","Food and beverage manufacturing","Food and beverage manufacturing"] },
+  { c:"f_linen", bi:true, t:["リネンサプライ","Linen supply","Linen supply","Linen supply","Linen supply","Linen supply"] },
+  { c:"f_logi", bi:true, t:["物流倉庫","Warehousing and logistics","Warehousing and logistics","Warehousing and logistics","Warehousing and logistics","Warehousing and logistics"] },
+  { c:"f_recycle", bi:true, t:["資源循環","Resource circulation","Resource circulation","Resource circulation","Resource circulation","Resource circulation"] },
+  { c:"f_truck", bi:true, t:["自動車運送業","Automobile transport","Automobile transport","Automobile transport","Automobile transport","Automobile transport"] },
+  { c:"f_air", bi:true, t:["航空","Aviation","Aviation","Aviation","Aviation","Aviation"] },
+  NO_OTHER, NO_UNSURE
+];
+// 資格(持っている/取りたい 共通の選択肢)
+const NO_CERT = [
+  { c:"n5", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N5","JLPT N5","JLPT N5","JLPT N5","JLPT N5","JLPT N5"] },
+  { c:"n4", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N4","JLPT N4","JLPT N4","JLPT N4","JLPT N4","JLPT N4"] },
+  { c:"n3", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N3","JLPT N3","JLPT N3","JLPT N3","JLPT N3","JLPT N3"] },
+  { c:"n2", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N2","JLPT N2","JLPT N2","JLPT N2","JLPT N2","JLPT N2"] },
+  { c:"n1", g:["日本語","Japanese","Bahasa Jepang","Japanese","ภาษาญี่ปุ่น","ဂျပန်စာ"], t:["JLPT N1","JLPT N1","JLPT N1","JLPT N1","JLPT N1","JLPT N1"] },
+  { c:"gino", g:["そのほか","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"], t:["技能検定","Skills test (Ginou Kentei)","Ujian keterampilan (Ginou Kentei)","Skills test (Ginou Kentei)","การทดสอบทักษะ (Ginou Kentei)","ကျွမ်းကျင်မှုစာမေးပွဲ (Ginou Kentei)"] },
+  { c:"sswtest", g:["そのほか","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"], t:["特定技能の評価試験","SSW skills evaluation test","Ujian evaluasi SSW","SSW skills evaluation test","การสอบประเมินทักษะ SSW","SSW ကျွမ်းကျင်မှု စစ်ဆေးမှု"] },
+  { c:"license", g:["そのほか","Other","Lainnya","Iba pa","อื่น ๆ","အခြား"], t:["運転免許","Driver's license","SIM (surat izin mengemudi)","Driver's license","ใบขับขี่","ယာဉ်မောင်းလိုင်စင်"] },
+  NO_OTHER, NO_NONE
+];
+const NQ = [
+  { code:"A", group:"A", multi:true, q:["あなたは、なぜ日本に来ましたか？","Why did you come to Japan?","Mengapa Anda datang ke Jepang?","Bakit ka pumunta sa Japan?","ทำไมคุณถึงมาญี่ปุ่น?","ဂျပန်ကို ဘာကြောင့် လာခဲ့ပါသလဲ။"], text:"opt",
+    opts:[
+      { c:"fam",      t:["家族を支えたい","Support my family","Membantu keluarga","Suportahan ang pamilya ko","ช่วยเหลือครอบครัว","မိသားစုကို ထောက်ပံ့ချင်သည်"] },
+      { c:"money",    t:["お金を貯めたい","Save money","Menabung uang","Mag-ipon ng pera","เก็บเงิน","ငွေစုချင်သည်"] },
+      { c:"jobskill", t:["日本の仕事を学びたい","Learn Japanese work","Belajar pekerjaan di Jepang","Matuto ng trabaho sa Japan","เรียนรู้งานแบบญี่ปุ่น","ဂျပန်အလုပ်ကို သင်ယူချင်သည်"] },
+      { c:"jp",       t:["日本語が上手になりたい","Get better at Japanese","Mahir bahasa Jepang","Gumaling sa Japanese","เก่งภาษาญี่ปุ่น","ဂျပန်စာ ပိုကောင်းချင်သည်"] },
+      { c:"tech",     t:["技術を身につけたい","Gain skills","Menguasai keterampilan","Matuto ng skills","เรียนรู้ทักษะ","ကျွမ်းကျင်မှု ရယူချင်သည်"] },
+      { c:"future",   t:["将来の仕事に役立てたい","Useful for my future job","Berguna untuk pekerjaan masa depan","Para sa future na trabaho","ใช้ในงานอนาคต","အနာဂတ်အလုပ်အတွက် အသုံးဝင်စေချင်သည်"] },
+      { c:"culture",  t:["日本の生活・文化を知りたい","Learn Japanese life and culture","Mengenal kehidupan dan budaya Jepang","Alamin ang buhay at kultura sa Japan","เรียนรู้ชีวิตและวัฒนธรรมญี่ปุ่น","ဂျပန်လူနေမှုနှင့် ယဉ်ကျေးမှုကို သိချင်သည်"] },
+      { c:"stayjp",   t:["将来も日本で働きたい","Keep working in Japan in the future","Ingin terus bekerja di Jepang","Magtrabaho pa rin sa Japan","อยากทำงานที่ญี่ปุ่นต่อไป","နောင်တွင်လည်း ဂျပန်မှာ အလုပ်လုပ်ချင်သည်"] },
+      { c:"homejob",  t:["母国で仕事をしたい","Work in my home country","Bekerja di negara asal","Magtrabaho sa sariling bansa","ทำงานในประเทศของตัวเอง","မိမိနိုင်ငံမှာ အလုပ်လုပ်ချင်သည်"] },
+      NO_UNSURE, NO_OTHER ] },
+  { code:"A2", group:"A", multi:true, q:["お金を貯めて、何をしたいですか？","What do you want to do with the money you save?","Apa yang ingin Anda lakukan dengan uang yang ditabung?","Ano ang gusto mong gawin sa naipon mong pera?","เก็บเงินแล้วอยากทำอะไร?","စုထားသောငွေဖြင့် ဘာလုပ်ချင်ပါသလဲ။"], text:"opt",
+    opts:[
+      { c:"send",  t:["家族に送る","Send it to my family","Dikirim ke keluarga","Ipadala sa pamilya","ส่งให้ครอบครัว","မိသားစုထံ ပို့မည်"] },
+      { c:"prep",  t:["家や店など、将来の準備","Prepare for the future (house, shop, etc.)","Persiapan masa depan (rumah, toko, dll.)","Paghahanda sa hinaharap (bahay, tindahan, atbp.)","เตรียมอนาคต (บ้าน ร้านค้า ฯลฯ)","အနာဂတ်ပြင်ဆင်မှု (အိမ်၊ ဆိုင် စသည်)"] },
+      { c:"study", t:["勉強する","Study","Belajar","Mag-aral","เรียนต่อ","ပညာသင်မည်"] },
+      { c:"marry", t:["結婚・家族のため","For marriage or family","Untuk menikah atau keluarga","Para sa kasal o pamilya","เพื่อการแต่งงานหรือครอบครัว","လက်ထပ်ရန်/မိသားစုအတွက်"] },
+      NO_UNSURE, NO_OTHER ] },
+  { code:"B", group:"B", multi:true, max:3, goal:true, q:["日本にいる間に、何ができるようになりたいですか？","What do you want to be able to do while you are in Japan?","Apa yang ingin Anda bisa lakukan selama di Jepang?","Ano ang gusto mong magawa habang nasa Japan ka?","ระหว่างอยู่ญี่ปุ่น อยากทำอะไรให้ได้?","ဂျပန်မှာ နေစဉ် ဘာတွေ လုပ်နိုင်ချင်ပါသလဲ။"], text:"opt", opts:NO_GOALS_B.map(o=>o.x ? o : Object.assign({}, o, { g: ["cert","ssw","care","leader"].includes(o.c) ? NG_CAREER : NG_COMMON })).concat([NO_OTHER]) },
+  { code:"C3", group:"C", multi:false, q:["3年後、どうなっていたいですか？","Where do you want to be in 3 years?","Seperti apa Anda ingin menjadi 3 tahun lagi?","Ano ang gusto mong kalagayan mo sa loob ng 3 taon?","3 ปีข้างหน้า อยากเป็นอย่างไร?","၃ နှစ်အကြာမှာ ဘယ်လိုဖြစ်နေချင်ပါသလဲ။"], text:"opt", future:true, opts:NO_FUTURE },
+  { code:"C5", group:"C", multi:false, q:["5年後、どうなっていたいですか？","Where do you want to be in 5 years?","Seperti apa Anda ingin menjadi 5 tahun lagi?","Ano ang gusto mong kalagayan mo sa loob ng 5 taon?","5 ปีข้างหน้า อยากเป็นอย่างไร?","၅ နှစ်အကြာမှာ ဘယ်လိုဖြစ်နေချင်ပါသလဲ။"], text:"opt", future:true, opts:NO_FUTURE },
+  { code:"D_field", group:"D", multi:false, q:["あなたの仕事の分野は？","Which field do you work in?","Anda bekerja di bidang apa?","Anong larangan ng trabaho ang pinasok mo?","คุณทำงานในสาขาไหน?","သင်သည် ဘယ်နယ်ပယ်တွင် အလုပ်လုပ်သလဲ။"], text:"opt", opts:NO_FIELDS },
+  { code:"D_work_can", group:"D", multi:true, q:["いま、一人でできる仕事を教えてください","What work can you do by yourself now?","Pekerjaan apa yang sudah bisa Anda lakukan sendiri sekarang?","Anong trabaho ang kaya mo nang gawin nang mag-isa ngayon?","ตอนนี้งานอะไรที่คุณทำคนเดียวได้?","ယခု တစ်ယောက်တည်း လုပ်နိုင်သော အလုပ်ကို ပြောပြပါ။"], text:"main",
+    opts:[ { c:"none", t:["まだない","Not yet","Belum ada","Wala pa","ยังไม่มี","မရှိသေးပါ"], x:1 } ] },
+  { code:"D_work_want", group:"D", multi:true, q:["これから覚えたい仕事・技術は何ですか？","What work or skills do you want to learn next?","Pekerjaan atau keterampilan apa yang ingin Anda pelajari?","Anong trabaho o skills ang gusto mong matutunan?","งานหรือทักษะที่อยากเรียนรู้ต่อไปคืออะไร?","နောက်ထပ် သင်ယူချင်သော အလုပ်/ကျွမ်းကျင်မှုက ဘာလဲ။"], text:"main", opts:[ NO_UNSURE ] },
+  { code:"D_cert_have", group:"D", multi:true, max:3, jlpt:true, q:["持っている資格は？","Which qualifications do you have?","Sertifikat apa yang Anda miliki?","Anong mga kwalipikasyon ang mayroon ka?","คุณมีใบรับรอง/คุณวุฒิอะไรบ้าง?","ရှိပြီးသော လက်မှတ်များက ဘာတွေလဲ။"], text:"opt", opts:NO_CERT },
+  { code:"D_cert_want", group:"D", multi:true, max:3, q:["取りたい資格は？","Which qualifications do you want to get?","Sertifikat apa yang ingin Anda dapatkan?","Anong mga kwalipikasyon ang gusto mong makuha?","อยากสอบใบรับรอง/คุณวุฒิอะไร?","ရယူချင်သော လက်မှတ်များက ဘာတွေလဲ။"], text:"opt", opts:NO_CERT.filter(o=>o.c !== "none").concat([NO_UNSURE]) },
+  { code:"D_life", group:"L", multi:true, q:["日本の生活で困っていることはありますか？","Is there anything you find difficult in your life in Japan?","Apakah ada hal yang menyulitkan dalam kehidupan di Jepang?","May mga bagay ba na nahihirapan ka sa buhay sa Japan?","มีเรื่องที่ลำบากในการใช้ชีวิตที่ญี่ปุ่นไหม?","ဂျပန်မှာ နေထိုင်ရာတွင် ခက်ခဲနေသည်များ ရှိပါသလား။"], text:"opt", talk:true, privacy:true, opts:NO_DIFF },
+  { code:"E", group:"E", multi:true, max:3, q:["いまの会社で、どんなことができるようになりたいですか？","What do you want to be able to do at your current company?","Apa yang ingin Anda bisa lakukan di perusahaan Anda sekarang?","Ano ang gusto mong magawa sa kasalukuyan mong kumpanya?","ที่บริษัทปัจจุบัน อยากทำอะไรให้ได้?","ယခုကုမ္ပဏီတွင် ဘာတွေလုပ်နိုင်ချင်ပါသလဲ။"], text:"opt",
+    opts:[
+      { c:"trust",   t:["一人で仕事を任せてもらいたい","Be trusted with work on my own","Dipercaya mengerjakan pekerjaan sendiri","Mapagkatiwalaan sa trabaho nang mag-isa","ได้รับมอบหมายงานให้ทำเอง","အလုပ်ကို တစ်ယောက်တည်း ယုံကြည်ပြီး ပေးစေချင်သည်"] },
+      { c:"newjob",  t:["新しい仕事を覚えたい","Learn new work","Belajar pekerjaan baru","Matuto ng bagong trabaho","เรียนรู้งานใหม่","အလုပ်အသစ် သင်ယူချင်သည်"] },
+      { c:"teach",   t:["後輩を教えたい","Teach newcomers","Mengajari junior","Magturo sa mga bago","สอนรุ่นน้อง","လူသစ်များကို သင်ပေးချင်သည်"] },
+      NO_LEADER,
+      { c:"certwork",t:["資格を取って仕事の幅を広げたい","Get a qualification to widen my work","Mendapat sertifikat untuk memperluas pekerjaan","Kumuha ng kwalipikasyon para lumawak ang trabaho","สอบใบรับรองเพื่อขยายงาน","လက်မှတ်ယူပြီး အလုပ်အကွာအဝေး ကျယ်ပြန့်စေချင်သည်"] },
+      { c:"comm",    t:["日本語でコミュニケーションできるようになりたい","Communicate in Japanese","Berkomunikasi dalam bahasa Jepang","Makipag-usap sa Japanese","สื่อสารเป็นภาษาญี่ปุ่นได้","ဂျပန်ဘာသာဖြင့် ဆက်သွယ်နိုင်ချင်သည်"] },
+      { c:"long",    t:["長く働きたい","Work here for a long time","Ingin bekerja lama","Magtrabaho nang matagal","อยากทำงานที่นี่นาน ๆ","ကြာကြာ အလုပ်လုပ်ချင်သည်"] },
+      NO_UNSURE, NO_OTHER ] }
+];
+const NQ_BY = {}; NQ.forEach(q=>{ NQ_BY[q.code] = q; });
+const NO_RESULT = [
+  { c:"done",    t:["できるようになった","I can do it now","Sudah bisa","Kaya ko na","ทำได้แล้ว","လုပ်နိုင်ပြီ"] },
+  { c:"partial", t:["途中までできる","Partly","Sebagian sudah bisa","Bahagya na","ทำได้บางส่วน","တစ်စိတ်တစ်ပိုင်း လုပ်နိုင်သည်"] },
+  { c:"notyet",  t:["まだできない","Not yet","Belum bisa","Hindi pa","ยังทำไม่ได้","မလုပ်နိုင်သေးပါ"] },
+  { c:"changed", t:["目標が変わった","My goal changed","Tujuan saya berubah","Nagbago ang layunin ko","เป้าหมายเปลี่ยนไป","ပန်းတိုင် ပြောင်းသွားသည်"] }
+];
+// 企業に見せられるグループ(同意の対象): A, B, D, E。C(将来)とL(生活の困りごと)は対象外。
+const NOTE_SHARE_GROUPS = ["A","B","D","E"];
+const NOTE_WIZARD_ORDER = ["A","A2","B","C3","C5","D_field","D_work_can","D_work_want","D_cert_have","D_cert_want","D_life","E"];
+
+// ---- 通信 ----
+function noteHdr(extra){ return authedHeaders(extra); }
+async function noteGet(path){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/" + path, { headers: noteHdr() });
+  if(!r.ok) throw new Error("note_get_" + r.status);
+  return r.json();
+}
+async function notePost(path, body, prefer){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/" + path, { method:"POST", headers: noteHdr({ "Prefer": prefer || "return=representation" }), body: JSON.stringify(body) });
+  if(!r.ok) throw new Error("note_post_" + r.status);
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+async function notePatch(path, body){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/" + path, { method:"PATCH", headers: noteHdr({ "Prefer": "return=minimal" }), body: JSON.stringify(body) });
+  if(!r.ok) throw new Error("note_patch_" + r.status);
+}
+async function noteDelete(path){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/" + path, { method:"DELETE", headers: noteHdr({ "Prefer": "return=minimal" }) });
+  if(!r.ok) throw new Error("note_delete_" + r.status);
+}
+function noteSid(){ return AUTH.student && AUTH.student.id; }
+function noteToday(){ const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function noteAddMonths(iso, n){ const d = new Date(iso + "T00:00:00"); d.setMonth(d.getMonth()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function noteFmtDate(iso){
+  if(!iso) return "";
+  const p = iso.split("-"); const y = +p[0], m = +p[1], d = +p[2];
+  if(ST.lang === "ja") return y + "年" + m + "月" + d + "日";
+  return y + "-" + String(m).padStart(2,"0") + "-" + String(d).padStart(2,"0");
+}
+function noteFmt(arr, vars){ let s = tr(arr); Object.keys(vars||{}).forEach(k=>{ s = s.split("{"+k+"}").join(String(vars[k])); }); return s; }
+
+// ---- データ読み込み ----
+function noteState(){
+  if(!ST.note || ST.note.sid !== noteSid()){
+    ST.note = { sid: noteSid(), status: "idle", period: null, ans: {}, consent: {}, review: null, interviews: [], wiz: null, rv: null };
+  }
+  return ST.note;
+}
+async function noteLoad(force){
+  const N = noteState();
+  if(N.status === "loading" || (N.status === "done" && !force)) return;
+  N.status = "loading";
+  try{
+    const sid = encodeURIComponent(noteSid());
+    const periods = await noteGet("career_periods?student_id=eq." + sid + "&order=period_start.desc,created_at.desc&limit=1&select=*");
+    N.period = periods[0] || null;
+    N.ans = {};
+    if(N.period){
+      const rows = await noteGet("career_goals?period_id=eq." + encodeURIComponent(N.period.id) + "&select=question_code,option_codes,free_text,want_talk,confirmed_at");
+      rows.forEach(r=>{ N.ans[r.question_code] = { opts: r.option_codes || [], text: r.free_text || "", talk: !!r.want_talk, confirmed: !!r.confirmed_at }; });
+    }
+    N.interviews = await noteGet("support_interviews?student_id=eq." + sid + "&order=held_on.desc,created_at.desc&limit=5&select=held_on,next_on,summary_for_student");
+    N.status = "done";
+  }catch(e){
+    console.warn("[note] 読み込み失敗", e); N.status = "error";
+  }
+  if(["noteHome"].includes(ST.view)) render();
+}
+
+// ---- 選択肢の並び(人ごとに固定のランダム。「まだ分からない」「その他」は最後) ----
+function noteSeed(str){ let h = 2166136261; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function noteRng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function noteOrdered(def){
+  const fixed = def.opts.filter(o=>!o.x), tail = def.opts.filter(o=>o.x).sort((a,b)=>a.x-b.x);
+  const rnd = noteRng(noteSeed(String(noteSid()) + ":" + def.code));
+  const a = fixed.slice();
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(rnd()*(i+1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a.concat(tail);
+}
+function noteOptLabel(codeOrObj, list){
+  const o = typeof codeOrObj === "string" ? (list || []).find(x=>x.c === codeOrObj) : codeOrObj;
+  if(!o) return String(codeOrObj);
+  return tr(o.t) + ((o.bi && ST.lang !== "ja") ? "（" + o.t[0] + "）" : "");
+}
+function noteIsEmpty(a){ return !a || ((!a.opts || a.opts.length === 0) && !(a.text && a.text.trim()) && !a.talk); }
+
+// ---- 画面の部品 ----
+function noteHead(titleArr, backFn, step){
+  const h = el('<div class="nt-head"></div>');
+  const b = document.createElement("button"); b.type = "button"; b.className = "nt-back"; b.textContent = "‹ " + tr(NL.back);
+  b.onclick = backFn; h.appendChild(b);
+  if(step){ const s = document.createElement("div"); s.className = "nt-step"; s.textContent = noteFmt(NL.step, step); h.appendChild(s); }
+  return h;
+}
+function noteProgress(i, n){ return el('<div class="nt-bar"><i style="width:' + Math.round((i)/n*100) + '%"></i></div>'); }
+function noteBigQ(def, arr){
+  const w = document.createElement("div");
+  const q = document.createElement("div"); q.className = "nt-q"; q.textContent = tr(arr || def.q); w.appendChild(q);
+  if(ST.lang !== "ja"){ const j = document.createElement("div"); j.className = "nt-qja"; j.textContent = (arr || def.q)[0]; w.appendChild(j); }
+  return w;
+}
+function noteOptButton(label, on, onClick, multi){
+  const b = document.createElement("button"); b.type = "button"; b.className = "nt-opt" + (on ? " on" : "");
+  b.innerHTML = '<span class="nt-mark' + (multi ? " sq" : "") + '"></span><span class="nt-lab"></span>';
+  b.querySelector(".nt-lab").textContent = label; b.onclick = onClick; return b;
+}
+// プルダウン方式の選択。スロット(1つめ・2つめ…)を1つずつ増やして出す。
+function noteBuildSelects(def, ans, rerender, box){
+  const slots = def.multi ? (def.max || 3) : 1;
+  const filled = (ans.opts || []).filter(Boolean);
+  const exclusive = filled.some(c=>{ const o = def.opts.find(x=>x.c === c); return o && o.x === 1; });
+  const show = exclusive ? 1 : Math.min(filled.length + 1, slots);
+  for(let i=0;i<show;i++){
+    if(slots > 1){ const lab = document.createElement("div"); lab.className = "nt-label"; lab.textContent = noteFmt(NL.slotN, { n: i+1 }); box.appendChild(lab); }
+    const sel = document.createElement("select"); sel.className = "nt-select";
+    const cur = filled[i] || "";
+    const add = (parent, v, text)=>{ const op = document.createElement("option"); op.value = v; op.textContent = text; if(v === cur) op.selected = true; parent.appendChild(op); };
+    add(sel, "", tr(NL.choose));
+    let grp = null, grpEl = null;
+    def.opts.forEach(o=>{
+      const taken = filled.includes(o.c) && o.c !== cur;
+      if(taken) return;
+      const gName = o.g ? tr(o.g) : null;
+      if(gName){ if(gName !== grp){ grp = gName; grpEl = document.createElement("optgroup"); grpEl.label = gName; sel.appendChild(grpEl); } add(grpEl, o.c, noteOptLabel(o)); }
+      else { grp = null; grpEl = null; add(sel, o.c, noteOptLabel(o)); }
+    });
+    sel.onchange = ()=>{
+      const v = sel.value; const next = filled.slice();
+      const ex = v && (def.opts.find(x=>x.c === v) || {}).x === 1;
+      if(!v){ next.splice(i, 1); }
+      else if(ex){ next.length = 0; next.push(v); }
+      else { next[i] = v; }
+      ans.opts = next.filter(Boolean);
+      rerender();
+    };
+    box.appendChild(sel);
+  }
+}
+// 1つの質問(選択式 + 短い文章 + 必要なら「担当者と話したい」)。値は ans に直接書き込む。
+function noteBuildQuestion(def, ans, rerender){
+  const box = document.createElement("div");
+  box.appendChild(noteBigQ(def));
+  const hint = document.createElement("div"); hint.className = "nt-hint";
+  if(def.opts.length && def.text !== "main"){
+    hint.textContent = def.multi ? (def.max ? noteFmt(NL.pickMax, { n: def.max }) : tr(NL.pickMany)) : tr(NL.pickOne);
+    box.appendChild(hint);
+  }
+  if(def.privacy){ const p = el('<div class="nt-privacy"></div>'); p.textContent = tr(NL.lifePrivacy); box.appendChild(p); }
+  if(def.jlpt){
+    const s = overallStats();
+    if(s.studied > 0){ const h = el('<div class="nt-auto"></div>'); h.textContent = tr(NL.studyH) + ": " + noteFmt(NL.studyLine, { s: s.studied, r: s.rate }); box.appendChild(h); }
+  }
+  if(def.text === "main"){
+    const ta = document.createElement("textarea"); ta.className = "nt-text"; ta.maxLength = 100; ta.rows = 3; ta.placeholder = tr(NL.ph);
+    ta.value = ans.text || ""; ta.oninput = ()=>{ ans.text = ta.value; };
+    box.appendChild(ta);
+    // 文章が主の質問は、「まだ分からない」などだけをボタンで出す
+    const list = noteOrdered(def);
+    const exclusive = (c)=> list.find(o=>o.c === c && o.x === 1);
+    list.forEach(o=>{
+      const on = ans.opts.includes(o.c);
+      box.appendChild(noteOptButton(tr(o.t), on, ()=>{
+        if(def.multi){
+          if(on){ ans.opts = ans.opts.filter(x=>x !== o.c); }
+          else if(o.x === 1){ ans.opts = [o.c]; }
+          else { ans.opts = ans.opts.filter(x=>!exclusive(x)); ans.opts.push(o.c); }
+        } else { ans.opts = on ? [] : [o.c]; }
+        rerender();
+      }, def.multi));
+    });
+  } else {
+    noteBuildSelects(def, ans, rerender, box);
+  }
+  if(def.text === "opt"){
+    const hasOther = def.opts.some(o=>o.c === "other");
+    if(!hasOther || ans.opts.includes("other")){
+      const lab = document.createElement("div"); lab.className = "nt-label"; lab.textContent = hasOther ? tr(NL.otherWrite) : tr(NL.optional);
+      box.appendChild(lab);
+      const ta = document.createElement("textarea"); ta.className = "nt-text"; ta.maxLength = 100; ta.rows = 2; ta.placeholder = tr(NL.ph);
+      ta.value = ans.text || ""; ta.oninput = ()=>{ ans.text = ta.value; };
+      box.appendChild(ta);
+    }
+  }
+  if(def.talk){
+    box.appendChild(noteOptButton(tr(NL.talk), !!ans.talk, ()=>{ ans.talk = !ans.talk; rerender(); }, true));
+  }
+  return box;
+}
+
+// ---- 保存 ----
+async function noteSaveAnswer(def, ans){
+  const N = noteState();
+  const filter = "career_goals?period_id=eq." + encodeURIComponent(N.period.id) + "&question_code=eq." + encodeURIComponent(def.code);
+  if(noteIsEmpty(ans)){ await noteDelete(filter); delete N.ans[def.code]; return; }
+  await notePost("career_goals?on_conflict=period_id,question_code", {
+    student_id: noteSid(), period_id: N.period.id, group_code: def.group, question_code: def.code,
+    option_codes: ans.opts || [], free_text: (ans.text || "").trim() || null, want_talk: !!ans.talk
+  }, "resolution=merge-duplicates,return=minimal");
+  const prev = N.ans[def.code];
+  N.ans[def.code] = { opts: (ans.opts || []).slice(), text: (ans.text || "").trim(), talk: !!ans.talk, confirmed: prev ? prev.confirmed && JSON.stringify(prev.opts) === JSON.stringify(ans.opts) && prev.text === (ans.text||"").trim() : false };
+}
+async function noteEnsurePeriod(){
+  const N = noteState();
+  if(N.period) return N.period;
+  const rows = await notePost("career_periods", { student_id: noteSid(), kind: "initial", period_start: noteToday() });
+  N.period = rows[0]; return N.period;
+}
+
+// ---- ホームのカード(入口) ----
+function noteBuildHomeCard(){
+  const c = el('<button class="jrow jnote"></button>');
+  c.style.setProperty("--sc", "#0E9F8E"); c.style.setProperty("--sb", "#DDF6F1");
+  c.innerHTML = '<span class="jrow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M8 7h8"/><path d="M8 11h6"/></svg></span><span class="jrow-body"><span class="jrow-t1"></span><span class="jrow-t2"></span></span><span class="jrow-chev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+  c.querySelector(".jrow-t1").textContent = tr(NL.title);
+  c.querySelector(".jrow-t2").textContent = tr(NL.subtitle);
+  c.onclick = ()=>{ ST.view = "noteHome"; render(); };
+  return c;
+}
+
+// ---- ノートのトップ ----
+function renderNoteHome(){
+  const N = noteState();
+  const wrap = document.createElement("div"); wrap.className = "v-note";
+  if(N.status === "idle" || N.status === "loading"){ if(N.status === "idle") noteLoad(); const l = el('<div class="nt-msg"></div>'); l.textContent = tr(NL.loading); wrap.appendChild(l); return wrap; }
+  if(N.status === "error"){
+    const e = el('<div class="nt-msg"></div>'); e.textContent = tr(NL.loadFail); wrap.appendChild(e);
+    const b = el('<button class="nt-primary"></button>'); b.textContent = tr(NL.title); b.onclick = ()=>{ N.status = "idle"; render(); }; wrap.appendChild(b);
+    return wrap;
+  }
+  const t = el('<div class="nt-title"></div>'); t.textContent = tr(NL.title); wrap.appendChild(t);
+  const answered = NOTE_WIZARD_ORDER.filter(c=>N.ans[c]).length;
+
+  if(!N.period || answered === 0){
+    const card = el('<div class="nt-card"></div>');
+    const p = document.createElement("div"); p.className = "nt-p"; p.textContent = tr(NL.intro); card.appendChild(p);
+    const b = el('<button class="nt-primary"></button>'); b.textContent = tr(NL.start);
+    b.onclick = ()=>{ N.wiz = { i: 0, draft: {}, saving: false, err: false }; ST.view = "noteWizard"; render(); };
+    card.appendChild(b); wrap.appendChild(card);
+    return wrap;
+  }
+
+  // 目標
+  const gb = N.ans.B;
+  const goalCard = el('<div class="nt-card"></div>');
+  const gh = document.createElement("div"); gh.className = "nt-h"; gh.textContent = tr(NL.goalsNow); goalCard.appendChild(gh);
+  if(gb && gb.opts.length){
+    gb.opts.forEach(c=>{ const r = el('<div class="nt-goal"></div>'); r.textContent = noteOptLabel(c, NO_GOALS_B); goalCard.appendChild(r); });
+    if(gb.text){ const m = el('<div class="nt-memo"></div>'); m.textContent = gb.text; goalCard.appendChild(m); }
+    if(gb.confirmed){ const ok = el('<div class="nt-ok"></div>'); ok.textContent = "✓ " + tr(NL.confirmed); goalCard.appendChild(ok); }
+  } else { const n = el('<div class="nt-sub"></div>'); n.textContent = tr(NL.notSet); goalCard.appendChild(n); }
+  wrap.appendChild(goalCard);
+
+  // 目的
+  const ga = N.ans.A;
+  if(ga && (ga.opts.length || ga.text)){
+    const pc = el('<div class="nt-card"></div>');
+    const ph = document.createElement("div"); ph.className = "nt-h"; ph.textContent = tr(NL.purposeH); pc.appendChild(ph);
+    const NA = NQ_BY.A.opts;
+    ga.opts.forEach(c=>{ const r = el('<div class="nt-chip"></div>'); r.textContent = noteOptLabel(c, NA); pc.appendChild(r); });
+    if(ga.text){ const m = el('<div class="nt-memo"></div>'); m.textContent = ga.text; pc.appendChild(m); }
+    wrap.appendChild(pc);
+  }
+
+  // 面談
+  const iv = N.interviews[0];
+  const nextOn = N.interviews.map(x=>x.next_on).filter(d=>d && d >= noteToday()).sort()[0];
+  if(nextOn || (iv && iv.summary_for_student)){
+    const mc = el('<div class="nt-card"></div>');
+    if(nextOn){ const d = el('<div class="nt-row"></div>'); d.innerHTML = '<b></b><span></span>'; d.querySelector("b").textContent = tr(NL.nextMeet); d.querySelector("span").textContent = noteFmtDate(nextOn); mc.appendChild(d); }
+    if(iv && iv.summary_for_student){ const h = document.createElement("div"); h.className = "nt-h"; h.style.marginTop = "10px"; h.textContent = tr(NL.meetNote) + "（" + noteFmtDate(iv.held_on) + "）"; mc.appendChild(h); const m = el('<div class="nt-memo"></div>'); m.textContent = iv.summary_for_student; mc.appendChild(m); }
+    wrap.appendChild(mc);
+  }
+
+  // 学習の進み
+  const s = overallStats();
+  if(s.studied > 0){
+    const sc = el('<div class="nt-card"></div>');
+    const h = document.createElement("div"); h.className = "nt-h"; h.textContent = tr(NL.studyH); sc.appendChild(h);
+    const l = el('<div class="nt-sub"></div>'); l.textContent = noteFmt(NL.studyLine, { s: s.studied, r: s.rate }); sc.appendChild(l);
+    wrap.appendChild(sc);
+  }
+
+  // ふりかえり
+  const rc = el('<div class="nt-card"></div>');
+  const rh = document.createElement("div"); rh.className = "nt-h"; rh.textContent = tr(NL.reviewH); rc.appendChild(rh);
+  const due = N.period.review_open || noteToday() >= noteAddMonths(N.period.period_start, 6);
+  if(due){
+    const m = el('<div class="nt-sub"></div>'); m.textContent = tr(NL.reviewReady); rc.appendChild(m);
+    const b = el('<button class="nt-primary"></button>'); b.textContent = tr(NL.reviewStart);
+    b.onclick = ()=>{ N.rv = { i: 0, results: {}, diff: { opts: [], text: "", talk: false }, grow: { opts: [], text: "" }, next: { opts: (gb ? gb.opts.slice() : []), text: (gb ? gb.text : "") }, nextInit: false, saving: false, err: false }; ST.view = "noteReview"; render(); };
+    rc.appendChild(b);
+  } else {
+    const m = el('<div class="nt-sub"></div>'); m.textContent = noteFmt(NL.reviewWhen, { d: noteFmtDate(noteAddMonths(N.period.period_start, 6)) }); rc.appendChild(m);
+  }
+  wrap.appendChild(rc);
+
+  // 操作
+  const act = el('<div class="nt-actions"></div>');
+  const e = el('<button class="nt-secondary"></button>'); e.textContent = tr(NL.editAns);
+  e.onclick = ()=>{ N.wiz = { i: 0, draft: {}, saving: false, err: false }; ST.view = "noteWizard"; render(); };
+  act.appendChild(e); wrap.appendChild(act);
+  return wrap;
+}
+
+// ---- 入力ウィザード(1画面1問) ----
+function renderNoteWizard(){
+  const N = noteState(); const W = N.wiz;
+  const wrap = document.createElement("div"); wrap.className = "v-note";
+  if(!W){ ST.view = "noteHome"; return wrap; }
+  const total = NOTE_WIZARD_ORDER.length;
+  const goBack = ()=>{
+    if(W.i === 0){ ST.view = "noteHome"; render(); return; }
+    W.i--; render();
+  };
+  // 次の質問へ。最後まで来たら完了画面へ
+  const advance = ()=>{
+    W.i++;
+    if(W.i >= total){ N.wiz = null; N.status = "idle"; ST.view = "noteDone"; }
+    render();
+  };
+
+  const code = NOTE_WIZARD_ORDER[W.i]; const def = NQ_BY[code];
+  if(!W.draft[code]){
+    const cur = N.ans[code];
+    W.draft[code] = cur ? { opts: cur.opts.slice(), text: cur.text || "", talk: !!cur.talk } : { opts: [], text: "", talk: false };
+  }
+  const ans = W.draft[code];
+  wrap.appendChild(noteHead(NL.title, goBack, { i: W.i + 1, n: total }));
+  wrap.appendChild(noteProgress(W.i + 1, total));
+  const qbox = noteBuildQuestion(def, ans, ()=>{ const y = window.scrollY; render(); window.scrollTo(0, y); });
+  wrap.appendChild(qbox);
+  if(W.err){ const e = el('<div class="nt-err"></div>'); e.textContent = tr(NL.saveFail); wrap.appendChild(e); }
+  const nav = el('<div class="nt-nav"></div>');
+  const later = el('<button class="nt-secondary"></button>'); later.textContent = tr(NL.later);
+  later.onclick = ()=>{ W.err = false; advance(); };
+  const nx = el('<button class="nt-primary"></button>'); nx.textContent = W.saving ? tr(NL.saving) : tr(NL.next); nx.disabled = !!W.saving;
+  nx.onclick = async ()=>{
+    W.saving = true; W.err = false; render();
+    try{
+      await noteEnsurePeriod();
+      await noteSaveAnswer(def, ans);
+      W.saving = false; advance();
+    }catch(e){ console.warn("[note] 保存失敗", e); W.saving = false; W.err = true; render(); }
+  };
+  nav.appendChild(later); nav.appendChild(nx); wrap.appendChild(nav);
+  return wrap;
+}
+
+function renderNoteDone(){
+  const wrap = document.createElement("div"); wrap.className = "v-note";
+  const card = el('<div class="nt-card nt-center"></div>');
+  const ic = el('<div class="nt-done-ic">✓</div>'); card.appendChild(ic);
+  const h = el('<div class="nt-title"></div>'); h.textContent = tr(NL.doneTitle); card.appendChild(h);
+  const p = el('<div class="nt-p"></div>'); p.textContent = tr(NL.doneBody); card.appendChild(p);
+  const b = el('<button class="nt-primary"></button>'); b.textContent = tr(NL.toNote);
+  b.onclick = ()=>{ const N = noteState(); N.status = "idle"; ST.view = "noteHome"; render(); };
+  card.appendChild(b); wrap.appendChild(card);
+  return wrap;
+}
+
+// ---- 半年ごとの振り返り ----
+function renderNoteReview(){
+  const N = noteState(); const R = N.rv;
+  const wrap = document.createElement("div"); wrap.className = "v-note";
+  if(!R || !N.period){ ST.view = "noteHome"; return wrap; }
+  const goals = (N.ans.B && N.ans.B.opts.filter(c=>c !== "unsure")) || [];
+  const steps = ["goals","diff","grow","next"];
+  const cur = steps[R.i]; const total = steps.length;
+  const goBack = ()=>{ if(R.i === 0){ ST.view = "noteHome"; render(); } else { R.i--; render(); } };
+  wrap.appendChild(noteHead(NL.reviewH, goBack, { i: R.i + 1, n: total }));
+  wrap.appendChild(noteProgress(R.i + 1, total));
+  const rerender = ()=>{ const y = window.scrollY; render(); window.scrollTo(0, y); };
+  const nextBtn = (label, fn)=>{ const b = el('<button class="nt-primary"></button>'); b.textContent = R.saving ? tr(NL.saving) : tr(label || NL.next); b.disabled = !!R.saving; b.onclick = fn; return b; };
+
+  if(cur === "goals"){
+    const q = el('<div class="nt-q"></div>'); q.textContent = tr(NL.rvGoals); wrap.appendChild(q);
+    if(!goals.length){ const m = el('<div class="nt-hint"></div>'); m.textContent = tr(NL.noGoals); wrap.appendChild(m); }
+    goals.forEach(c=>{
+      const card = el('<div class="nt-card"></div>');
+      const h = document.createElement("div"); h.className = "nt-h"; h.textContent = noteOptLabel(c, NO_GOALS_B); card.appendChild(h);
+      NO_RESULT.forEach(o=>{ card.appendChild(noteOptButton(tr(o.t), R.results[c] === o.c, ()=>{ R.results[c] = (R.results[c] === o.c ? undefined : o.c); rerender(); }, false)); });
+      wrap.appendChild(card);
+    });
+    wrap.appendChild(nextBtn(NL.next, ()=>{
+      if(!R.nextInit){ R.next.opts = goals.filter(c=>!["done","changed"].includes(R.results[c])); R.nextInit = true; }
+      R.i++; render();
+    }));
+  } else if(cur === "diff"){
+    const def = { code:"rv_diff", multi:true, q:NL.rvDiff, text:"opt", talk:true, privacy:true, opts:NO_DIFF };
+    wrap.appendChild(noteBuildQuestion(def, R.diff, rerender));
+    wrap.appendChild(nextBtn(NL.next, ()=>{ R.i++; render(); }));
+  } else if(cur === "grow"){
+    const def = { code:"rv_grow", multi:true, q:NL.rvGrow, text:"opt", opts:NO_GROW };
+    wrap.appendChild(noteBuildQuestion(def, R.grow, rerender));
+    wrap.appendChild(nextBtn(NL.next, ()=>{ R.i++; render(); }));
+  } else {
+    const def = Object.assign({}, NQ_BY.B, { q: NL.rvNext });
+    wrap.appendChild(noteBuildQuestion(def, R.next, rerender));
+    if(R.err){ const e = el('<div class="nt-err"></div>'); e.textContent = tr(NL.saveFail); wrap.appendChild(e); }
+    wrap.appendChild(nextBtn(NL.save, async ()=>{
+      R.saving = true; R.err = false; render();
+      try{ await noteFinishReview(R, goals); R.saving = false; N.rv = null; N.status = "idle"; ST.view = "noteReviewDone"; render(); }
+      catch(e){ console.warn("[note] 振り返り保存失敗", e); R.saving = false; R.err = true; render(); }
+    }));
+  }
+  return wrap;
+}
+
+// 振り返りを保存し、次の6か月の期間を作る。順序: 新しい期間 → 答えをコピー → 振り返り → 古い期間を閉じる
+async function noteFinishReview(R, goals){
+  const N = noteState(); const old = N.period; const sid = noteSid();
+  if(!R.newPeriodId){
+    const rows = await notePost("career_periods", { student_id: sid, kind: "halfyear", period_start: noteToday() });
+    R.newPeriodId = rows[0].id;
+  }
+  if(!R.copied){
+    const copy = [];
+    Object.keys(N.ans).forEach(code=>{
+      if(code === "B") return;
+      const def = NQ_BY[code]; if(!def) return; const a = N.ans[code];
+      copy.push({ student_id: sid, period_id: R.newPeriodId, group_code: def.group, question_code: code, option_codes: a.opts, free_text: a.text || null, want_talk: !!a.talk });
+    });
+    const nb = R.next;
+    if(!noteIsEmpty(nb)) copy.push({ student_id: sid, period_id: R.newPeriodId, group_code: "B", question_code: "B", option_codes: nb.opts, free_text: (nb.text || "").trim() || null, want_talk: false });
+    if(copy.length) await notePost("career_goals?on_conflict=period_id,question_code", copy, "resolution=merge-duplicates,return=minimal");
+    R.copied = true;
+  }
+  if(!R.reviewed){
+    await notePost("career_reviews?on_conflict=period_id", {
+      student_id: sid, period_id: old.id, goal_results: R.results,
+      difficult_codes: R.diff.opts, difficult_text: (R.diff.text || "").trim() || null, want_talk: !!R.diff.talk,
+      grown_codes: R.grow.opts, grown_text: (R.grow.text || "").trim() || null
+    }, "resolution=merge-duplicates,return=minimal");
+    R.reviewed = true;
+  }
+  await notePatch("career_periods?id=eq." + encodeURIComponent(old.id), { period_end: noteToday() });
+}
+function renderNoteReviewDone(){
+  const wrap = document.createElement("div"); wrap.className = "v-note";
+  const card = el('<div class="nt-card nt-center"></div>');
+  card.appendChild(el('<div class="nt-done-ic">✓</div>'));
+  const p = el('<div class="nt-p"></div>'); p.textContent = tr(NL.rvDone); card.appendChild(p);
+  const b = el('<button class="nt-primary"></button>'); b.textContent = tr(NL.toNote);
+  b.onclick = ()=>{ ST.view = "noteHome"; render(); };
+  card.appendChild(b); wrap.appendChild(card);
+  return wrap;
+}
 
 function renderLifeHomeView(){
   const wrap = document.createElement("div");
