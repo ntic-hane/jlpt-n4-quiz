@@ -820,6 +820,15 @@ body.shell-on .examrow{border-bottom:1px solid var(--nv-line);}
 <style>
 
 .k-note{grid-column:span 12;order:0;}
+.k-level-card{margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;padding:14px 18px;}
+.k-level-label{flex:1;min-width:240px;}
+.k-level-label b{display:block;font-size:14px;font-weight:800;color:var(--nv-text);}
+.k-level-label small{display:block;font-size:12px;color:var(--nv-sub);line-height:1.6;margin-top:2px;}
+.k-level-seg{display:flex;background:#EFF2F8;border-radius:14px;padding:4px;gap:4px;}
+.k-level-btn{border:none;background:transparent;color:var(--nv-sub);font:inherit;font-size:16px;font-weight:800;min-width:96px;height:44px;border-radius:11px;cursor:pointer;}
+.k-level-btn.on{background:var(--nv-blue,#3B82F6);color:#fff;box-shadow:0 1px 3px rgba(15,27,51,.18);}
+.k-level-btn:focus-visible{outline:2px solid var(--nv-blue,#3B82F6);outline-offset:2px;}
+@media (max-width:899px){.k-level-seg{width:100%;}.k-level-btn{flex:1;}}
 .k-note-card{padding:16px 18px;}
 .kn-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:10px;}
 .kn-title{font-size:15px;font-weight:800;color:var(--nv-text);} .kn-title small{font-size:11.5px;font-weight:600;color:var(--nv-sub);margin-left:8px;}
@@ -5293,8 +5302,12 @@ function renderLearnerKarte(){
     wrap.appendChild(errCard);
     return wrap;
   }
-  l.dailyRows = kd.daily;
-  l.studySessions = kd.sessions;
+  // N4/N3の切り替え: 数値・履歴・カレンダー・模試のすべてを、選んだレベルのデータだけで表示する。
+  const karteLevel = dashState.karteLevel === "n3" ? "n3" : "n4";
+  const lvOfRow = (x)=> (x && x.level) ? x.level : "n4";
+  const lvOfProgress = (p)=> p.level || (String(p.question_id||"").startsWith("N3-") ? "n3" : "n4");
+  l.dailyRows = (kd.daily || []).filter(d=> lvOfRow(d) === karteLevel);
+  l.studySessions = (kd.sessions || []).filter(x=> lvOfRow(x) === karteLevel);
 
   // パスワードリセット(NTIC管理者のみ・既にNTLP登録済みの人だけ対象)。
   // 「本人が紙を無くした」等、発行後に繰り返し起こりうる運用のための機能。
@@ -5325,12 +5338,27 @@ function renderLearnerKarte(){
   }
 
   // ---- ヘッダー(新デザイン): 名前・バッジ・所属事業所 + 主要な数字6枚 ----
-  const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
+  const lvProgress = (kd.progress || []).filter(p=> lvOfProgress(p) === karteLevel);
+  let kN = 0, kC = 0, kTN = 0, kTC = 0, lvLastAnswered = null;
+  lvProgress.forEach(p=>{
+    kN += p.n_count || 0; kC += p.c_count || 0; kTN += p.tn_count || 0; kTC += p.tc_count || 0;
+    if(p.last_answered_at && (!lvLastAnswered || new Date(p.last_answered_at) > new Date(lvLastAnswered))) lvLastAnswered = p.last_answered_at;
+  });
+  const lvQuestionsStudied = lvProgress.length;
+  const rate = kN > 0 ? Math.round(kC / kN * 100) : 0;
+  const lvTransRate = kN > 0 ? Math.round(kTN / kN * 100) : null;
+  const lvJaOnlyN = kN - kTN, lvJaOnlyC = kC - kTC;
+  const lvJaOnlyRate = lvJaOnlyN > 0 ? Math.round(lvJaOnlyC / lvJaOnlyN * 100) : null;
   const sessionStats = computeSessionStats(l);
   const streakDays = computeStudyStreakDays(l);
-  const totalQBank = Object.keys(QID_CATEGORY_MAP_N4).length;
+  const totalQBank = Object.keys(karteLevel === "n3" ? QID_CATEGORY_MAP_N3 : QID_CATEGORY_MAP_N4).length;
   const days30 = (l.dailyRows||[]).filter(d=>{ const diff=(new Date()-new Date(d.summary_date))/86400000; return diff<=30; }).map(d=>d.summary_date).filter((v,i,a)=>a.indexOf(v)===i).length;
-  const jaOnlyExtra = (l.translationUsageRate !== null && l.translationUsageRate > 0 && l.japaneseOnlyRate !== null) ? "日本語のみ " + l.japaneseOnlyRate + "%" : null;
+  const jaOnlyExtra = (lvTransRate !== null && lvTransRate > 0 && lvJaOnlyRate !== null) ? "日本語のみ " + lvJaOnlyRate + "%" : null;
+  // 最終学習日: 選んだレベルの最後の解答日(解答記録が無ければ、そのレベルの日別集計・セッションの最新日)
+  let lvLastSeen = lvLastAnswered;
+  (l.dailyRows||[]).forEach(d=>{ const t = String(d.summary_date); if(!lvLastSeen || new Date(t) > new Date(lvLastSeen)) lvLastSeen = t; });
+  (l.studySessions||[]).forEach(x=>{ if(x.started_at && (!lvLastSeen || new Date(x.started_at) > new Date(lvLastSeen))) lvLastSeen = x.started_at; });
+  const lvLabel = karteLevel.toUpperCase();
 
   const headCard = el('<div class="k-head"></div>');
   const dispName = l.learnerName || l.learner_id;
@@ -5374,9 +5402,9 @@ function renderLearnerKarte(){
     return k;
   };
   const kpiRow = el('<div class="ov-kpis k-kpis"></div>');
-  kpiRow.appendChild(kk("book","blue","学習済み問題数", l.questionsStudied, "/"+totalQBank+"問", totalQBank > 0 ? Math.round(l.questionsStudied/totalQBank*100)+"% 消化" : ""));
-  kpiRow.appendChild(kk("target","green","通算正答率", rate, "%", jaOnlyExtra || "N4の学習状況"));
-  kpiRow.appendChild(kk("calendar","purple","最終学習", l.lastSeen ? relTime(l.lastSeen) : "-", "", ""));
+  kpiRow.appendChild(kk("book","blue","学習済み問題数", lvQuestionsStudied, "/"+totalQBank+"問", totalQBank > 0 ? Math.round(lvQuestionsStudied/totalQBank*100)+"% 消化" : ""));
+  kpiRow.appendChild(kk("target","green","通算正答率", rate, "%", jaOnlyExtra || (lvLabel + "の学習状況")));
+  kpiRow.appendChild(kk("calendar","purple","最終学習", lvLastSeen ? relTime(lvLastSeen) : "-", "", ""));
   kpiRow.appendChild(kk("users","orange","学習セッション数", sessionStats.count, "回", sessionStats.count === 0 ? "10/1から記録" : ""));
   kpiRow.appendChild(kk("trendingUp","blue","累計学習時間", sessionStats.totalSeconds > 0 ? formatDuration(sessionStats.totalSeconds) : "-", "", sessionStats.count === 0 ? "10/1から記録" : ""));
   kpiRow.appendChild(kk("alertTriangle","red","学習継続日数", streakDays, "日", streakDays > 0 ? "直近30日で"+days30+"日学習" : ""));
@@ -5386,29 +5414,37 @@ function renderLearnerKarte(){
   const kadd = (card, cls)=>{ const c = el('<div class="'+cls+'"></div>'); c.appendChild(card); kgrid.appendChild(c); };
   if(karteScope.isSuper || karteScope.isStaff){ kadd(buildNoteKarteCard((dashState.students || []).find(x=>x.dekisugi_student_code === sel.learner_id) || null), "k-note"); }
 
+  // ---- N4/N3 切り替え(目立つ位置:カルテ上部の専用バー) ----
+  {
+    const lvBar = el('<div class="card k-level-card"></div>');
+    const lvLabel = el('<div class="k-level-label"></div>');
+    lvLabel.innerHTML = '<b>表示するレベル</b><small>上の数値・分野別正答率・間違えた問題・模試・学習履歴・カレンダーが、すべて選んだレベルのデータに切り替わります。</small>';
+    lvBar.appendChild(lvLabel);
+    const lvSeg = el('<div class="k-level-seg" role="tablist"></div>');
+    ["n4","n3"].forEach(lv=>{
+      const tb = document.createElement("button");
+      tb.type = "button"; tb.setAttribute("role","tab");
+      const active = dashState.karteLevel === lv;
+      tb.className = "k-level-btn" + (active ? " on" : "");
+      tb.setAttribute("aria-selected", active ? "true" : "false");
+      tb.textContent = lv.toUpperCase();
+      tb.onclick = ()=>{ if(dashState.karteLevel !== lv){ dashState.karteLevel = lv; dashState.karteMissQShowCount = { moji:5, bunpo:5, dokkai:5, choukai:5 }; render(); } };
+      lvSeg.appendChild(tb);
+    });
+    lvBar.appendChild(lvSeg);
+    kpiRow.parentNode.insertBefore(lvBar, kpiRow);   // 数値(KPI)の上に置く: 数値もこのレベルで切り替わるため
+  }
+
   // 分野別正答率カード
   const catCard = el('<div class="card"></div>');
   const catTitleRow = el('<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"></div>');
   const catTitle = document.createElement("div");
   catTitle.className = "card-title";
-  catTitle.textContent = "分野別正答率";
+  catTitle.textContent = "分野別正答率（" + dashState.karteLevel.toUpperCase() + "）";
   catTitleRow.appendChild(catTitle);
 
-  // N4/N3切り替えタブ
-  const levelTabs = el('<div style="display:flex;background:#EFF2F8;border-radius:16px;padding:3px;"></div>');
-  ["n4","n3"].forEach(lv=>{
-    const tb = document.createElement("button");
-    const active = dashState.karteLevel === lv;
-    tb.textContent = lv.toUpperCase();
-    tb.style.cssText = "border:none;border-radius:13px;padding:4px 16px;font-size:12.5px;font-weight:700;cursor:pointer;" +
-      (active ? "background:var(--nv-blue,#3B82F6);color:#fff;" : "background:transparent;color:var(--text-sub);");
-    tb.onclick = ()=>{ if(dashState.karteLevel !== lv){ dashState.karteLevel = lv; dashState.karteMissQShowCount = { moji:5, bunpo:5, dokkai:5, choukai:5 }; render(); } };
-    levelTabs.appendChild(tb);
-  });
-  catTitleRow.appendChild(levelTabs);
   catCard.appendChild(catTitleRow);
 
-  const karteLevel = dashState.karteLevel;
   const karteQidMap = karteLevel === "n3" ? QID_CATEGORY_MAP_N3 : QID_CATEGORY_MAP_N4;
   const myProgress = kd.progress.filter(p=>{
     const pLevel = p.level || (String(p.question_id||"").startsWith("N3-") ? "n3" : "n4");
@@ -5512,7 +5548,7 @@ function renderLearnerKarte(){
   const recentCard = el('<div class="card"></div>');
   const recentTitle = document.createElement("div");
   recentTitle.className = "card-title";
-  recentTitle.textContent = "最近間違えた問題";
+  recentTitle.textContent = "最近間違えた問題（" + dashState.karteLevel.toUpperCase() + "）";
   recentCard.appendChild(recentTitle);
   const recentDesc = document.createElement("div");
   recentDesc.className = "card-desc";
@@ -5572,7 +5608,7 @@ function renderLearnerKarte(){
   const missQCard = el('<div class="card"></div>');
   const missQTitle = document.createElement("div");
   missQTitle.className = "card-title";
-  missQTitle.textContent = "よく間違えている問題";
+  missQTitle.textContent = "よく間違えている問題（" + dashState.karteLevel.toUpperCase() + "）";
   missQCard.appendChild(missQTitle);
   const missQDesc = document.createElement("div");
   missQDesc.className = "card-desc";
@@ -5668,11 +5704,11 @@ function renderLearnerKarte(){
   const examCard = el('<div class="card"></div>');
   const examTitle = document.createElement("div");
   examTitle.className = "card-title";
-  examTitle.textContent = "模試履歴";
+  examTitle.textContent = "模試履歴（" + lvLabel + "）";
   examCard.appendChild(examTitle);
 
   const myExams = dashState.exams
-    .filter(e=>e.company_id===sel.company_id && e.learner_id===sel.learner_id)
+    .filter(e=>e.company_id===sel.company_id && e.learner_id===sel.learner_id && (e.level || "n4") === karteLevel)
     .sort((a,b)=> new Date(b.taken_at) - new Date(a.taken_at));
 
   if(myExams.length === 0){
@@ -5705,7 +5741,7 @@ function renderLearnerKarte(){
   const histCard2 = el('<div class="card"></div>');
   const histTitle2 = document.createElement("div");
   histTitle2.className = "card-title";
-  histTitle2.textContent = "学習履歴";
+  histTitle2.textContent = "学習履歴（" + lvLabel + "）";
   histCard2.appendChild(histTitle2);
   const mySessions = (l.studySessions || []).slice().sort((a,b)=> new Date(b.started_at) - new Date(a.started_at));
   if(mySessions.length === 0){
@@ -5748,7 +5784,7 @@ function renderLearnerKarte(){
   const calTitle = document.createElement("div");
   calTitle.className = "card-title";
   calTitle.style.marginBottom = "0";
-  calTitle.textContent = "学習カレンダー";
+  calTitle.textContent = "学習カレンダー（" + lvLabel + "）";
   calTitleRow.appendChild(calTitle);
   if(!dashState.karteCalendarDate) dashState.karteCalendarDate = new Date();
   const calYear = dashState.karteCalendarDate.getFullYear();
