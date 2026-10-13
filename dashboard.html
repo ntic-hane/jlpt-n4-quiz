@@ -2795,7 +2795,7 @@ function shellNavItems(scope){
   const items = [
     { id:"overview", label:"概要", icon:STAT_ICONS.home },
     { id:"learners", label:"実習生", icon:STAT_ICONS.users },
-    { id:"learning", label:"学習", icon:STAT_ICONS.book, sub:LEARNING_SUBTAB_DEFS }
+    { id:"learning", label:"学習", icon:STAT_ICONS.book, sub:learningSubTabDefs(scope) }
   ];
   if(scope.isAdmin){
     items.push({ id:"companies", label:"企業・事業所", short:"企業", icon:STAT_ICONS.building });
@@ -3656,7 +3656,7 @@ function buildSummaryContent(wrap, tab){
     learners.forEach(l=>{
       if(l.company_id === "cDEMO" || l.company_id === "cNTIC") return; // デモ・社内学習は除外
       if(!l.ntlpRegistered) return;
-      const g = rkMap[l.company_id] || (rkMap[l.company_id] = { name: l.companyName || l.company_id, total:0, active:0, progSum:0, rateSum:0, rateN:0 });
+      const g = rkMap[l.company_id] || (rkMap[l.company_id] = { cid: l.company_id, name: l.companyName || l.company_id, total:0, active:0, progSum:0, rateSum:0, rateN:0 });
       g.total += 1;
       if(l.lastSeen && new Date(l.lastSeen).getTime() >= rkSince) g.active += 1;
       g.progSum += (l.progressPct || 0);
@@ -3674,7 +3674,7 @@ function buildSummaryContent(wrap, tab){
     const rkAsc = dashState.rankDir === "asc";
     const rkM = RK_METRICS[rkKey];
     const rkRows = Object.values(rkMap).map(g=>({
-      name:g.name, total:g.total, active:g.active,
+      cid:g.cid, name:g.name, total:g.total, active:g.active,
       pct: g.total ? Math.round(g.active/g.total*100) : 0,
       avgProg: g.total ? Math.round(g.progSum/g.total) : 0,
       avgRate: g.rateN ? Math.round(g.rateSum/g.rateN) : null
@@ -3713,7 +3713,7 @@ function buildSummaryContent(wrap, tab){
     dirB.onclick = ()=>{ dashState.rankDir = rkAsc ? "desc" : "asc"; render(); };
     rkCtl.appendChild(dirB);
     rkCard.appendChild(rkCtl);
-    rkCard.appendChild(el('<div style="font-size:11.5px;color:var(--nv-sub,#64748B);line-height:1.6;margin-bottom:8px;">実施率＝'+rkDays+'日以内に学習した人 ÷ アカウント発行済み・実習中の人。デモ企業は除外。（少人数）は対象が1〜2名で、1人の動きで率が大きく変わります。このランキングは管理者・企業支援担当者にだけ表示されます。</div>'));
+    rkCard.appendChild(el('<div style="font-size:11.5px;color:var(--nv-sub,#64748B);line-height:1.6;margin-bottom:8px;">実施率＝'+rkDays+'日以内に学習した人 ÷ アカウント発行済み・実習中の人。デモ企業は除外。（少人数）は対象が1〜2名で、1人の動きで率が大きく変わります。企業名を押すと、その企業の実習生一覧を開きます。このランキングは管理者・企業支援担当者にだけ表示されます。</div>'));
     const rkTbl = el('<div style="overflow:auto;max-height:520px;"></div>');
     let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#64748B;font-size:11.5px;">'+
       '<th style="padding:6px;">順位</th><th style="padding:6px;">企業</th><th style="padding:6px;text-align:right;">実施率</th><th style="padding:6px;text-align:right;">学習した人/対象</th><th style="padding:6px;text-align:right;">平均進捗</th><th style="padding:6px;text-align:right;">平均正答率</th></tr></thead><tbody>';
@@ -3722,8 +3722,8 @@ function buildSummaryContent(wrap, tab){
       const cv = rkM.get(r);
       const rank = (rkKey!=="name" && cv === prevV) ? prevRank : i+1; prevV = cv; prevRank = rank;
       const small = r.total <= 2 ? ' <span style="font-size:10.5px;font-weight:700;color:#B45309;background:#FFFBEB;border-radius:99px;padding:1px 7px;">少人数</span>' : '';
-      html += '<tr style="border-top:1px solid #E7ECF2;"><td style="padding:7px 6px;font-weight:800;">'+rank+'</td>'+
-        '<td style="padding:7px 6px;">'+escapeHtml(r.name)+small+'</td>'+
+      html += '<tr class="rk-co-row" data-cid="'+escapeHtml(r.cid)+'" title="押すと、この企業の実習生一覧を開きます" style="border-top:1px solid #E7ECF2;cursor:pointer;"><td style="padding:7px 6px;font-weight:800;">'+rank+'</td>'+
+        '<td style="padding:7px 6px;color:#1D4ED8;font-weight:700;">'+escapeHtml(r.name)+small+' <span style="color:#94A3B8;font-weight:400;">›</span></td>'+
         '<td style="padding:7px 6px;text-align:right;font-weight:800;color:'+(r.pct>=70?'#16A34A':r.pct>=40?'#B45309':'#DC2626')+';">'+r.pct+'%</td>'+
         '<td style="padding:7px 6px;text-align:right;">'+r.active+' / '+r.total+'</td>'+
         '<td style="padding:7px 6px;text-align:right;">'+r.avgProg+'%</td>'+
@@ -3732,6 +3732,19 @@ function buildSummaryContent(wrap, tab){
     html += '</tbody></table>';
     if(!rkRows.length) html = '<div style="color:#64748B;font-size:12.5px;">対象の企業がありません</div>';
     rkTbl.innerHTML = html;
+    // 企業の行を押すと、実習生タブをその企業で絞り込んで開く(個人カルテへ進む入口と同じ流れ)
+    rkTbl.querySelectorAll("tr.rk-co-row").forEach(tr=>{
+      tr.onclick = ()=>{
+        dashState.companyFilter = tr.getAttribute("data-cid") || "";
+        dashState.workplaceFilter = "";
+        dashState.companyPage = 0;
+        dashState.onlyUnregistered = false;
+        dashState.activeTab = "learners";
+        render();
+      };
+      tr.onmouseenter = ()=>{ tr.style.background = "#F1F5F9"; };
+      tr.onmouseleave = ()=>{ tr.style.background = ""; };
+    });
     rkCard.appendChild(rkTbl);
     wrap.appendChild(rkCard);
   }
@@ -4238,6 +4251,141 @@ function buildSummaryContent(wrap, tab){
     setTimeout(()=> renderLearningLearnersOnly(), 0);
   }
 
+  // ==== サブタブ: 個人ランキング(管理者・企業支援担当者のみ。企業のアカウントには出さない) ====
+  // 「勉強しているかどうか」を見るための一覧。成績の優劣を競わせる目的ではなく、
+  // 学習が止まっている人を見つけ、声をかける材料にする。デモ企業・社内学習(cNTIC)・実習終了済みの人は除く。
+  else if(dashState.learningSubTab === "ranking" && scope.isAdmin){
+    const prkDays = dashState.prkDays || 7;
+    const prkSince = Date.now() - prkDays*86400000;
+    const PRK_METRICS = {
+      recent: { label:"最終学習が新しい順", get:r=> r.lastMs, dflt:"desc" },
+      n:      { label:"解答数",             get:r=> r.n,      dflt:"desc" },
+      prog:   { label:"進捗率",             get:r=> r.prog,   dflt:"desc" },
+      rate:   { label:"正答率",             get:r=> r.rate,   dflt:"desc" },
+      name:   { label:"氏名",               get:r=> r.name,   dflt:"asc" }
+    };
+    const prkKey = PRK_METRICS[dashState.prkSort] ? dashState.prkSort : "recent";
+    const prkAsc = dashState.prkDir ? dashState.prkDir === "asc" : PRK_METRICS[prkKey].dflt === "asc";
+    const prkOnly = dashState.prkOnly || "all";   // all / studied(期間内に学習した人) / idle(期間内に学習していない人)
+    const prkRowsAll = learners.filter(l=>
+      l.company_id !== "cDEMO" && l.company_id !== "cNTIC" && l.ntlpRegistered && !l.isFinished
+    ).map(l=>{
+      const lastMs = l.lastSeen ? new Date(l.lastSeen).getTime() : 0;
+      const days = lastMs ? Math.floor((Date.now()-lastMs)/86400000) : null;
+      return {
+        l, cid:l.company_id, lid:l.learner_id,
+        name: l.learnerName || l.learner_id, kana: l.learnerNameKana || "",
+        company: l.companyName || l.company_id,
+        lastMs, days, active: lastMs >= prkSince,
+        n: l.n || 0, prog: l.progressPct || 0, rate: l.n > 0 ? l.rate : null
+      };
+    });
+    const nActive = prkRowsAll.filter(r=>r.active).length;
+    const nNever = prkRowsAll.filter(r=>!r.lastMs).length;
+
+    const prkCard = el('<div class="card"></div>');
+    const prkHead = el('<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;"></div>');
+    const prkTitle = el('<div class="card-title" style="margin:0;"></div>'); prkTitle.textContent = "個人ランキング（勉強しているか）";
+    prkHead.appendChild(prkTitle);
+    const prkBtns = el('<div style="display:flex;gap:6px;"></div>');
+    [[7,"直近1週間"],[30,"直近1か月"]].forEach(([d,lb])=>{
+      const b = el('<button type="button"></button>'); b.textContent = lb;
+      b.style.cssText = "padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid "+(prkDays===d?"#16A34A":"#E7ECF2")+";background:"+(prkDays===d?"#16A34A":"#fff")+";color:"+(prkDays===d?"#fff":"#64748B")+";";
+      b.onclick = ()=>{ dashState.prkDays = d; dashState.prkShow = 50; render(); };
+      prkBtns.appendChild(b);
+    });
+    prkHead.appendChild(prkBtns);
+    prkCard.appendChild(prkHead);
+    prkCard.appendChild(el('<div style="font-size:12.5px;color:#334155;margin-bottom:8px;">対象 <b>'+fmtNum(prkRowsAll.length)+'</b>名のうち、直近'+prkDays+'日以内に学習した人は <b style="color:#16A34A;">'+fmtNum(nActive)+'</b>名、学習していない人は <b style="color:#DC2626;">'+fmtNum(prkRowsAll.length-nActive)+'</b>名（まだ一度も学習していない人 '+fmtNum(nNever)+'名を含む）。</div>'));
+
+    const prkCtl = el('<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"></div>');
+    Object.keys(PRK_METRICS).forEach(k=>{
+      const on = prkKey===k;
+      const b = el('<button type="button"></button>'); b.textContent = PRK_METRICS[k].label;
+      b.style.cssText = "padding:5px 11px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid "+(on?"#2563EB":"#E7ECF2")+";background:"+(on?"#2563EB":"#fff")+";color:"+(on?"#fff":"#334155")+";";
+      b.onclick = ()=>{ if(on){ dashState.prkDir = prkAsc ? "desc" : "asc"; } else { dashState.prkSort = k; dashState.prkDir = PRK_METRICS[k].dflt; } dashState.prkShow = 50; render(); };
+      prkCtl.appendChild(b);
+    });
+    const prkDirB = el('<button type="button"></button>'); prkDirB.textContent = prkAsc ? "▲ 低い順" : "▼ 高い順";
+    prkDirB.style.cssText = "padding:5px 11px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #E7ECF2;background:#fff;color:#334155;margin-left:4px;";
+    prkDirB.onclick = ()=>{ dashState.prkDir = prkAsc ? "desc" : "asc"; render(); };
+    prkCtl.appendChild(prkDirB);
+    [["all","全員"],["studied","学習した人"],["idle","学習していない人"]].forEach(([k,lb])=>{
+      const on = prkOnly===k;
+      const b = el('<button type="button"></button>'); b.textContent = lb;
+      b.style.cssText = "padding:5px 11px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid "+(on?"#16A34A":"#E7ECF2")+";background:"+(on?"#F0FDF4":"#fff")+";color:"+(on?"#15803D":"#64748B")+";";
+      if(k==="all") b.style.marginLeft = "10px";
+      b.onclick = ()=>{ dashState.prkOnly = k; dashState.prkShow = 50; render(); };
+      prkCtl.appendChild(b);
+    });
+    prkCard.appendChild(prkCtl);
+    const prkSearch = document.createElement("input");
+    prkSearch.type = "text"; prkSearch.placeholder = "氏名・企業名で検索";
+    prkSearch.value = dashState.prkSearch || "";
+    prkSearch.style.marginBottom = "8px";
+    prkCard.appendChild(prkSearch);
+    prkCard.appendChild(el('<div style="font-size:11.5px;color:var(--nv-sub,#64748B);line-height:1.6;margin-bottom:8px;">「学習した」＝直近'+prkDays+'日以内に1問でも解いた。解答数・進捗率・正答率はこれまでの合計です。行を押すと個人カルテを開きます。このランキングは管理者・企業支援担当者にだけ表示され、企業のアカウントには出ません。</div>'));
+    const prkTbl = el('<div id="prkTblWrap" style="overflow:auto;"></div>');
+    prkCard.appendChild(prkTbl);
+
+    const drawPrk = ()=>{
+      const q = (dashState.prkSearch || "").trim().toLowerCase();
+      let rows = prkRowsAll.filter(r=>
+        (prkOnly==="all" || (prkOnly==="studied" ? r.active : !r.active)) &&
+        (!q || (r.name+" "+r.kana+" "+r.company+" "+r.lid).toLowerCase().includes(q)));
+      const M = PRK_METRICS[prkKey];
+      rows.sort((a,b)=>{
+        const va = M.get(a), vb = M.get(b);
+        if(prkKey==="name"){ const c = String(va).localeCompare(String(vb),"ja"); return prkAsc ? c : -c; }
+        if(va === null && vb !== null) return 1;       // 正答率が未計測の人は常に最下位
+        if(vb === null && va !== null) return -1;
+        const d = (va===null && vb===null) ? 0 : (prkAsc ? va-vb : vb-va);
+        return d || b.n - a.n || String(a.name).localeCompare(String(b.name),"ja");
+      });
+      const show = dashState.prkShow || 50;
+      let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#64748B;font-size:11.5px;">'+
+        '<th style="padding:6px;">順位</th><th style="padding:6px;">氏名</th><th style="padding:6px;">企業</th><th style="padding:6px;">学習状況</th>'+
+        '<th style="padding:6px;text-align:right;">解答数</th><th style="padding:6px;text-align:right;">進捗</th><th style="padding:6px;text-align:right;">正答率</th></tr></thead><tbody>';
+      let prevV, prevRank = 0;
+      rows.slice(0,show).forEach((r,i)=>{
+        const cv = M.get(r);
+        const tie = (prkKey==="n"||prkKey==="prog"||prkKey==="rate") && cv === prevV;
+        const rank = tie ? prevRank : i+1; prevV = cv; prevRank = rank;
+        let st;
+        if(!r.lastMs) st = '<span style="font-size:11px;font-weight:700;color:#DC2626;background:#FEF2F2;border-radius:99px;padding:2px 8px;">未学習</span>';
+        else if(r.days <= 0) st = '<span style="font-size:11px;font-weight:700;color:#15803D;background:#F0FDF4;border-radius:99px;padding:2px 8px;">今日</span> <span style="color:#64748B;font-size:11.5px;">'+relTime(new Date(r.lastMs).toISOString())+'</span>';
+        else if(r.active) st = '<span style="font-size:11px;font-weight:700;color:#15803D;background:#F0FDF4;border-radius:99px;padding:2px 8px;">'+r.days+'日前</span>';
+        else st = '<span style="font-size:11px;font-weight:700;color:#B45309;background:#FFFBEB;border-radius:99px;padding:2px 8px;">'+r.days+'日前</span>';
+        html += '<tr class="prk-row" data-i="'+i+'" style="border-top:1px solid #E7ECF2;cursor:pointer;"><td style="padding:7px 6px;font-weight:800;">'+rank+'</td>'+
+          '<td style="padding:7px 6px;font-weight:700;">'+flagBadge(r.l.nationality)+escapeHtml(r.name)+'</td>'+
+          '<td style="padding:7px 6px;font-size:12px;color:#334155;">'+escapeHtml(r.company)+'</td>'+
+          '<td style="padding:7px 6px;">'+st+'</td>'+
+          '<td style="padding:7px 6px;text-align:right;">'+fmtNum(r.n)+'</td>'+
+          '<td style="padding:7px 6px;text-align:right;">'+r.prog+'%</td>'+
+          '<td style="padding:7px 6px;text-align:right;">'+(r.rate===null?'—':r.rate+'%')+'</td></tr>';
+      });
+      html += '</tbody></table>';
+      if(!rows.length) html = '<div style="color:#64748B;font-size:12.5px;">該当する人がいません</div>';
+      prkTbl.innerHTML = html;
+      prkTbl.querySelectorAll("tr.prk-row").forEach(tr=>{
+        const r = rows[Number(tr.getAttribute("data-i"))];
+        tr.onclick = ()=> openKarte(r.cid, r.lid);
+        tr.onmouseenter = ()=>{ tr.style.background = "#F1F5F9"; };
+        tr.onmouseleave = ()=>{ tr.style.background = ""; };
+      });
+      if(rows.length > show){
+        const more = el('<button type="button" style="margin:10px 0 2px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;border:1.5px solid #E7ECF2;background:#fff;color:#334155;"></button>');
+        more.textContent = "もっと見る（残り "+fmtNum(rows.length-show)+"名）";
+        more.onclick = ()=>{ dashState.prkShow = show + 50; drawPrk(); };
+        prkTbl.appendChild(more);
+      }
+      prkTbl.appendChild(el('<div style="font-size:11.5px;color:#64748B;margin-top:6px;">表示 '+fmtNum(Math.min(show,rows.length))+' / '+fmtNum(rows.length)+'名</div>'));
+    };
+    prkSearch.oninput = ()=>{ dashState.prkSearch = prkSearch.value; dashState.prkShow = 50; drawPrk(); };
+    drawPrk();
+    learningWrap.appendChild(prkCard);
+  }
+
   // ==== サブタブ: 分野別(4科目のサマリー + 15カテゴリの苦手ランキング) ====
   else if(dashState.learningSubTab === "subjects"){
     const totalForRate = learners.length;
@@ -4518,15 +4666,20 @@ const LEARNING_SUBTAB_DEFS = [
   { id: "overview", label: "学習概要" },
   { id: "learners", label: "実習生別" },
   { id: "subjects", label: "分野別" },
-  { id: "history", label: "学習履歴" }
+  { id: "history", label: "学習履歴" },
+  { id: "ranking", label: "個人ランキング", adminOnly: true } // 企業には見せない(管理者・企業支援担当者のみ)
 ];
+function learningSubTabDefs(scope){
+  const isAdmin = !!(scope || sessionScope()).isAdmin;
+  return LEARNING_SUBTAB_DEFS.filter(t=> isAdmin || !t.adminOnly);
+}
 function switchLearningSubTab(id){
   dashState.learningSubTab = id;
   render();  // 先頭へのスクロールはrender()側で一律に行う
 }
 function buildLearningSubNav(){
   const nav = el('<div class="subnav"></div>');
-  LEARNING_SUBTAB_DEFS.forEach(t=>{
+  learningSubTabDefs().forEach(t=>{
     const btn = el('<button class="subnav-btn"></button>');
     if(t.id === dashState.learningSubTab) btn.classList.add("active");
     btn.textContent = t.label;
@@ -4807,6 +4960,9 @@ function renderDashboard(){
   // (URLで直接指定されたわけではないが、念のための安全策)。
   if(!scope.isAdmin && (dashState.activeTab === "companies" || dashState.activeTab === "reports")){
     dashState.activeTab = "overview";
+  }
+  if(!scope.isAdmin && dashState.learningSubTab === "ranking"){
+    dashState.learningSubTab = "overview";
   }
 
   // company_users問い合わせがまだの場合、先にそれを解決してから権限判定する
