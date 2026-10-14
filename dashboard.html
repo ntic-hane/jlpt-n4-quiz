@@ -3673,7 +3673,7 @@ function buildSummaryContent(wrap, tab){
     const rkKey = RK_METRICS[dashState.rankSort] ? dashState.rankSort : "pct";
     const rkAsc = dashState.rankDir === "asc";
     const rkM = RK_METRICS[rkKey];
-    const rkRows = Object.values(rkMap).map(g=>({
+    const rkRowsAll = Object.values(rkMap).map(g=>({
       cid:g.cid, name:g.name, total:g.total, active:g.active,
       pct: g.total ? Math.round(g.active/g.total*100) : 0,
       avgProg: g.total ? Math.round(g.progSum/g.total) : 0,
@@ -3686,6 +3686,11 @@ function buildSummaryContent(wrap, tab){
       const d = (va===null && vb===null) ? 0 : (rkAsc ? va-vb : vb-va);
       return d || b.total - a.total || a.name.localeCompare(b.name,"ja");
     });
+    // 継続して学習できていない企業を外す(2026/10/14)。アカウントは全員発行済みでも、対象期間の実施率が
+    // 下限(rkMin)に届かない企業はランキングから外す。外した企業は下に一覧表示し、「すべて」に戻せば見える。
+    const rkMin = (typeof dashState.rankMin === "number") ? dashState.rankMin : 30;
+    const rkRows = rkRowsAll.filter(r=> r.pct >= rkMin);
+    const rkHidden = rkRowsAll.filter(r=> r.pct < rkMin);
     const rkCard = el('<div class="card dash-sec-company"></div>');
     const rkHead = el('<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;"></div>');
     const rkTitle = el('<div class="card-title" style="margin:0;"></div>'); rkTitle.textContent = "企業ランキング（"+rkM.label+(rkKey==="name"?"":(rkAsc?"・低い順":"・高い順"))+"）";
@@ -3712,6 +3717,15 @@ function buildSummaryContent(wrap, tab){
     dirB.style.cssText = "padding:5px 11px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #E7ECF2;background:#fff;color:#334155;margin-left:4px;";
     dirB.onclick = ()=>{ dashState.rankDir = rkAsc ? "desc" : "asc"; render(); };
     rkCtl.appendChild(dirB);
+    const minLbl = el('<span style="font-size:12px;font-weight:700;color:#64748B;margin-left:10px;"></span>'); minLbl.textContent = "表示する企業";
+    rkCtl.appendChild(minLbl);
+    [[0,"すべて"],[30,"実施率30%以上"],[50,"実施率50%以上"]].forEach(([v,lb])=>{
+      const on = rkMin===v;
+      const b = el('<button type="button"></button>'); b.textContent = lb;
+      b.style.cssText = "padding:5px 11px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid "+(on?"#16A34A":"#E7ECF2")+";background:"+(on?"#16A34A":"#fff")+";color:"+(on?"#fff":"#334155")+";";
+      b.onclick = ()=>{ dashState.rankMin = v; render(); };
+      rkCtl.appendChild(b);
+    });
     rkCard.appendChild(rkCtl);
     rkCard.appendChild(el('<div style="font-size:11.5px;color:var(--nv-sub,#64748B);line-height:1.6;margin-bottom:8px;">実施率＝'+rkDays+'日以内に学習した人 ÷ アカウント発行済み・実習中の人。デモ企業は除外。（少人数）は対象が1〜2名で、1人の動きで率が大きく変わります。企業名を押すと、その企業の実習生一覧を開きます。このランキングは管理者・企業支援担当者にだけ表示されます。</div>'));
     const rkTbl = el('<div style="overflow:auto;max-height:520px;"></div>');
@@ -3746,6 +3760,12 @@ function buildSummaryContent(wrap, tab){
       tr.onmouseleave = ()=>{ tr.style.background = ""; };
     });
     rkCard.appendChild(rkTbl);
+    if(rkHidden.length){
+      const hid = el('<div style="font-size:11.5px;color:#64748B;line-height:1.7;margin-top:10px;padding-top:8px;border-top:1px dashed #E7ECF2;"></div>');
+      hid.textContent = "実施率が"+rkMin+"%に届かないためランキングから外した企業（"+rkHidden.length+"社）: "+
+        rkHidden.slice().sort((a,b)=>a.pct-b.pct||a.name.localeCompare(b.name,"ja")).map(r=>r.name+"（"+r.pct+"%）").join("、");
+      rkCard.appendChild(hid);
+    }
     wrap.appendChild(rkCard);
   }
 
