@@ -462,6 +462,7 @@ header h1{cursor:pointer;}
 .jrow-t1{font-size:15.5px;font-weight:800;color:var(--nv-text);}
 .jrow-t2{font-size:13px;color:var(--nv-sub);font-weight:600;line-height:1.4;}
 .jrow-chev{color:var(--nv-sub);display:flex;}
+.jkanji-top{margin-top:12px;}
 .jmockcard{margin-top:16px;background:#E8F0FA;border-color:#D5E3F5;--sb:#fff;--sc:var(--nv-blue);}
 
 /* ====================== 練習する(案2) ====================== */
@@ -652,6 +653,7 @@ header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
   .v-home > .jside{grid-column:9 / 13;display:flex;flex-direction:column;gap:12px;}
   .v-home > .jside .jsec{margin-top:0;}
   .v-home > .jside .jmockcard{margin-top:0;}
+  .v-home > .jside .jkanji-top{margin-top:0;}
   .v-home > .jprogsec{grid-column:1 / -1;margin-top:0;}
   .jprog-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;}
   .jprog{padding:18px;}
@@ -783,7 +785,7 @@ header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
   .v-home > .jpc-head{display:flex;grid-column:1 / 9;grid-row:1;align-items:center;justify-content:space-between;gap:20px;}
   .v-home > .jhero2{grid-column:1 / 9;grid-row:2;position:relative;overflow:hidden;background:linear-gradient(135deg,#EAF2FF 0%,#F4F8FF 100%);border-color:#D6E4FB;}
   .v-home > .jprogsec{grid-column:1 / 9;grid-row:3;margin-top:0;}
-  .v-home > .jside{grid-column:1 / 9;grid-row:4;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+  .v-home > .jside{grid-column:1 / 9;grid-row:4;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
   .v-home > .jpc-bottom{display:grid;grid-column:1 / 9;grid-row:5;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
   .v-home > .jpc-right{display:flex;flex-direction:column;gap:16px;grid-column:9 / 13;grid-row:1 / span 5;}
   .jpc-greet .t{font-size:30px;font-weight:800;color:var(--nv-text);letter-spacing:-.3px;}
@@ -8275,6 +8277,13 @@ function renderHomeView(){
   mock.querySelector(".jrow-t2").textContent = tr(T.mockCardSub);
   mock.onclick = ()=>{ ST.view = "mock"; render(); };
   side.appendChild(mock);
+  // ---- 漢字帳(スマホ・PCどちらでも、トップに出す) ----
+  const kanjiTop = el('<button class="jrow jkanji2 jkanji-top"></button>');
+  kanjiTop.innerHTML = '<span class="jrow-ic"><span style="font-size:21px;font-weight:800;line-height:1;">字</span></span><span class="jrow-body"><span class="jrow-t1"></span><span class="jrow-t2"></span></span><span class="jrow-chev">'+chevron+'</span>';
+  kanjiTop.querySelector(".jrow-t1").textContent = tr(KANJI_L.rowTitle);
+  kanjiTop.querySelector(".jrow-t2").textContent = tr(KANJI_L.rowSub);
+  kanjiTop.onclick = ()=>{ KJ.tab = ST.level === "n3" ? "n3" : "n4"; KJ.mode = "grid"; KJ.detail = null; KJ.idx = 0; KJ.flipped = false; KJ.order = null; ST.view = "kanjiHome"; render(); };
+  side.appendChild(kanjiTop);
   // ---- 生活クイズ(PCの3枚の行の3枚目) ----
   const lifeCard = el('<button class="jrow jlife-pc"></button>');
   lifeCard.style.setProperty("--sc", "#F59E0B"); lifeCard.style.setProperty("--sb", "#FFF3D6");
