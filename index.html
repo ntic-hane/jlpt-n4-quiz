@@ -7713,7 +7713,7 @@ function applyRuby(text){
 }
 // 日本語テキストをルビ設定に応じて描画する（container に innerHTML/textContent をセット）
 function renderJaInto(container, text){
-  if(ST.mode === "practice" && ST.showFurigana){
+  if(ST.mode === "practice" && ST.showFurigana && ST.level !== "n2"){ // N2は本試験どおり、ふりがななし
     container.innerHTML = applyRuby(text);
   } else {
     container.textContent = text;
@@ -10122,7 +10122,7 @@ function renderQuestion(){
 
   wrap.appendChild(card);
 
-  if(ST.mode === "practice"){
+  if(ST.mode === "practice" && ST.level !== "n2"){   // N2はふりがな切替も出さない
     const togWrap = el('<div style="margin-top:10px;"></div>');
     const furiTog = el('<div class="togglewrap"></div>');
     const fcb = document.createElement("input");
