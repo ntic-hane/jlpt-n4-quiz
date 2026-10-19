@@ -6660,6 +6660,7 @@ function setLevel(level, opts){
   ST.level = normLevel(level);
   ALL_DATA = dataOfLevel(ST.level);
   ALL_Q = qOfLevel(ST.level);
+  ST.showFurigana = (ST.level !== "n2"); // N2は本試験どおり、ふりがなを初期オフにする(練習中に切り替えは可能)
   if(opts.persist !== false){
     try{
       const key = AUTH.student ? (LEVEL_STORAGE_KEY + "__" + AUTH.student.id) : LEVEL_STORAGE_KEY;
