@@ -7015,12 +7015,17 @@ function renderTableOnly(){
   const scopeForTable = sessionScope();
 
   // ---- 企業 → 勤務先 → 実習生、の階層にグルーピングする ----
+  // 事業所担当者のIDが、2つ以上の会社の店舗を担当している場合(統括ID・関東ID・北海道IDなど)は、
+  // 会社ごとに分けず、担当店舗を1つの「担当エリア」にまとめて表示する(店舗単位で見たいため)。
+  const areaMode = !scopeForTable.isAdmin && scopeForTable.role === "workplace_manager"
+    && new Set((dashState.workplaces || []).map(w=>w.company_id)).size > 1;
   const companyGroups = {}; // company_id -> { companyName, learners:[], workplaceMap:{ key -> {label, learners:[]} } }
   learners.forEach(l=>{
-    if(!companyGroups[l.company_id]){
-      companyGroups[l.company_id] = { companyName: l.companyName || l.company_id, workplaceMap: {} };
+    const gKey = areaMode ? "__area__" : l.company_id;
+    if(!companyGroups[gKey]){
+      companyGroups[gKey] = { companyName: areaMode ? "担当エリア" : (l.companyName || l.company_id), workplaceMap: {} };
     }
-    const g = companyGroups[l.company_id];
+    const g = companyGroups[gKey];
     const w = (l.workplaces && l.workplaces[0]) ? l.workplaces[0] : null;
     const key = w ? w.id : "__unset__";
     if(!g.workplaceMap[key]){
