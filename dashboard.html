@@ -5074,6 +5074,40 @@ function buildImportCard(){
   return card;
 }
 
+// 取り込み前の注意: 「すでに別の店舗に紐づいている人」のうち、CSV(Dekisugi)の事業所が違う人を数える。
+// 取込は店舗への紐づけを「追加」するだけで、古い紐づけは消さない。そのため、手作業で店舗を付け替えた人を
+// Dekisugi側を直さないまま取り込むと、付け替え前の店舗にも再び紐づいてしまう(2つの店舗に表示される)。
+// 画面に読み込み済みのデータだけで判定する(データベースは変更しない)。
+function computeWorkplaceConflicts(rows){
+  const wps = dashState.workplaces || [];
+  const links = dashState.studentWorkplaces || [];
+  if(!wps.length || !links.length) return [];
+  const wpByDek = {}; const wpById = {};
+  wps.forEach(w=>{ wpById[w.id] = w; if(w.dekisugi_workplace_id != null && w.dekisugi_workplace_id !== "") wpByDek[String(w.dekisugi_workplace_id)] = w; });
+  const linkMap = {};
+  links.forEach(l=>{ (linkMap[l.dekisugi_student_code] = linkMap[l.dekisugi_student_code] || []).push(l.workplace_id); });
+  const cmap = {};
+  (dashState.companies || []).forEach(c=>{ if(c.dekisugi_company_id != null) cmap[String(c.dekisugi_company_id)] = c.company_name || c.company_id; });
+  const out = [];
+  (rows || []).forEach(r=>{
+    const code = String(r.student_id || "").trim();
+    const raw = String(r.dekisugi_workplace_id || "").trim();
+    if(!code || !raw) return;
+    const first = raw.split("・")[0].trim();           // 「235・236」のように複数あるときは先頭が実際の所属
+    const target = wpByDek[first];
+    if(!target) return;                                 // DBにまだ無い事業所(新規追加)は対象外
+    const have = linkMap[code] || [];
+    if(!have.length || have.indexOf(target.id) >= 0) return;
+    out.push({
+      code: code,
+      company: cmap[String(r.dekisugi_company_id || "").trim()] || (r.company_name || ""),
+      nowNames: have.map(id=>(wpById[id] && wpById[id].workplace_name) || "(不明)").join(" / "),
+      csvName: target.workplace_name || ""
+    });
+  });
+  return out;
+}
+
 // プレビュー結果(差分の表)と「取り込む」ボタンを組み立てる
 function buildImportPreview(rows, preview, resultWrap, statusEl){
   const box = document.createElement("div");
@@ -5081,6 +5115,44 @@ function buildImportPreview(rows, preview, resultWrap, statusEl){
   const t = el('<div class="card-title" style="margin-top:var(--sp-4);"></div>');
   t.textContent = "取込内容の確認";
   box.appendChild(t);
+
+  // 店舗の食い違いの注意(あるときだけ表示。取り込みは止めない)
+  try{
+    const conflicts = computeWorkplaceConflicts(rows);
+    if(conflicts.length){
+      const byCo = {};
+      conflicts.forEach(c=>{ const k = c.company || "(会社不明)"; byCo[k] = (byCo[k] || 0) + 1; });
+      const warn = el('<div class="card" style="background:#FFF4E5;border-color:#E0A040;margin-bottom:var(--sp-3);"></div>');
+      const wt = el('<div class="card-title" style="color:#9A5B00;"></div>');
+      wt.textContent = "注意：すでに別の店舗に紐づいている人が " + fmtNum(conflicts.length) + "名 います";
+      warn.appendChild(wt);
+      const wd = document.createElement("div");
+      wd.style.cssText = "font-size:13px;line-height:1.8;";
+      wd.innerHTML =
+        "会社別： " + Object.keys(byCo).map(k=>escapeHtml(k) + " " + fmtNum(byCo[k]) + "名").join("、") + "<br>" +
+        "このまま取り込むと、CSV(Dekisugi)の店舗にも<b>追加で</b>紐づき、<b>2つの店舗に表示</b>されます（今の紐づけは自動では消えません）。<br>" +
+        "手作業で店舗を付け替えた人の場合は、Dekisugiの「実習事業所」を直してから取り込むか、取り込み後に紐づけを確認してください。";
+      warn.appendChild(wd);
+      const det = document.createElement("details");
+      det.style.cssText = "margin-top:8px;font-size:12.5px;";
+      const sm = document.createElement("summary");
+      sm.textContent = "該当する人を見る（先頭50名まで）";
+      sm.style.cursor = "pointer";
+      det.appendChild(sm);
+      const tw = document.createElement("div"); tw.className = "table-scroll";
+      const tb = document.createElement("table");
+      tb.innerHTML = "<thead><tr><th>実習生ID</th><th>会社</th><th>今の店舗</th><th>CSVの店舗</th></tr></thead>";
+      const tbd = document.createElement("tbody");
+      conflicts.slice(0, 50).forEach(c=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = "<td>"+escapeHtml(c.code)+"</td><td>"+escapeHtml(c.company)+"</td><td>"+escapeHtml(c.nowNames)+"</td><td>"+escapeHtml(c.csvName)+"</td>";
+        tbd.appendChild(tr);
+      });
+      tb.appendChild(tbd); tw.appendChild(tb); det.appendChild(tw);
+      warn.appendChild(det);
+      box.appendChild(warn);
+    }
+  }catch(e){ /* 注意の表示に失敗しても、取り込み自体は妨げない */ }
 
   const tableWrap = document.createElement("div");
   tableWrap.className = "table-scroll";
