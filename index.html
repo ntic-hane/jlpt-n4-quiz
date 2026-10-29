@@ -6850,6 +6850,10 @@ function qById(id){ return ALL_Q.find(x=>x.id===id); }
 // ---- storage ----
 let memoryFallback = null;
 let storageBroken = false;
+// 端末の日付(YYYY-MM-DD)。toISOString()はUTCなので、日本では朝9時前の日付がずれる
+function dayKeyLocal(dt){
+  return dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0") + "-" + String(dt.getDate()).padStart(2,"0");
+}
 function load(){
   try{
     const raw = localStorage.getItem(storageKey());
@@ -7015,6 +7019,124 @@ function authedHeaders(extra){
   return h;
 }
 
+// ---- アクセストークンの自動更新 ----
+// 以前は、アプリを開いた瞬間にしかトークンを更新していなかった。アクセストークンは約1時間で切れるため、
+// 画面を開いたまま1時間以上たつと、回答・日別記録・学習セッションの保存がすべて401で失敗していた
+// (端末には残るが、ダッシュボードに届かない=「勉強しているのに反映されない」の原因の1つ)。
+// 全てのSupabase REST呼び出しの手前で、期限が近ければ更新し、401が返ったら更新して1回だけ送り直す。
+let _tokenRefreshing = null;
+function refreshOnce(){
+  if(!AUTH.session || !AUTH.session.refresh_token) return Promise.resolve(false);
+  if(!_tokenRefreshing){
+    _tokenRefreshing = authRefresh(AUTH.session.refresh_token).then(()=>true).catch(()=>false).then(ok=>{ _tokenRefreshing = null; return ok; });
+  }
+  return _tokenRefreshing;
+}
+(function(){
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async function(input, init){
+    try{
+      const url = (typeof input === "string") ? input : ((input && input.url) || "");
+      const h = init && init.headers;
+      const plain = h && typeof h === "object" && !(typeof Headers !== "undefined" && h instanceof Headers);
+      const auth = plain ? h["Authorization"] : null;
+      if(url.indexOf(SUPABASE_URL + "/rest/v1/") !== 0 || !AUTH.session || !auth || auth.indexOf("Bearer ") !== 0 || auth === "Bearer " + SUPABASE_KEY){
+        return origFetch(input, init);
+      }
+      const withToken = ()=> Object.assign({}, init, { headers: Object.assign({}, h, { "Authorization": "Bearer " + AUTH.session.access_token }) });
+      // ページが閉じる瞬間(keepalive)は待てないので、更新はしない
+      if(!init.keepalive && AUTH.session.expires_at && Date.now() >= AUTH.session.expires_at - 60000){ await refreshOnce(); }
+      let res = await origFetch(input, withToken());
+      if(res.status === 401 && !init.keepalive){
+        if(await refreshOnce()){ res = await origFetch(input, withToken()); }
+      }
+      return res;
+    }catch(e){
+      return origFetch(input, init);
+    }
+  };
+})();
+
+// ---- 端末に残っている記録のうち、サーバーに届いていない分を送り直す(1回だけ) ----
+// 上の認証切れなどで保存に失敗した回答は、端末(localStorage)には残っている。サーバーより端末のほうが回答数が多い問題・日だけを送る
+// (サーバーのほうが多い場合は何もしない。別の端末で勉強した分を上書きしないため)。成功したら、この端末では二度と実行しない。
+async function backfillFetchRows(table, cols, order, sid, lv){
+  const out = [];
+  for(let off = 0; off < 50000; off += 1000){
+    const res = await fetch(SUPABASE_URL + "/rest/v1/" + table + "?select=" + cols + "&student_id=eq." + encodeURIComponent(sid) +
+      "&level=eq." + encodeURIComponent(lv) + "&order=" + order + "&limit=1000&offset=" + off, { headers: authedHeaders() });
+    if(!res.ok) throw new Error("backfill_read_failed");
+    const rows = await res.json();
+    rows.forEach(r=>out.push(r));
+    if(rows.length < 1000) break;
+  }
+  return out;
+}
+async function backfillPostRows(path, rows){
+  for(let i = 0; i < rows.length; i += 200){
+    const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+      method: "POST",
+      headers: authedHeaders({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
+      body: JSON.stringify(rows.slice(i, i + 200))
+    });
+    if(!res.ok) throw new Error("backfill_write_failed");
+  }
+}
+async function backfillLocalToServer(){
+  if(!AUTH.session || !AUTH.student) return;
+  const sid = AUTH.student.id;
+  const flagKey = "ntic_backfill_v1__" + sid;
+  try{ if(localStorage.getItem(flagKey)) return; }catch(e){ return; }
+  const company = AUTH.student.company_id || "";
+  const levels = [["n4", ""], ["n3", "_n3"], ["n2", "_n2"]];
+  let allOk = true;
+  for(const lvDef of levels){
+    const lv = lvDef[0];
+    let d = null;
+    try{ const raw = localStorage.getItem(STORAGE_KEY_BASE + lvDef[1] + "__" + sid); if(raw) d = JSON.parse(raw); }catch(e){ d = null; }
+    if(!d) continue;
+    try{
+      const localQ = d.q || {};
+      const qids = Object.keys(localQ).filter(k=> localQ[k] && localQ[k].n > 0);
+      if(qids.length){
+        const srv = await backfillFetchRows("progress", "question_id,n_count", "id.asc", sid, lv);
+        const have = {}; srv.forEach(r=>{ have[r.question_id] = r.n_count || 0; });
+        const rows = [];
+        qids.forEach(qid=>{
+          const rec = localQ[qid];
+          if(rec.n > (have[qid] || 0)){
+            rows.push({ student_id: sid, company_id: company, learner_id: sid, question_id: qid, level: lv,
+              n_count: rec.n, c_count: rec.c || 0, tn_count: rec.tn || 0, tc_count: rec.tc || 0,
+              last_answered_at: new Date(rec.t || Date.now()).toISOString(), updated_at: new Date().toISOString() });
+          }
+        });
+        if(rows.length) await backfillPostRows("progress?on_conflict=company_id,learner_id,question_id", rows);
+      }
+      const localD = d.daily || {};
+      const dates = Object.keys(localD);
+      if(dates.length){
+        const srvD = await backfillFetchRows("daily_summary", "summary_date,subj,n_count", "summary_date.asc,subj.asc", sid, lv);
+        const haveD = {}; srvD.forEach(r=>{ haveD[String(r.summary_date).slice(0,10) + "|" + r.subj] = r.n_count || 0; });
+        const rowsD = [];
+        dates.forEach(dt=>{
+          Object.keys(localD[dt] || {}).forEach(subj=>{
+            const v = localD[dt][subj];
+            if(v && v.n > (haveD[dt + "|" + subj] || 0)){
+              rowsD.push({ student_id: sid, company_id: company, learner_id: sid, summary_date: dt, subj: subj, level: lv,
+                n_count: v.n, c_count: v.c || 0, updated_at: new Date().toISOString() });
+            }
+          });
+        });
+        if(rowsD.length) await backfillPostRows("daily_summary?on_conflict=company_id,learner_id,summary_date,subj,level", rowsD);
+      }
+    }catch(e){
+      allOk = false;
+      console.warn("[sync] 端末の記録の送り直しに失敗(次回また試します)", lv, e);
+    }
+  }
+  if(allOk){ try{ localStorage.setItem(flagKey, "1"); }catch(e){ /* noop */ } }
+}
+
 // ログイン中の本人のstudentsレコードを取得する
 async function fetchOwnStudent(uid){
   // 自分のID(auth_user_id)で必ず絞る。絞らないと、企業代表のように「自社の学習者を全員読める」ログインでは、
@@ -7086,6 +7208,14 @@ function optShown(o){
 // 新しいお知らせは、配列の先頭に足す。idは重複しない文字列。viewは、押したときに開く画面(なければ空)。
 // 文面は [日本語, English, Indonesia, Tagalog, ไทย, မြန်မာ]。日本語・英語以外はAI訳で、ネイティブ確認はしていない。
 const NEWS_ITEMS = [
+  { id:"2026-10-session-fix", date:"2026-10-29", view:"",
+    title:["学習時間の記録を直しました","We fixed how study time is recorded","Pencatatan waktu belajar sudah diperbaiki","Naayos na ang pag-record ng oras ng pag-aaral","แก้ไขการบันทึกเวลาเรียนแล้ว","လေ့လာချိန် မှတ်တမ်းကို ပြင်ဆင်ပြီးပါပြီ"],
+    body:["アプリを閉じたときなどに、学習時間が記録されないことがありました。直しました。答えた問題の記録や点数には影響ありません。",
+      "Sometimes your study time was not saved when you closed the app. This is fixed. Your answers and scores were not affected.",
+      "Kadang waktu belajar tidak tersimpan saat aplikasi ditutup. Sudah diperbaiki. Jawaban dan nilai Anda tidak terpengaruh.",
+      "Minsan hindi nase-save ang oras ng pag-aaral kapag isinara ang app. Naayos na ito. Hindi naapektuhan ang inyong mga sagot at puntos.",
+      "บางครั้งเวลาเรียนไม่ถูกบันทึกเมื่อปิดแอป แก้ไขแล้ว คำตอบและคะแนนของคุณไม่ได้รับผลกระทบ",
+      "အက်ပ်ကို ပိတ်လိုက်သောအခါ လေ့လာချိန် မှတ်တမ်းမတင်ဘဲ ကျန်ခဲ့တတ်ပါသည်။ ပြင်ဆင်ပြီးပါပြီ။ သင့်အဖြေများနှင့် ရမှတ်များကို မထိခိုက်ပါ။"] },
   { id:"2026-10-n2", date:"2026-10-15", view:"",
     title:["N2が始まりました(文字・語彙と文法)","N2 is here (vocabulary and grammar)"],
     body:["上の「N4 / N3 / N2」で N2 を選べます。N2は日本語だけで出題します(翻訳はありません)。読解と聴解、模擬試験は準備中です。",
@@ -7486,24 +7616,49 @@ function fmtT(arr, vars){
 function startSession(mode, subject){
   // 前のセッションが閉じずに残っていたら(通常起きないが念のため)先に片付ける
   if(ST.session) finishSession();
-  ST.session = { mode, subject, level: ST.level, start: Date.now(), count: 0, correct: 0 };
+  // count/correct はサーバーへ未送信の分(画面が隠れて途中送信するたびに0に戻る)。allCount/allCorrect はこのセッション全体の累計(端末内の「前回」表示用)。
+  // 学習時間は「開いていた時間」ではなく「操作していた時間」で数える(activeMs)。
+  // 回答と回答の間が IDLE_CAP_MS を超えて空いた分(開きっぱなし・放置)は、上限までしか数えない。
+  ST.session = { mode, subject, level: ST.level, start: Date.now(), lastT: Date.now(), activeMs: 0, count: 0, correct: 0, allCount: 0, allCorrect: 0 };
+}
+// 1問あたりに数える時間の上限(ミリ秒)。考える・解説を読む時間を見込んで3分。これを超える空白は放置とみなす。
+const IDLE_CAP_MS = 180 * 1000;
+const IDLE_CAP_MOCK_MS = 600 * 1000;   // 模擬試験は長文・聴解で1問が長くなるため10分
+function idleCap(s){ return s && s.mode === "mock" ? IDLE_CAP_MOCK_MS : IDLE_CAP_MS; }
+// いま送るべき学習時間(秒)。回答の間隔ごとに上限を掛けた合計 + 最後の回答からの経過(これも上限つき)
+function sessionActiveSec(s){
+  const now = Date.now();
+  if(typeof s.activeMs !== "number" || typeof s.lastT !== "number"){ return Math.max(1, Math.round((now - s.start) / 1000)); }
+  const total = s.activeMs + Math.min(Math.max(0, now - s.lastT), idleCap(s));
+  return Math.max(1, Math.round(total / 1000));
 }
 function bumpSession(isCorrect){
   if(!ST.session) return;
+  { const s = ST.session, now = Date.now();
+    if(typeof s.lastT === "number"){ s.activeMs = (s.activeMs || 0) + Math.min(Math.max(0, now - s.lastT), idleCap(s)); }
+    s.lastT = now; }
   ST.session.count += 1;
-  if(isCorrect) ST.session.correct += 1;
+  ST.session.allCount = (ST.session.allCount || 0) + 1;
+  if(isCorrect){ ST.session.correct += 1; ST.session.allCorrect = (ST.session.allCorrect || 0) + 1; }
 }
 function finishSession(){
   const s = ST.session;
   ST.session = null;
-  if(!s || s.count === 0) return; // 1問も答えずに離脱した場合は記録しない
+  if(!s || (s.count === 0 && !s.allCount)) return; // 1問も答えずに離脱した場合は記録しない
   // 前回の結果(科目・問題数・正解数)を端末に残す。ホームの「今日のおすすめ」で「前回: ○問中○問正解」を出すため。
   // (通信が不要なので、ログイン状態・通信の成否に関係なく保存する)
   if(s.mode === "practice"){
-    try{ const dd = load(); dd.lastSession = { d: Date.now(), subj: s.subject || null, n: s.count, c: s.correct }; save(dd); }catch(e){ /* noop */ }
+    try{ const dd = load(); dd.lastSession = { d: Date.now(), subj: s.subject || null, n: s.allCount || s.count, c: s.allCorrect || s.correct }; save(dd); }catch(e){ /* noop */ }
   }
+  postStudySession(s, false);
+}
+// 学習セッション1件をstudy_sessionsへ送る。keepalive=trueのときは、ページが閉じられる・
+// バックグラウンドに回る瞬間でも送信が打ち切られにくいfetch(keepalive)を使う。
+// (sendBeaconはAuthorizationヘッダを付けられずRLSを通らないが、fetchのkeepaliveはヘッダを付けられる)
+function postStudySession(s, keepalive){
+  if(!s || s.count === 0) return;
   if(!AUTH.session || !AUTH.student) return;
-  const durationSec = Math.max(1, Math.round((Date.now() - s.start) / 1000));
+  const durationSec = sessionActiveSec(s);
   const body = {
     student_id: AUTH.student.id,
     company_id: AUTH.student.company_id || "",
@@ -7517,16 +7672,49 @@ function finishSession(){
     ended_at: new Date().toISOString(),
     duration_seconds: durationSec
   };
-  fetch(SUPABASE_URL + "/rest/v1/study_sessions", {
+  const opts = {
     method: "POST",
     headers: authedHeaders({ "Prefer": "return=minimal" }),
     body: JSON.stringify(body)
-  }).catch(e=>{ console.warn("[sync] study_sessions通信エラー", e); });
+  };
+  if(keepalive) opts.keepalive = true;
+  try{
+    fetch(SUPABASE_URL + "/rest/v1/study_sessions", opts)
+      .catch(e=>{ console.warn("[sync] study_sessions通信エラー", e); });
+  }catch(e){ console.warn("[sync] study_sessions送信エラー", e); }
 }
-// 注: タブを閉じる・強制終了した場合はfinishSession()が呼ばれず、そのセッションは記録されない。
-// sendBeaconでの代替送信も検討したが、Supabaseの認証はAuthorizationヘッダ(Bearerトークン)が必須で、
-// sendBeaconはヘッダを指定できずapikeyしか渡せないため、RLS(student_insert_own_study_sessions)を
-// 満たせず結局失敗する。中途半端な対応をするより、素直に「閉じた場合は記録されない」ことにした。
+// 画面を閉じる・別アプリに切り替える(スマホのホームに戻る等)と、ホームへ戻るボタンを押さないため
+// finishSession()が呼ばれず、そのセッションの学習時間・回数が記録されなかった(ダッシュボードの
+// 「学習が反映されない」の原因)。そこで、画面が隠れた時点でそこまでの分を送る。
+// 送った分は数え直し(続きから再開しても二重に記録されない)、戻ってきたら開始時刻を取り直す。
+function flushSessionOnHide(){
+  const s = ST && ST.session;
+  if(!s || s.count === 0) return;
+  postStudySession(s, true);
+  s.count = 0; s.correct = 0;
+  s.start = Date.now(); s.lastT = Date.now(); s.activeMs = 0;
+  s.hiddenAt = Date.now();
+}
+let LAST_ACTIVITY_SYNC = 0;
+document.addEventListener("visibilitychange", ()=>{
+  try{
+    if(document.visibilityState === "hidden"){
+      flushSessionOnHide();
+    } else if(document.visibilityState === "visible"){
+      // 戻ってきた: 隠れていた時間は学習時間に含めない
+      if(ST && ST.session && ST.session.hiddenAt){ ST.session.start = Date.now(); ST.session.lastT = Date.now(); ST.session.hiddenAt = 0; }
+      // 長く裏に回っていてトークンが切れていたら、先に更新しておく
+      if(AUTH && AUTH.session && AUTH.session.expires_at && Date.now() >= AUTH.session.expires_at - 60000){ refreshOnce(); }
+      // 画面を開いたままの端末でも「最終学習日時」が更新されるよう、10分以上空いていたら記録する
+      if(AUTH && AUTH.session && AUTH.student && Date.now() - LAST_ACTIVITY_SYNC > 10 * 60 * 1000){
+        LAST_ACTIVITY_SYNC = Date.now();
+        syncActivity();
+      }
+    }
+  }catch(e){ /* noop */ }
+});
+// iOS Safariなどはvisibilitychangeが来ないままページを破棄することがあるため、pagehideでも送る
+window.addEventListener("pagehide", ()=>{ try{ flushSessionOnHide(); }catch(e){ /* noop */ } });
 
 function syncProgress(qid){
   if(!AUTH.session || !AUTH.student) return;
@@ -8186,7 +8374,7 @@ function recordAnswer(qid, isCorrect, subj, translationUsed, selectedIdx){
   }
 
   // 日別・科目別の記録も更新(本人向け・管理者向けダッシュボードの推移表示に使う)
-  const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  const today = dayKeyLocal(new Date()); // YYYY-MM-DD(端末の日付。以前はUTCで、日本時間の朝9時前の学習が前日の扱いになっていた)
   if(!d.daily) d.daily = {};
   if(!d.daily[today]) d.daily[today] = {};
   if(subj){
@@ -8301,7 +8489,7 @@ function weeklyStats(){
   let n=0, c=0;
   for(let i=0;i<7;i++){
     const dt = new Date(today); dt.setDate(dt.getDate()-i);
-    const key = dt.toISOString().slice(0,10);
+    const key = dayKeyLocal(dt);
     const day = daily[key];
     if(!day) continue;
     Object.values(day).forEach(v=>{ n+=v.n; c+=v.c; });
@@ -8315,7 +8503,7 @@ function dailyTrendArray(days){
   const arr = [];
   for(let i=(days-1);i>=0;i--){
     const dt = new Date(today); dt.setDate(dt.getDate()-i);
-    const key = dt.toISOString().slice(0,10);
+    const key = dayKeyLocal(dt);
     const day = daily[key];
     let n=0,c=0;
     if(day) Object.values(day).forEach(v=>{ n+=v.n; c+=v.c; });
@@ -8676,6 +8864,11 @@ function renderLogin(){
         return;
       }
       ST.view = AUTH.mustChangePassword ? "passwordChange" : "home";
+      // 画面を開き直したとき(establishSession経由)だけでなく、ログイン操作の直後も「最終利用日時」を記録する
+      // (以前はここで呼んでおらず、初回ログインの人のlearner_activityが作られなかった)
+      LAST_ACTIVITY_SYNC = Date.now();
+      syncActivity();
+      backfillLocalToServer().catch(()=>{});
       render();
     }catch(e){
       errorMsg.textContent = tr(T.loginError);
@@ -11682,6 +11875,7 @@ establishSession().then(result=>{
     ST.view = AUTH.mustChangePassword ? "passwordChange" : "home";
     setLevel(loadSavedLevel(), {persist:false}); // ログイン確認後、実習生ごとの前回レベルを復元
     syncActivity();
+    backfillLocalToServer().catch(()=>{});
   }
   render();
 });
