@@ -7356,16 +7356,45 @@ function renderDevicesTab(scope){
   search.onkeydown = (e)=>{ if(e.key === "Enter"){ D.q = search.value; render(); } };
   const go = document.createElement("button"); go.textContent = "探す"; go.onclick = ()=>{ D.q = search.value; render(); };
   sRow.appendChild(search); sRow.appendChild(go); sc.appendChild(sRow);
+  // 企業・絞り込み
+  const fRow = el('<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:13px;"></div>');
+  const cs = document.createElement("select");
+  cs.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;min-width:200px;background:#fff;";
+  const o0 = document.createElement("option"); o0.value = ""; o0.textContent = "すべての企業"; cs.appendChild(o0);
+  (dashState.companies || []).slice().sort((a,b)=> String(a.company_name).localeCompare(String(b.company_name),"ja")).forEach(c=>{
+    const o = document.createElement("option"); o.value = c.company_id; o.textContent = c.company_name + "（" + c.company_id + "）";
+    if(D.company === c.company_id) o.selected = true; cs.appendChild(o);
+  });
+  cs.onchange = ()=>{ D.company = cs.value; render(); };
+  fRow.appendChild(cs);
+  const mkChk = (label, key)=>{
+    const lb = document.createElement("label"); lb.style.cssText = "display:flex;gap:6px;align-items:center;cursor:pointer;";
+    const ck = document.createElement("input"); ck.type = "checkbox"; ck.checked = !!D[key];
+    ck.onchange = ()=>{ D[key] = ck.checked; render(); };
+    lb.appendChild(ck); lb.appendChild(document.createTextNode(label)); fRow.appendChild(lb);
+  };
+  mkChk("登録外の端末で試した人だけ", "onlyAtt");
+  mkChk("PC許可の人だけ", "onlyPc");
+  mkChk("スマホ未登録の人だけ", "onlyNoPhone");
+  sc.appendChild(fRow);
 
   // 実習生ごとにまとめる
   const per = {};
   D.devices.forEach(d=>{ (per[d.student_id] = per[d.student_id] || { phone:null, pc:null })[d.kind] = d; });
   students.filter(s=>s.pc_allowed).forEach(s=>{ per[s.id] = per[s.id] || { phone:null, pc:null }; });
+  // 企業を選んだときは、その企業の在籍者を全員出す(まだ登録していない人も見えるように)
+  if(D.company){
+    students.filter(s=>s.company_id === D.company && s.status === "active").forEach(s=>{ per[s.id] = per[s.id] || { phone:null, pc:null }; });
+  }
   const lines = Object.keys(per).map(id=>({ id, st: byId[id], dv: per[id] }));
   const recentAtt = {};
   D.attempts.forEach(a=>{ (recentAtt[a.student_id] = recentAtt[a.student_id] || []).push(a); });
   Object.keys(recentAtt).forEach(id=>{ if(!per[id]) lines.push({ id, st: byId[id], dv:{ phone:null, pc:null } }); });
   const hit = lines.filter(l=>{
+    if(D.company && !(l.st && l.st.company_id === D.company)) return false;
+    if(D.onlyAtt && !(recentAtt[l.id] || []).length) return false;
+    if(D.onlyPc && !(l.st && l.st.pc_allowed)) return false;
+    if(D.onlyNoPhone && l.dv.phone) return false;
     if(!q) return true;
     const code = (l.dv.phone ? String(l.dv.phone.device_id||"").slice(-6) : "") + " " + (l.dv.pc ? String(l.dv.pc.device_id||"").slice(-6) : "");
     return (devStudentLabel(l.st) + " " + code).toLowerCase().includes(q);
@@ -7399,7 +7428,7 @@ function renderDevicesTab(scope){
   tbl.appendChild(tb); t.appendChild(tbl);
   if(!hit.length) sc.appendChild(el('<div style="font-size:13.5px;color:var(--text-sub);">該当する実習生はいません。</div>'));
   sc.appendChild(t);
-  sc.appendChild(el('<div style="margin-top:8px;font-size:12px;color:var(--text-sub);">登録のある人・PC許可の人・最近ログインを断られた人を表示（最大200件）。「登録外の端末数」が多い人は、IDの使い回しの疑いがあります（試した端末の数）。</div>'));
+  sc.appendChild(el('<div style="margin-top:8px;font-size:12px;color:var(--text-sub);">企業を選ぶと、その企業の在籍者を全員表示します（未登録の人も含む）。企業を選ばないときは、登録のある人・PC許可の人・ログインを断られた人を表示（最大200件）。「登録外の端末数」が多い人は、IDの使い回しの疑いがあります（試した端末の数）。</div>'));
   wrap.appendChild(sc);
 
   // 最近の記録
@@ -7412,7 +7441,7 @@ function renderDevicesTab(scope){
     const t2 = el('<div class="table-scroll"></div>'); const tb2 = document.createElement("table");
     tb2.innerHTML = "<thead><tr><th>最後の日時</th><th>実習生</th><th>内容</th><th>回数</th><th>端末コード</th></tr></thead>";
     const b2 = document.createElement("tbody");
-    D.attempts.slice(0,30).forEach(a=>{
+    D.attempts.filter(a=> !D.company || (byId[a.student_id] && byId[a.student_id].company_id === D.company)).slice(0,30).forEach(a=>{
       const tr = document.createElement("tr");
       tr.innerHTML = "<td>" + escapeHtml(devJst(a.last_seen_at)) + "</td><td>" + escapeHtml(devStudentLabel(byId[a.student_id])) + "</td><td>" + escapeHtml(rs[a.reason] || a.reason || "") + "</td><td>" + (a.times||1) + "</td><td>" + escapeHtml(String(a.device_id||"").slice(-6).toUpperCase()) + "</td>";
       b2.appendChild(tr);
