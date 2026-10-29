@@ -6963,6 +6963,7 @@ async function authLogout(){
   AUTH.session = null;
   AUTH.student = null;
   AUTH.mustChangePassword = false;
+  DEVICE.blocked = false; DEVICE.warn = false; DEVICE.reason = "";
   clearAuthSession();
   if(session){
     try{
@@ -7056,6 +7057,154 @@ function refreshOnce(){
     }
   };
 })();
+
+// ---- 端末の登録(1つのIDを使い回されないようにする) ----
+// スマホは1台、PCは担当者が許可した人だけ1台。強制の開始日(サーバー側の設定)より前は、止めずに記録だけする。
+// 判定はサーバー側(Supabase)で行う。ここは、(1)この端末の目印を作って登録を依頼し、(2)登録できなかったときの案内を出すだけ。
+// 文面は [日本語, English, Indonesia, Tagalog, ไทย, မြန်မာ]。日本語・英語以外はAI訳で、ネイティブ確認はしていない。
+const DEVICE_ID_KEY = "ntic_device_id_v1";
+const DEVICE_CONTACT = "hane@ntic.jp";
+let DEVICE = {
+  id: "",            // この端末の目印(ブラウザに保存したランダムな文字列)
+  kind: "",          // 'phone' | 'pc'
+  blocked: false,    // 強制が始まっていて、この端末が登録されていない(使えない)
+  warn: false,       // 強制の前だが、この端末は登録されていない(開始日から使えなくなる)
+  reason: "",        // phone_limit | pc_not_allowed | pc_limit
+  enforceFrom: null, // 強制の開始日時(ISO文字列)
+  checkedAt: 0
+};
+const DEVICE_L = {
+  blockedTitle: ["この端末では使えません","You can't use the app on this device","Aplikasi tidak dapat digunakan di perangkat ini","Hindi magagamit ang app sa device na ito","ไม่สามารถใช้งานบนอุปกรณ์เครื่องนี้ได้","ဤစက်တွင် အသုံးမပြုနိုင်ပါ"],
+  phone_limit: ["このIDは、すでに別のスマホで登録されています。1つのIDで使えるスマホは1台です。スマホを変えた人は、下のメールアドレスに連絡してください。",
+    "This ID is already registered on another phone. Only one phone can be used with one ID. If you changed your phone, please contact us at the email address below.",
+    "ID ini sudah terdaftar di ponsel lain. Satu ID hanya dapat digunakan di satu ponsel. Jika Anda mengganti ponsel, silakan hubungi alamat email di bawah.",
+    "Naka-register na ang ID na ito sa ibang phone. Isang phone lang ang magagamit sa isang ID. Kung nagpalit ka ng phone, makipag-ugnayan sa email sa ibaba.",
+    "ไอดีนี้ลงทะเบียนกับมือถือเครื่องอื่นแล้ว ไอดีหนึ่งใช้ได้กับมือถือเครื่องเดียว หากเปลี่ยนมือถือ กรุณาติดต่อตามอีเมลด้านล่าง",
+    "ဤ ID ကို အခြားဖုန်းတစ်လုံးတွင် မှတ်ပုံတင်ပြီးဖြစ်သည်။ ID တစ်ခုလျှင် ဖုန်းတစ်လုံးသာ အသုံးပြုနိုင်သည်။ ဖုန်းလဲထားပါက အောက်ပါအီးမေးလ်သို့ ဆက်သွယ်ပါ။"],
+  pc_not_allowed: ["このIDでは、パソコンはまだ使えません。パソコンで使いたい人は、下のメールアドレスに連絡してください。",
+    "Computers can't be used with this ID yet. If you want to use a computer, please contact us at the email address below.",
+    "Komputer belum dapat digunakan dengan ID ini. Jika ingin menggunakan komputer, silakan hubungi alamat email di bawah.",
+    "Hindi pa magagamit ang computer sa ID na ito. Kung gusto mong gumamit ng computer, makipag-ugnayan sa email sa ibaba.",
+    "ไอดีนี้ยังใช้งานบนคอมพิวเตอร์ไม่ได้ หากต้องการใช้คอมพิวเตอร์ กรุณาติดต่อตามอีเมลด้านล่าง",
+    "ဤ ID ဖြင့် ကွန်ပျူတာကို မသုံးနိုင်သေးပါ။ ကွန်ပျူတာဖြင့် သုံးလိုပါက အောက်ပါအီးမေးလ်သို့ ဆက်သွယ်ပါ။"],
+  pc_limit: ["このIDで登録できるパソコンは1台です。パソコンを変えた人は、下のメールアドレスに連絡してください。",
+    "Only one computer can be registered with this ID. If you changed your computer, please contact us at the email address below.",
+    "Hanya satu komputer yang dapat didaftarkan dengan ID ini. Jika Anda mengganti komputer, silakan hubungi alamat email di bawah.",
+    "Isang computer lang ang maaaring i-register sa ID na ito. Kung nagpalit ka ng computer, makipag-ugnayan sa email sa ibaba.",
+    "ไอดีนี้ลงทะเบียนคอมพิวเตอร์ได้เพียงเครื่องเดียว หากเปลี่ยนคอมพิวเตอร์ กรุณาติดต่อตามอีเมลด้านล่าง",
+    "ဤ ID ဖြင့် ကွန်ပျူတာတစ်လုံးသာ မှတ်ပုံတင်နိုင်သည်။ ကွန်ပျူတာလဲထားပါက အောက်ပါအီးမေးလ်သို့ ဆက်သွယ်ပါ။"],
+  mailNote: ["メールには、ログインIDと、下の「端末コード」を書いてください。",
+    "In your email, please write your login ID and the \"device code\" below.",
+    "Dalam email, tuliskan ID login dan \"kode perangkat\" di bawah.",
+    "Sa email, isulat ang inyong login ID at ang \"device code\" sa ibaba.",
+    "ในอีเมล กรุณาเขียนไอดีเข้าสู่ระบบและ \"รหัสอุปกรณ์\" ด้านล่าง",
+    "အီးမေးလ်တွင် Login ID နှင့် အောက်ပါ \"စက်ကုဒ်\" ကို ရေးပါ။"],
+  codeLabel: ["端末コード","Device code","Kode perangkat","Device code","รหัสอุปกรณ์","စက်ကုဒ်"],
+  recheck: ["もう一度確認","Check again","Periksa lagi","Suriin muli","ตรวจสอบอีกครั้ง","ထပ်မံစစ်ဆေးရန်"],
+  warn: ["この端末は、このIDに登録されていません。{d}から、この端末では使えなくなります。くわしくは、お知らせを見てください。",
+    "This device is not registered to this ID. From {d}, you will not be able to use the app on this device. See the News for details.",
+    "Perangkat ini belum terdaftar untuk ID ini. Mulai {d}, aplikasi tidak dapat digunakan di perangkat ini. Lihat Pengumuman untuk detailnya.",
+    "Hindi naka-register ang device na ito sa ID na ito. Simula {d}, hindi na magagamit ang app sa device na ito. Tingnan ang Mga Anunsyo para sa detalye.",
+    "อุปกรณ์เครื่องนี้ยังไม่ได้ลงทะเบียนกับไอดีนี้ ตั้งแต่ {d} จะใช้งานบนอุปกรณ์เครื่องนี้ไม่ได้ ดูรายละเอียดได้ที่ประกาศ",
+    "ဤစက်ကို ဤ ID တွင် မှတ်ပုံမတင်ရသေးပါ။ {d} မှစ၍ ဤစက်တွင် အသုံးပြု၍ မရတော့ပါ။ အသေးစိတ်ကို အသိပေးချက်တွင် ကြည့်ပါ။"]
+};
+function getDeviceId(){
+  if(DEVICE.id) return DEVICE.id;
+  let v = "";
+  try{ v = localStorage.getItem(DEVICE_ID_KEY) || ""; }catch(e){ v = ""; }
+  if(!v || v.length < 8){
+    try{ v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ""; }catch(e){ v = ""; }
+    if(!v){ v = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12); }
+    try{ localStorage.setItem(DEVICE_ID_KEY, v); }catch(e){ /* 保存できないときは、この画面を開いている間だけ有効 */ }
+  }
+  DEVICE.id = v;
+  return v;
+}
+// スマホ(タブレット含む)かPCか。iPadのSafariはMacと名乗るので、タッチ画面があればスマホ側に入れる。
+function detectDeviceKind(){
+  try{
+    const ua = navigator.userAgent || "";
+    if(/iPhone|iPad|iPod|Android|Mobile/i.test(ua)) return "phone";
+    if(/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return "phone";
+  }catch(e){ /* noop */ }
+  return "pc";
+}
+function deviceDateText(iso){
+  try{
+    const loc = { ja:"ja-JP", en:"en-US", id:"id-ID", tl:"fil-PH", th:"th-TH", my:"my-MM" }[ST.lang] || "ja-JP";
+    return new Intl.DateTimeFormat(loc, { month:"long", day:"numeric", timeZone:"Asia/Tokyo" }).format(new Date(iso));
+  }catch(e){ return String(iso || "").slice(0, 10); }
+}
+// この端末を、ログイン中の実習生に登録する(登録済みなら、このログインを紐づけるだけ)。ベストエフォート:通信できないときは何もしない。
+async function registerDevice(){
+  if(!AUTH.session || !AUTH.student) return;
+  try{
+    DEVICE.kind = detectDeviceKind();
+    const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/register_device", {
+      method: "POST",
+      headers: authedHeaders(),
+      body: JSON.stringify({ p_device_id: getDeviceId(), p_kind: DEVICE.kind, p_user_agent: (navigator.userAgent || "").slice(0, 300) })
+    });
+    if(!res.ok) return;
+    const r = await res.json();
+    DEVICE.checkedAt = Date.now();
+    if(!r || (r.status !== "ok" && r.status !== "denied")){ return; } // not_student など: 何もしない
+    const wasBlocked = DEVICE.blocked;
+    DEVICE.enforceFrom = r.enforce_from || null;
+    DEVICE.reason = r.reason || "";
+    DEVICE.blocked = (r.status === "denied" && !!r.enforced);
+    DEVICE.warn = (r.status === "denied" && !r.enforced);
+    if(DEVICE.blocked && !wasBlocked){ ST.view = "deviceBlocked"; render(); }
+    else if(!DEVICE.blocked && wasBlocked){ ST.view = "home"; render(); }
+  }catch(e){ /* 通信できないときは、何もしない(使えなくはしない) */ }
+}
+// 強制の前に、登録されていない端末へ出す帯(ホームの上)
+function buildDeviceWarnBar(){
+  if(!DEVICE.warn || !AUTH.student) return null;
+  const bar = el('<div role="note" style="margin:0 0 12px;padding:10px 12px;border:1px solid #E8C27A;background:#FFF4E3;color:#8A5A00;border-radius:10px;font-size:13px;line-height:1.5;"></div>');
+  bar.textContent = tr(DEVICE_L.warn).replace("{d}", DEVICE.enforceFrom ? deviceDateText(DEVICE.enforceFrom) : "");
+  return bar;
+}
+// 強制の開始後、登録されていない端末に出す画面
+function renderDeviceBlocked(){
+  const wrap = document.createElement("div");
+  const card = el('<div class="card" style="max-width:420px;margin:40px auto;"></div>');
+  const title = document.createElement("div");
+  title.style.cssText = "font-weight:700;font-size:16px;margin-bottom:10px;";
+  title.textContent = tr(DEVICE_L.blockedTitle);
+  card.appendChild(title);
+  const why = document.createElement("div");
+  why.style.cssText = "font-size:13.5px;line-height:1.7;margin-bottom:12px;";
+  why.textContent = tr(DEVICE_L[DEVICE.reason] || DEVICE_L.phone_limit);
+  card.appendChild(why);
+  const mail = document.createElement("div");
+  mail.style.cssText = "font-size:14px;font-weight:700;margin-bottom:4px;";
+  const a = document.createElement("a");
+  a.href = "mailto:" + DEVICE_CONTACT; a.textContent = DEVICE_CONTACT;
+  a.style.cssText = "color:var(--navy);";
+  mail.appendChild(a);
+  card.appendChild(mail);
+  const note = document.createElement("div");
+  note.style.cssText = "font-size:12.5px;color:#556;line-height:1.6;margin-bottom:6px;";
+  note.textContent = tr(DEVICE_L.mailNote);
+  card.appendChild(note);
+  const code = document.createElement("div");
+  code.style.cssText = "font-size:13px;margin-bottom:16px;";
+  code.textContent = tr(DEVICE_L.codeLabel) + ": " + (getDeviceId().slice(-6).toUpperCase());
+  card.appendChild(code);
+  const again = document.createElement("button");
+  again.className = "primary"; again.style.width = "100%";
+  again.textContent = tr(DEVICE_L.recheck);
+  again.onclick = async ()=>{ again.disabled = true; await registerDevice(); again.disabled = false; render(); };
+  card.appendChild(again);
+  const out = document.createElement("button");
+  out.className = "ghost jlogout"; out.style.cssText = "width:100%;margin-top:10px;";
+  out.textContent = tr(T.logoutBtn);
+  out.onclick = async ()=>{ await authLogout(); ST.view = "login"; render(); };
+  card.appendChild(out);
+  wrap.appendChild(card);
+  return wrap;
+}
 
 // ---- 端末に残っている記録のうち、サーバーに届いていない分を送り直す(1回だけ) ----
 // 上の認証切れなどで保存に失敗した回答は、端末(localStorage)には残っている。サーバーより端末のほうが回答数が多い問題・日だけを送る
@@ -7208,6 +7357,14 @@ function optShown(o){
 // 新しいお知らせは、配列の先頭に足す。idは重複しない文字列。viewは、押したときに開く画面(なければ空)。
 // 文面は [日本語, English, Indonesia, Tagalog, ไทย, မြန်မာ]。日本語・英語以外はAI訳で、ネイティブ確認はしていない。
 const NEWS_ITEMS = [
+  { id:"2026-11-device", date:"2026-11-02", view:"",
+    title:["ログインできる端末が、1台になります（11月13日から）","From November 13, only one device can be used with each ID","Mulai 13 November, satu ID hanya dapat digunakan di satu perangkat","Simula Nobyembre 13, isang device lang ang magagamit sa bawat ID","ตั้งแต่วันที่ 13 พฤศจิกายน ไอดีหนึ่งจะใช้ได้กับอุปกรณ์เครื่องเดียว","နိုဝင်ဘာ ၁၃ ရက်မှစ၍ ID တစ်ခုလျှင် စက်တစ်လုံးသာ သုံးနိုင်ပါမည်"],
+    body:["ほかの人に使い回されないように、1つのIDで使えるのは、スマホ1台だけにします。11月13日からは、登録したスマホ以外では使えなくなります。パソコンで使いたい人や、スマホを変えた人は、hane@ntic.jp に連絡してください。IDとパスワードは、ほかの人に教えないでください。",
+      "To prevent your ID from being shared, each ID can be used on only one phone. From November 13, the app will not work on any device other than your registered phone. If you want to use a computer, or if you changed your phone, please email hane@ntic.jp. Please do not share your ID and password with anyone.",
+      "Agar ID tidak digunakan bersama orang lain, satu ID hanya dapat digunakan di satu ponsel. Mulai 13 November, aplikasi tidak dapat digunakan di perangkat selain ponsel yang terdaftar. Jika ingin menggunakan komputer atau mengganti ponsel, silakan kirim email ke hane@ntic.jp. Jangan berikan ID dan kata sandi kepada orang lain.",
+      "Para hindi magamit ng ibang tao ang inyong ID, isang phone lang ang magagamit sa bawat ID. Simula Nobyembre 13, hindi na magagamit ang app sa ibang device maliban sa naka-register na phone. Kung gusto ninyong gumamit ng computer, o kung nagpalit kayo ng phone, mag-email sa hane@ntic.jp. Huwag ibigay ang inyong ID at password sa ibang tao.",
+      "เพื่อไม่ให้ผู้อื่นนำไอดีไปใช้ร่วมกัน ไอดีหนึ่งจะใช้ได้กับมือถือเครื่องเดียว ตั้งแต่วันที่ 13 พฤศจิกายน จะใช้แอปบนอุปกรณ์อื่นนอกจากมือถือที่ลงทะเบียนไว้ไม่ได้ หากต้องการใช้คอมพิวเตอร์ หรือเปลี่ยนมือถือ กรุณาส่งอีเมลถึง hane@ntic.jp และอย่าบอกไอดีและรหัสผ่านให้ผู้อื่น",
+      "အခြားသူများ မျှဝေသုံးစွဲခြင်းမှ ကာကွယ်ရန် ID တစ်ခုလျှင် ဖုန်းတစ်လုံးတွင်သာ သုံးနိုင်ပါမည်။ နိုဝင်ဘာ ၁၃ ရက်မှစ၍ မှတ်ပုံတင်ထားသော ဖုန်းမှလွဲ၍ အခြားစက်များတွင် အက်ပ်ကို သုံး၍ မရတော့ပါ။ ကွန်ပျူတာဖြင့် သုံးလိုပါက သို့မဟုတ် ဖုန်းလဲထားပါက hane@ntic.jp သို့ အီးမေးလ်ပို့ပါ။ ID နှင့် စကားဝှက်ကို အခြားသူအား မပေးပါနှင့်။"] },
   { id:"2026-10-session-fix", date:"2026-10-29", view:"",
     title:["学習時間の記録を直しました","We fixed how study time is recorded","Pencatatan waktu belajar sudah diperbaiki","Naayos na ang pag-record ng oras ng pag-aaral","แก้ไขการบันทึกเวลาเรียนแล้ว","လေ့လာချိန် မှတ်တမ်းကို ပြင်ဆင်ပြီးပါပြီ"],
     body:["アプリを閉じたときなどに、学習時間が記録されないことがありました。直しました。答えた問題の記録や点数には影響ありません。",
@@ -7365,7 +7522,7 @@ function renderSidebar(){
     aside.id = "psb"; aside.className = "psb";
     document.body.insertBefore(aside, document.body.firstChild);
   }
-  const loggedIn = !["login","passwordChange"].includes(ST.view);
+  const loggedIn = !["login","passwordChange","deviceBlocked"].includes(ST.view);
   try{ document.body.classList.toggle("has-psb", loggedIn); }catch(e){ /* noop */ }
   aside.innerHTML = "";
   if(!loggedIn) return;
@@ -7551,7 +7708,7 @@ function renderTopbar(){
     }
   }
   bar.innerHTML = "";
-  const loggedIn = !["login","passwordChange"].includes(ST.view);
+  const loggedIn = !["login","passwordChange","deviceBlocked"].includes(ST.view);
   if(!loggedIn) return;
   const NAMES = { ja:"日本語", en:"English", id:"Bahasa Indonesia", tl:"Tagalog", th:"ภาษาไทย", my:"မြန်မာဘာသာ" };
   const chev = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
@@ -7705,6 +7862,8 @@ document.addEventListener("visibilitychange", ()=>{
       if(ST && ST.session && ST.session.hiddenAt){ ST.session.start = Date.now(); ST.session.lastT = Date.now(); ST.session.hiddenAt = 0; }
       // 長く裏に回っていてトークンが切れていたら、先に更新しておく
       if(AUTH && AUTH.session && AUTH.session.expires_at && Date.now() >= AUTH.session.expires_at - 60000){ refreshOnce(); }
+      // 強制の開始日をまたいで画面を開いたままの端末にも効くよう、10分以上空いていたら端末の登録を再確認する
+      if(AUTH && AUTH.session && AUTH.student && Date.now() - DEVICE.checkedAt > 10 * 60 * 1000){ registerDevice(); }
       // 画面を開いたままの端末でも「最終学習日時」が更新されるよう、10分以上空いていたら記録する
       if(AUTH && AUTH.session && AUTH.student && Date.now() - LAST_ACTIVITY_SYNC > 10 * 60 * 1000){
         LAST_ACTIVITY_SYNC = Date.now();
@@ -8628,7 +8787,7 @@ function renderHeader(){
   // ヘッダーだけが常に見えている状態になる。そこからでもホームに戻れる手段として)。
   // ログイン前後の画面では戻る先が無い/意味が無いため無効化する。
   const logoEl = document.getElementById("orgLogo");
-  const canGoHome = !["login","passwordChange"].includes(ST.view);
+  const canGoHome = !["login","passwordChange","deviceBlocked"].includes(ST.view);
   logoEl.style.cursor = canGoHome ? "pointer" : "default";
   logoEl.onclick = canGoHome ? ()=>{
     if(ST.view === "home") return;
@@ -8695,7 +8854,7 @@ function renderHeader(){
   bar.appendChild(wrap);
 
   // 歯車ボタン(設定画面へ)。ログイン前後の画面では出さない。
-  if(!["login","passwordChange"].includes(ST.view)){
+  if(!["login","passwordChange","deviceBlocked"].includes(ST.view)){
     const gear = document.createElement("button");
     gear.type = "button"; gear.className = "gearbtn"; gear.setAttribute("aria-label", tr(T.settingsTitle));
     gear.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
@@ -8724,6 +8883,9 @@ function render(){
     else if(AUTH.mustChangePassword){ ST.view = "passwordChange"; }
   }
 
+  // 端末が登録されていない(強制の開始後)間は、案内の画面だけを出す
+  if(DEVICE.blocked && AUTH.session && AUTH.student && ST.view !== "login"){ ST.view = "deviceBlocked"; }
+
   renderHeader();
   renderSidebar();
   renderTopbar();
@@ -8733,8 +8895,9 @@ function render(){
   const showTabs = ["home","practice","mock","record","lifeHome","noteHome","kanjiHome"].includes(ST.view);
   if(showTabs) app.appendChild(buildTabBar());
 
-  if(ST.view === "home"){ const nb = buildNewsBar(); if(nb) app.appendChild(nb); }
+  if(ST.view === "home"){ const wb = buildDeviceWarnBar(); if(wb) app.appendChild(wb); const nb = buildNewsBar(); if(nb) app.appendChild(nb); }
   if(ST.view === "login") app.appendChild(renderLogin());
+  else if(ST.view === "deviceBlocked") app.appendChild(renderDeviceBlocked());
   else if(ST.view === "passwordChange") app.appendChild(renderPasswordChange());
   else if(ST.view === "home") app.appendChild(renderHomeView());
   else if(ST.view === "practice") app.appendChild(renderPracticeView());
@@ -8863,6 +9026,9 @@ function renderLogin(){
         btn.disabled = false; btn.textContent = tr(T.loginSubmit);
         return;
       }
+      // この端末を登録する(登録できず、強制が始まっていれば、案内の画面で止める)
+      await registerDevice();
+      if(DEVICE.blocked){ ST.view = "deviceBlocked"; render(); return; }
       ST.view = AUTH.mustChangePassword ? "passwordChange" : "home";
       // 画面を開き直したとき(establishSession経由)だけでなく、ログイン操作の直後も「最終利用日時」を記録する
       // (以前はここで呼んでおらず、初回ログインの人のlearner_activityが作られなかった)
@@ -11870,12 +12036,15 @@ function renderLifeResultView(){
 // セッション確認が終わるまでは、render()のガード処理により自動的にログイン画面が表示される
 checkMaintenanceBanner();
 render();
-establishSession().then(result=>{
+establishSession().then(async result=>{
   if(result){
-    ST.view = AUTH.mustChangePassword ? "passwordChange" : "home";
+    await registerDevice(); // この端末の登録を確認(登録できず、強制が始まっていれば、案内の画面で止める)
+    ST.view = DEVICE.blocked ? "deviceBlocked" : (AUTH.mustChangePassword ? "passwordChange" : "home");
     setLevel(loadSavedLevel(), {persist:false}); // ログイン確認後、実習生ごとの前回レベルを復元
-    syncActivity();
-    backfillLocalToServer().catch(()=>{});
+    if(!DEVICE.blocked){
+      syncActivity();
+      backfillLocalToServer().catch(()=>{});
+    }
   }
   render();
 });

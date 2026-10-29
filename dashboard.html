@@ -2857,6 +2857,7 @@ function shellNavItems(scope){
   if(scope.isAdmin){
     items.push({ id:"companies", label:"企業・事業所", short:"企業", icon:STAT_ICONS.building });
     items.push({ id:"reports", label:"レポート", icon:STAT_ICONS.fileText });
+    items.push({ id:"devices", label:"端末", icon:STAT_ICONS.idCard });
   }
   return items;
 }
@@ -4893,7 +4894,8 @@ const TAB_DEFS = [
   { id: "learners", label: "実習生", icon: "users" },
   { id: "learning", label: "学習", icon: "book" },
   { id: "companies", label: "企業・事業所", icon: "building", adminOnly: true },
-  { id: "reports", label: "レポート", icon: "fileText", adminOnly: true }
+  { id: "reports", label: "レポート", icon: "fileText", adminOnly: true },
+  { id: "devices", label: "端末", icon: "idCard", adminOnly: true }
 ];
 function visibleTabs(scope){
   return TAB_DEFS.filter(t => !t.adminOnly || scope.isAdmin);
@@ -5276,7 +5278,7 @@ function renderDashboard(){
 
   // 企業担当者が管理者限定タブ(companies/reports)を直接踏んでいた場合は概要に戻す
   // (URLで直接指定されたわけではないが、念のための安全策)。
-  if(!scope.isAdmin && (dashState.activeTab === "companies" || dashState.activeTab === "reports")){
+  if(!scope.isAdmin && (dashState.activeTab === "companies" || dashState.activeTab === "reports" || dashState.activeTab === "devices")){
     dashState.activeTab = "overview";
   }
   if(!scope.isAdmin && dashState.learningSubTab === "ranking"){
@@ -5459,6 +5461,8 @@ function renderDashboard(){
     wrap.appendChild(card);
 
     setTimeout(()=>{ renderTableOnly(); renderBulkBar(); }, 0);
+  } else if(dashState.activeTab === "devices"){
+    wrap.appendChild(renderDevicesTab(scope));
   } else if(dashState.activeTab === "reports"){
     // ==== レポートタブ：現時点では専用の帳票・集計機能は無いため、正直にその旨を示す ====
     const repCard = el('<div class="card"></div>');
@@ -7235,6 +7239,188 @@ function renderTableOnly(){
 
   tableWrap.innerHTML = "";
   tableWrap.appendChild(container);
+}
+
+
+// ============================================================
+// 端末管理タブ(ntic_admin / ntic_staff)。実習生の「1ID=スマホ1台+PC1台」の登録状況を見て、
+// 端末の解除・PCの許可を行う。ntic_viewer は見るだけ(ボタンは出さない。DB側でも拒否される)。
+// ============================================================
+function devD(){ if(!dashState.dev) dashState.dev = { status:"idle", cfg:null, devices:[], attempts:[], err:"", q:"", msg:"" }; return dashState.dev; }
+function devJst(iso){
+  if(!iso) return "";
+  try{ return new Intl.DateTimeFormat("ja-JP",{timeZone:"Asia/Tokyo",year:"numeric",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}).format(new Date(iso)); }catch(e){ return String(iso); }
+}
+function devJstInput(iso){
+  try{
+    const p = new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(iso));
+    return p.replace(" ","T");
+  }catch(e){ return ""; }
+}
+async function devLoad(force){
+  const D = devD();
+  if(D.status === "loading" || (D.status === "done" && !force)) return;
+  D.status = "loading"; D.err = "";
+  try{
+    const cfg = await fetchAll("device_lock_config", "select=*&id=eq.1");
+    D.cfg = cfg[0] || null;
+    D.devices = await fetchAllPaged("student_devices", "select=*&revoked_at=is.null&order=last_seen_at.desc");
+    D.attempts = await fetchAllPaged("student_device_attempts", "select=*&order=last_seen_at.desc");
+    D.status = "done";
+  }catch(e){
+    D.status = "error";
+    D.err = "端末の情報を読み込めませんでした。SQL(devlock_migration.sql)を実行済みか確認してください。";
+  }
+  render();
+}
+async function devRpc(name, body){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, { method:"POST", headers: await getAuthHeaders(), body: JSON.stringify(body) });
+  const txt = await res.text();
+  let data = null; try{ data = txt ? JSON.parse(txt) : null; }catch(e){}
+  if(!res.ok) throw new Error((data && data.message) || ("rpc_" + res.status));
+  return data;
+}
+async function devAct(label, fn){
+  const D = devD();
+  D.msg = "";
+  try{ await fn(); D.msg = label + "しました。"; }
+  catch(e){ D.msg = "うまくいきませんでした: " + (e && e.message ? e.message : e); }
+  D.status = "idle";
+  await devLoad(true);
+  if(dashState.students && typeof loadDashboardData === "function"){ /* students.pc_allowed は次回の再読み込みで更新 */ }
+}
+function devStudentLabel(st){
+  if(!st) return "(不明)";
+  return (st.name || "") + (st.dekisugi_student_code ? "（" + st.dekisugi_student_code + "）" : "");
+}
+function renderDevicesTab(scope){
+  const D = devD();
+  const wrap = document.createElement("div");
+  const canEdit = !scope.isViewer;
+  if(D.status === "idle"){ setTimeout(()=>devLoad(false), 0); }
+  const head = el('<div class="card"></div>');
+  const ttl = el('<div class="card-title"></div>'); ttl.textContent = "端末管理（1IDにつきスマホ1台・PC1台）";
+  head.appendChild(ttl);
+  if(D.status === "loading" || D.status === "idle"){
+    head.appendChild(el('<div class="loading">読み込み中...</div>'));
+    wrap.appendChild(head); return wrap;
+  }
+  if(D.status === "error"){
+    const e = el('<div class="errormsg"></div>'); e.textContent = D.err; head.appendChild(e);
+    const b = document.createElement("button"); b.className = "primary"; b.textContent = "再読み込み";
+    b.onclick = ()=>{ D.status = "idle"; render(); };
+    head.appendChild(b); wrap.appendChild(head); return wrap;
+  }
+  const students = dashState.students || [];
+  const byId = {}; students.forEach(s=>{ byId[s.id] = s; });
+  const now = Date.now();
+  const enforceAt = D.cfg ? new Date(D.cfg.enforce_from).getTime() : null;
+  const enforced = enforceAt !== null && enforceAt <= now;
+
+  // 状態
+  const st = el('<div style="font-size:13.5px;line-height:1.8;color:var(--text-sub);"></div>');
+  st.innerHTML = "<div><b>制限の開始日時:</b> " + (D.cfg ? escapeHtml(devJst(D.cfg.enforce_from)) + "（日本時間）" : "不明") +
+    " → <b style='color:" + (enforced ? "#b91c1c" : "#b45309") + "'>" + (enforced ? "制限中（登録外の端末は使えません）" : "まだ制限していません（記録だけ）") + "</b></div>" +
+    "<div>登録中の端末: <b>" + D.devices.length + "</b> 台（スマホ " + D.devices.filter(d=>d.kind==="phone").length + " / PC " + D.devices.filter(d=>d.kind==="pc").length + "）　PC許可済みの実習生: <b>" + students.filter(s=>s.pc_allowed).length + "</b> 人</div>";
+  head.appendChild(st);
+  if(D.msg){ const m = el('<div style="margin-top:8px;font-size:13px;color:#0f766e;font-weight:600;"></div>'); m.textContent = D.msg; head.appendChild(m); }
+  if(scope.isSuper){
+    const row = el('<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;"></div>');
+    row.appendChild(el('<span>制限の開始日時を変える:</span>'));
+    const inp = document.createElement("input"); inp.type = "datetime-local";
+    inp.style.cssText = "padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;";
+    if(D.cfg) inp.value = devJstInput(D.cfg.enforce_from);
+    const sv = document.createElement("button"); sv.className = "primary"; sv.textContent = "日時を保存";
+    sv.onclick = ()=>{
+      if(!inp.value) return;
+      if(!confirm("制限の開始日時を " + inp.value.replace("T"," ") + "（日本時間）にします。よろしいですか？")) return;
+      devAct("日時を保存", async ()=>{
+        const h = await getAuthHeaders(); h.Prefer = "return=minimal";
+        const r = await fetch(SUPABASE_URL + "/rest/v1/device_lock_config?id=eq.1", { method:"PATCH", headers:h, body: JSON.stringify({ enforce_from: inp.value + ":00+09:00", updated_at: new Date().toISOString() }) });
+        if(!r.ok) throw new Error("update_" + r.status);
+      });
+    };
+    row.appendChild(inp); row.appendChild(sv);
+    head.appendChild(row);
+    head.appendChild(el('<div style="margin-top:6px;font-size:12px;color:var(--text-sub);">※ 日時を変えたら、アプリのお知らせ(「11月13日から」の文)も合わせて直してください。</div>'));
+  }
+  wrap.appendChild(head);
+
+  // 検索
+  const q = (D.q || "").trim().toLowerCase();
+  const sc = el('<div class="card"></div>');
+  const sRow = el('<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>');
+  const search = document.createElement("input"); search.type = "search"; search.placeholder = "名前・ID・端末コードで探す";
+  search.value = D.q || "";
+  search.style.cssText = "padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;flex:1;min-width:200px;";
+  search.onkeydown = (e)=>{ if(e.key === "Enter"){ D.q = search.value; render(); } };
+  const go = document.createElement("button"); go.textContent = "探す"; go.onclick = ()=>{ D.q = search.value; render(); };
+  sRow.appendChild(search); sRow.appendChild(go); sc.appendChild(sRow);
+
+  // 実習生ごとにまとめる
+  const per = {};
+  D.devices.forEach(d=>{ (per[d.student_id] = per[d.student_id] || { phone:null, pc:null })[d.kind] = d; });
+  students.filter(s=>s.pc_allowed).forEach(s=>{ per[s.id] = per[s.id] || { phone:null, pc:null }; });
+  const lines = Object.keys(per).map(id=>({ id, st: byId[id], dv: per[id] }));
+  const recentAtt = {};
+  D.attempts.forEach(a=>{ (recentAtt[a.student_id] = recentAtt[a.student_id] || []).push(a); });
+  Object.keys(recentAtt).forEach(id=>{ if(!per[id]) lines.push({ id, st: byId[id], dv:{ phone:null, pc:null } }); });
+  const hit = lines.filter(l=>{
+    if(!q) return true;
+    const code = (l.dv.phone ? String(l.dv.phone.device_id||"").slice(-6) : "") + " " + (l.dv.pc ? String(l.dv.pc.device_id||"").slice(-6) : "");
+    return (devStudentLabel(l.st) + " " + code).toLowerCase().includes(q);
+  }).sort((a,b)=> (recentAtt[b.id]||[]).length - (recentAtt[a.id]||[]).length).slice(0, 200);
+
+  const t = el('<div class="table-scroll"></div>');
+  const tbl = document.createElement("table");
+  tbl.innerHTML = "<thead><tr><th>実習生</th><th>スマホ</th><th>PC</th><th>登録外の端末数</th><th>操作</th></tr></thead>";
+  const tb = document.createElement("tbody");
+  const cell = (d)=> d ? "<div>" + escapeHtml(devJst(d.last_seen_at)) + "</div><div style='font-size:11px;color:#64748b;'>コード " + escapeHtml(String(d.device_id||"").slice(-6).toUpperCase()) + "</div>" : "<span style='color:#94a3b8;'>—</span>";
+  hit.forEach(l=>{
+    const tr = document.createElement("tr");
+    const att = recentAtt[l.id] || [];
+    const pcOk = !!(l.st && l.st.pc_allowed);
+    tr.innerHTML = "<td>" + escapeHtml(devStudentLabel(l.st)) + (pcOk ? " <span style='font-size:11px;background:#dcfce7;color:#166534;padding:1px 6px;border-radius:99px;'>PC許可</span>" : "") + "</td><td>" + cell(l.dv.phone) + "</td><td>" + cell(l.dv.pc) + "</td><td>" +
+      (att.length ? "<b style='color:#b91c1c;'>" + att.length + "</b>" : "0") + "</td>";
+    const td = document.createElement("td"); td.style.whiteSpace = "nowrap";
+    if(canEdit){
+      const mk = (txt, fn, dis)=>{ const b = document.createElement("button"); b.textContent = txt; b.style.cssText = "margin:2px;padding:6px 10px;font-size:12px;"; if(dis){ b.disabled = true; } b.onclick = fn; td.appendChild(b); };
+      mk("スマホ解除", ()=>{ if(confirm(devStudentLabel(l.st) + " のスマホ登録を解除します。次にログインした端末が新しい登録になります。") ) devAct("スマホを解除", ()=>devRpc("admin_revoke_devices",{ p_student_id:l.id, p_kind:"phone" })); }, !l.dv.phone);
+      mk("PC解除", ()=>{ if(confirm(devStudentLabel(l.st) + " のPC登録を解除します。") ) devAct("PCを解除", ()=>devRpc("admin_revoke_devices",{ p_student_id:l.id, p_kind:"pc" })); }, !l.dv.pc);
+      mk(pcOk ? "PC許可をやめる" : "PCを許可", ()=>{
+        const next = !pcOk;
+        if(confirm(devStudentLabel(l.st) + (next ? " にPCの利用を許可します。" : " のPC許可をやめます（登録済みのPCも解除されます）。"))){
+          devAct(next ? "PCを許可" : "PC許可をやめ", async ()=>{ await devRpc("admin_set_pc_allowed",{ p_student_id:l.id, p_allowed:next }); if(l.st) l.st.pc_allowed = next; });
+        }
+      });
+    }
+    tr.appendChild(td); tb.appendChild(tr);
+  });
+  tbl.appendChild(tb); t.appendChild(tbl);
+  if(!hit.length) sc.appendChild(el('<div style="font-size:13.5px;color:var(--text-sub);">該当する実習生はいません。</div>'));
+  sc.appendChild(t);
+  sc.appendChild(el('<div style="margin-top:8px;font-size:12px;color:var(--text-sub);">登録のある人・PC許可の人・最近ログインを断られた人を表示（最大200件）。「登録外の端末数」が多い人は、IDの使い回しの疑いがあります（試した端末の数）。</div>'));
+  wrap.appendChild(sc);
+
+  // 最近の記録
+  const ac = el('<div class="card"></div>');
+  const at = el('<div class="card-title"></div>'); at.textContent = "最近、登録外の端末でログインしようとした記録（新しい順・30件）";
+  ac.appendChild(at);
+  const rs = { phone_limit:"2台目のスマホ", pc_not_allowed:"PC（許可なし）", pc_limit:"2台目のPC" };
+  if(!D.attempts.length) ac.appendChild(el('<div style="font-size:13.5px;color:var(--text-sub);">まだありません。</div>'));
+  else{
+    const t2 = el('<div class="table-scroll"></div>'); const tb2 = document.createElement("table");
+    tb2.innerHTML = "<thead><tr><th>最後の日時</th><th>実習生</th><th>内容</th><th>回数</th><th>端末コード</th></tr></thead>";
+    const b2 = document.createElement("tbody");
+    D.attempts.slice(0,30).forEach(a=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + escapeHtml(devJst(a.last_seen_at)) + "</td><td>" + escapeHtml(devStudentLabel(byId[a.student_id])) + "</td><td>" + escapeHtml(rs[a.reason] || a.reason || "") + "</td><td>" + (a.times||1) + "</td><td>" + escapeHtml(String(a.device_id||"").slice(-6).toUpperCase()) + "</td>";
+      b2.appendChild(tr);
+    });
+    tb2.appendChild(b2); t2.appendChild(tb2); ac.appendChild(t2);
+  }
+  wrap.appendChild(ac);
+  return wrap;
 }
 
 function escapeHtml(s){
