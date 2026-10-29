@@ -613,7 +613,10 @@ body.shell-on .tabnav, body.shell-on .subnav, body.shell-on .mobile-bottomnav{di
 
 .ov-kpis{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;}
 .ov-kpi{background:#fff;border:1px solid var(--nv-line);border-radius:14px;padding:14px 14px 12px;box-shadow:0 1px 2px rgba(15,27,51,.04);cursor:default;}
-.ov-kpi.click{cursor:pointer;}
+.ov-kpi.click{cursor:pointer;position:relative;}
+.ov-kpi.click::after{content:"›";position:absolute;top:8px;right:11px;font-size:20px;line-height:1;font-weight:700;color:var(--nv-blue);}
+.ov-kpi.click:active{background:#F2F6FF;}
+.ov-tap-hint{display:none;}
 .ov-kpi-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .ov-kpi-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 34px;}
 .ov-kpi-ico svg{width:19px;height:19px;}
@@ -627,6 +630,9 @@ body.shell-on .tabnav, body.shell-on .subnav, body.shell-on .mobile-bottomnav{di
 .ov-chip.flat{background:var(--nv-gray-bg);color:var(--nv-sub);}
 .ov-cap{font-size:11px;color:var(--nv-sub);}
 .ov-m-strip{display:none;}
+.ov-m-strip .it.click{cursor:pointer;position:relative;}
+.ov-m-strip .it.click::after{content:"›";position:absolute;top:6px;right:9px;font-size:16px;line-height:1;font-weight:700;color:var(--nv-blue);}
+.ov-m-strip .it.click:active{background:#F2F6FF;}
 
 .ov-grid{display:grid;gap:16px;grid-template-columns:repeat(12,minmax(0,1fr));}
 .ov-g-a{grid-column:span 5;} .ov-g-b{grid-column:span 7;}
@@ -723,6 +729,7 @@ body.shell-on .tabnav, body.shell-on .subnav, body.shell-on .mobile-bottomnav{di
   .ov-kpi-ico{width:30px;height:30px;flex-basis:30px;}
   .ov-kpi-ico svg{width:17px;height:17px;}
   .ov-m-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .ov-tap-hint{display:block;font-size:11px;color:var(--nv-sub);margin:2px 2px 8px;}
   .ov-m-strip .it{background:#fff;border:1px solid var(--nv-line);border-radius:12px;padding:9px 10px;}
   .ov-m-strip .it .l{font-size:10.5px;color:var(--nv-sub);font-weight:700;}
   .ov-m-strip .it .v{font-size:18px;font-weight:800;color:var(--nv-text);margin-top:2px;}
@@ -3321,7 +3328,8 @@ function buildOverviewV2(wrap, c){
   const accPrev = wPrev && wPrev.questions > 0 ? wPrev.correct / wPrev.questions * 100 : null;
   const dWeekLearners = (wThis && wPrev && wPrev.learners > 0) ? wThis.learners - wPrev.learners : null;
   const dAcc = (accThis !== null && accPrev !== null) ? accThis - accPrev : null;
-  const goFollow = ()=>{ dashState.learningLearnerFilter = "followup"; dashState.learningSubTab = "learners"; dashState.learningLearnerPage = 0; switchTab("learning"); };
+  const goList = (f)=> ()=>{ dashState.learningLearnerFilter = f; dashState.learningSubTab = "learners"; dashState.learningLearnerPage = 0; switchTab("learning"); };
+  const goFollow = goList("followup");
   const kpi = (opt)=>{
     const col = OV_COLORS[opt.color];
     const k = el('<div class="ov-kpi'+(opt.onclick ? ' click' : '')+(opt.sec ? ' sec' : '')+'"></div>');
@@ -3332,11 +3340,11 @@ function buildOverviewV2(wrap, c){
     return k;
   };
   const kpis = el('<div class="ov-kpis"></div>');
-  kpis.appendChild(kpi({ icon:"users", color:"blue", label: c.scope.isAdmin ? "学習対象" : "学習対象", value: fmtNum(total), unit:"人", cap:"登録している実習生" }));
-  kpis.appendChild(kpi({ icon:"book", color:"green", label:"学習中", value: fmtNum(c.studying.length), unit:"人", cap: pct(c.studying.length) }));
-  kpis.appendChild(kpi({ icon:"userOff", color:"gray", label:"未学習", value: fmtNum(c.notStudied.length), unit:"人", cap: pct(c.notStudied.length) }));
+  kpis.appendChild(kpi({ icon:"users", color:"blue", label: c.scope.isAdmin ? "学習対象" : "学習対象", value: fmtNum(total), unit:"人", cap:"登録している実習生", onclick: total > 0 ? goList("all") : null }));
+  kpis.appendChild(kpi({ icon:"book", color:"green", label:"学習中", value: fmtNum(c.studying.length), unit:"人", cap: pct(c.studying.length), onclick: c.studying.length > 0 ? goList("studying") : null }));
+  kpis.appendChild(kpi({ icon:"userOff", color:"gray", label:"未学習", value: fmtNum(c.notStudied.length), unit:"人", cap: pct(c.notStudied.length), onclick: c.notStudied.length > 0 ? goList("notstudied") : null }));
   kpis.appendChild(kpi({ icon:"alertTriangle", color:"red", label:"要フォロー", value: fmtNum(c.followUps.length), unit:"人", alert: c.followUps.length > 0, cap: pct(c.followUps.length), onclick: c.followUps.length > 0 ? goFollow : null }));
-  kpis.appendChild(kpi({ icon:"calendar", color:"purple", label:"今週学習", value: fmtNum(c.thisWeek.length), unit:"人", sec:true, chip: ovChip(dWeekLearners, "人"), cap: dWeekLearners === null ? pct(c.thisWeek.length) : "" }));
+  kpis.appendChild(kpi({ icon:"calendar", color:"purple", label:"今週学習", value: fmtNum(c.thisWeek.length), unit:"人", sec:true, chip: ovChip(dWeekLearners, "人"), cap: dWeekLearners === null ? pct(c.thisWeek.length) : "", onclick: c.thisWeek.length > 0 ? goList("thisweek") : null }));
   kpis.appendChild(kpi({ icon:"trendingUp", color:"orange", label:"平均進捗", value: c.avgProgress, unit:"%", sec:true, cap:"全問題に対する消化率" }));
   kpis.appendChild(kpi({ icon:"target", color:"green", label:"平均正答率", value: c.avgRate, unit:"%", sec:true, chip: ovChip(dAcc, "pt", 1), cap: dAcc === null ? "学習した人の平均" : "" }));
   root.appendChild(kpis);
@@ -3347,6 +3355,8 @@ function buildOverviewV2(wrap, c){
   const dTxt = (x, unit, dg)=>{ if(x === null || !isFinite(x)) return ''; const v = dg != null ? Number(x.toFixed(dg)) : Math.round(x); return '<div class="d '+(v > 0 ? 'up' : v < 0 ? 'down' : '')+'">'+(v > 0 ? '▲ +'+v : v < 0 ? '▼ '+Math.abs(v) : '― 0')+unit+' 前週比</div>'; };
   strip.innerHTML = sItem("今週学習", fmtNum(c.thisWeek.length), "人", dTxt(dWeekLearners, "人")) + sItem("平均進捗", c.avgProgress, "%", "") + sItem("平均正答率", c.avgRate, "%", dTxt(dAcc, "pt", 1));
   root.appendChild(strip);
+  { const first = strip.querySelector(".it"); if(first && c.thisWeek.length > 0){ first.classList.add("click"); first.onclick = goList("thisweek"); } }
+  root.appendChild(el('<div class="ov-tap-hint">「›」が付いた項目は、タップすると実習生の一覧が開きます。</div>'));
 
   // スマホ: 切り替えボタン
   const seg = el('<div class="m-seg"></div>');
