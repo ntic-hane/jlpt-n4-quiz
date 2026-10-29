@@ -2919,6 +2919,32 @@ async function shellRefresh(){
   render();
 }
 
+// ---- お知らせの帯(閉じると、そのブラウザでは次から出ない) ----
+// 新しいお知らせは DASH_NOTICES の先頭に足す。idは重複しない文字列。
+const DASH_NOTICES = [
+  { id:"2026-10-session-fix", date:"2026-10-29",
+    title:"【お知らせ】学習時間・学習回数の記録について（修正済み）",
+    body:"10月1日〜10月28日の間、アプリを閉じる・別のアプリに切り替えるなどして終了した場合に、その回の学習時間と学習回数が記録されない不具合がありました。10月29日に修正しました。問題の回答数・正答率・進捗は正しく記録されており、影響を受けたのは学習時間・学習回数・学習履歴です。この期間の学習時間が少なく（または0に）表示される場合がありますが、実際に学習していないわけではありません。修正前の分は復元できません。" }
+];
+const DASH_NOTICE_SEEN_KEY = "ntic_dash_notice_seen_v1";
+function dashNoticeSeen(){ try{ const r = localStorage.getItem(DASH_NOTICE_SEEN_KEY); return r ? (JSON.parse(r) || {}) : {}; }catch(e){ return {}; } }
+function dashNoticeMark(id){ try{ const o = dashNoticeSeen(); o[id] = 1; localStorage.setItem(DASH_NOTICE_SEEN_KEY, JSON.stringify(o)); }catch(e){ /* 保存できないときは、また出る */ } }
+function buildDashNotice(){
+  const seen = dashNoticeSeen();
+  const item = DASH_NOTICES.find(n => !seen[n.id]);
+  if(!item) return null;
+  const bar = el('<div role="region" aria-label="お知らせ" style="display:flex;gap:10px;align-items:flex-start;background:#FFF8E6;border:1px solid #F2D58A;border-radius:12px;padding:12px 14px;margin:0 0 14px;box-sizing:border-box;"></div>');
+  const txt = el('<div style="flex:1;min-width:0;"></div>');
+  const t = el('<div style="font-size:13.5px;font-weight:800;color:#7A5200;"></div>'); t.textContent = item.title;
+  const b = el('<div style="font-size:12.5px;line-height:1.7;color:#5C4300;margin-top:4px;"></div>'); b.textContent = item.body;
+  const d = el('<div style="font-size:11px;color:#8A6D1F;margin-top:4px;"></div>'); d.textContent = item.date;
+  txt.appendChild(t); txt.appendChild(b); txt.appendChild(d);
+  const x = el('<button type="button" aria-label="閉じる" style="border:0;background:transparent;font-size:18px;line-height:1;color:#7A5200;cursor:pointer;padding:2px 6px;">✕</button>');
+  x.onclick = ()=>{ dashNoticeMark(item.id); render(); };
+  bar.appendChild(txt); bar.appendChild(x);
+  return bar;
+}
+
 function buildShell(content){
   const scope = sessionScope();
   const logoSrc = (document.getElementById("orgLogo") || {}).src || "";
@@ -2969,6 +2995,7 @@ function buildShell(content){
   tools.appendChild(btn);
   head.appendChild(tools);
   inner.appendChild(head);
+  { const nb = buildDashNotice(); if(nb) inner.appendChild(nb); }
   inner.appendChild(content);
   main.appendChild(inner);
   shell.appendChild(main);
@@ -3398,7 +3425,7 @@ function buildOverviewV2(wrap, c){
         const ch = el('<div class="ov-chart"></div>');
         ch.innerHTML = ovLine({ labels: sl.map(r=>ovMD(r.day)), series:[{ values: vals, color: colr, area:true }], w: wideW, fmt: ttab === "time" ? (v)=> (Math.round(v*10)/10) : null });
         body.appendChild(ch);
-        if(ttab === "sessions" || ttab === "time") body.appendChild(el('<div class="ov-foot">※ セッション・学習時間は10/1から記録しています</div>'));
+        if(ttab === "sessions" || ttab === "time") body.appendChild(el('<div class="ov-foot">※ セッション・学習時間は10/1から記録しています（10/29の修正前は、アプリを閉じた回の分が記録されていない場合があり、実際より少なく表示されます）</div>'));
       }
     }
     grid.appendChild(ovCard("ov-g-c"+hideUnless("status"), "学習活動の推移", STAT_ICONS.trendingUp, "blue", body));
@@ -3424,7 +3451,7 @@ function buildOverviewV2(wrap, c){
         const dl = [], dv = []; for(let d = 1; d <= dim; d++){ dl.push(String(d)); dv.push(byDay[d] || 0); }
         ch.innerHTML = ovBars({ labels: dl, values: dv, color: OV_COLORS.blue.c, h:170, w: narrowW, fmt:(v)=>Math.round(v*10)/10 });
         body.appendChild(ch);
-        body.appendChild(el('<div class="ov-foot">※ 10/1から記録しています</div>'));
+        body.appendChild(el('<div class="ov-foot">※ 10/1から記録しています（10/29の修正前は、アプリを閉じた回の分が記録されていない場合があり、実際より少なく表示されます）</div>'));
       }
     }
     grid.appendChild(ovCard("ov-g-d"+hideUnless("time"), "今月の学習時間", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>', "blue", body));
@@ -5851,8 +5878,8 @@ function renderLearnerKarte(){
   kpiRow.appendChild(kk("book","blue","学習済み問題数", lvQuestionsStudied, "/"+totalQBank+"問", totalQBank > 0 ? Math.round(lvQuestionsStudied/totalQBank*100)+"% 消化" : ""));
   kpiRow.appendChild(kk("target","green","通算正答率", rate, "%", jaOnlyExtra || (lvLabel + "の学習状況")));
   kpiRow.appendChild(kk("calendar","purple","最終学習", lvLastSeen ? relTime(lvLastSeen) : "-", "", ""));
-  kpiRow.appendChild(kk("users","orange","学習セッション数", sessionStats.count, "回", sessionStats.count === 0 ? "10/1から記録" : ""));
-  kpiRow.appendChild(kk("trendingUp","blue","累計学習時間", sessionStats.totalSeconds > 0 ? formatDuration(sessionStats.totalSeconds) : "-", "", sessionStats.count === 0 ? "10/1から記録" : ""));
+  kpiRow.appendChild(kk("users","orange","学習セッション数", sessionStats.count, "回", sessionStats.count === 0 ? ((l.dailyRows||[]).length > 0 ? "回答あり・回数は記録漏れ" : "10/1から記録") : ""));
+  kpiRow.appendChild(kk("trendingUp","blue","累計学習時間", sessionStats.totalSeconds > 0 ? formatDuration(sessionStats.totalSeconds) : "-", "", sessionStats.count === 0 ? ((l.dailyRows||[]).length > 0 ? "回答あり・時間は記録漏れ" : "10/1から記録") : ""));
   kpiRow.appendChild(kk("alertTriangle","red","学習継続日数", streakDays, "日", streakDays > 0 ? "直近30日で"+days30+"日学習" : ""));
   wrap.appendChild(kpiRow);
   const kgrid = el('<div class="k-grid"></div>');
@@ -6214,8 +6241,35 @@ function renderLearnerKarte(){
   histTitle2.className = "card-title";
   histTitle2.textContent = "学習履歴（" + lvLabel + "）";
   histCard2.appendChild(histTitle2);
-  const mySessions = (l.studySessions || []).slice().sort((a,b)=> new Date(b.started_at) - new Date(a.started_at));
-  if(mySessions.length === 0){
+  const mySessionsAll = (l.studySessions || []).slice().sort((a,b)=> new Date(b.started_at) - new Date(a.started_at));
+  // 回答の記録(daily_summary)はあるのに、その日の学習セッション記録が無い日(アプリを閉じた回が記録されなかった不具合の分)を
+  // 「回答のみ」の行として足す。回答数・正答率は記録されているので、学習していないことにはならない。
+  const padH = (n)=> String(n).padStart(2,"0");
+  // 日別記録(daily_summary)の日付は、10/29の修正前はUTC(日本時間の朝9時に日付が変わる)で付いているため、
+  // セッションの日付は「端末の日付」と「UTCの日付」の両方で照合する(朝9時前の学習が「回答のみ」と誤判定されないように)。
+  const sessDays = new Set();
+  mySessionsAll.forEach(s=>{
+    [s.started_at, s.ended_at].forEach(ts=>{
+      if(!ts) return;
+      const d = new Date(ts);
+      sessDays.add(d.getFullYear()+"-"+padH(d.getMonth()+1)+"-"+padH(d.getDate()));
+      sessDays.add(d.toISOString().slice(0,10));
+    });
+  });
+  const gapByDate = {};
+  (l.dailyRows || []).forEach(r=>{
+    const ds = String(r.summary_date).slice(0,10);
+    if(sessDays.has(ds) || !(r.n_count > 0)) return;
+    if(!gapByDate[ds]) gapByDate[ds] = { date: ds, n:0, c:0, subjs:[] };
+    gapByDate[ds].n += r.n_count || 0; gapByDate[ds].c += r.c_count || 0;
+    const lb = SUBJECT_LABEL[r.subj] || r.subj;
+    if(lb && gapByDate[ds].subjs.indexOf(lb) < 0) gapByDate[ds].subjs.push(lb);
+  });
+  const gapRows = Object.keys(gapByDate).map(k=>gapByDate[k]);
+  const histItems = mySessionsAll.map(s=>({ t: +new Date(s.started_at), s }))
+    .concat(gapRows.map(g=>({ t: +new Date(g.date + "T12:00:00"), g })))
+    .sort((a,b)=> b.t - a.t);
+  if(histItems.length === 0){
     const histNote = el('<div class="loading">学習セッションの記録はまだありません（本機能の追加日以降に記録されます）。</div>');
     histCard2.appendChild(histNote);
   } else {
@@ -6226,8 +6280,17 @@ function renderLearnerKarte(){
     thead.innerHTML = '<tr><th>日付</th><th>モード</th><th>分野</th><th>問題数</th><th>正答率</th><th>学習時間</th></tr>';
     histTable.appendChild(thead);
     const tbody = document.createElement("tbody");
-    mySessions.slice(0, dashState.karteHistShowCount || 10).forEach(s=>{
+    histItems.slice(0, dashState.karteHistShowCount || 10).forEach(it=>{
       const tr = document.createElement("tr");
+      if(it.g){
+        const g = it.g;
+        const gp = g.n > 0 ? Math.round(g.c / g.n * 100) : 0;
+        tr.innerHTML = "<td>"+g.date.replace(/-/g,"/")+"</td><td><span class='mode-badge' style='background:#EEF0F5;color:#5B6478;'>回答のみ</span></td><td>"+escapeHtml(g.subjs.join("・") || "-")+"</td>"+
+          "<td>"+g.n+"問</td><td>"+gp+"%</td><td style='color:#9AA3B5;'>記録なし</td>";
+        tbody.appendChild(tr);
+        return;
+      }
+      const s = it.s;
       const d = new Date(s.started_at);
       const dateStr = d.getFullYear()+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
       const modeLabel = s.mode === "mock" ? "模試" : "練習";
@@ -6239,10 +6302,13 @@ function renderLearnerKarte(){
     });
     histTable.appendChild(tbody);
     histCard2.appendChild(histTable);
-    if(mySessions.length > (dashState.karteHistShowCount || 10)){
+    if(gapRows.length > 0){
+      histCard2.appendChild(el('<div class="ov-foot" style="margin-top:8px;font-size:11.5px;color:#6B7487;">「回答のみ」は、10/29の修正前にアプリを閉じた回の学習時間が記録されなかった日です。回答数・正答率は記録されています（学習時間は不明）。</div>'));
+    }
+    if(histItems.length > (dashState.karteHistShowCount || 10)){
       const histMoreBtn = document.createElement("button");
       histMoreBtn.className = "missq-more";
-      histMoreBtn.textContent = "もっと見る（あと" + (mySessions.length - (dashState.karteHistShowCount || 10)) + "件）";
+      histMoreBtn.textContent = "もっと見る（あと" + (histItems.length - (dashState.karteHistShowCount || 10)) + "件）";
       histMoreBtn.onclick = ()=>{ dashState.karteHistShowCount = (dashState.karteHistShowCount || 10) + 10; render(); };
       histCard2.appendChild(histMoreBtn);
     }
