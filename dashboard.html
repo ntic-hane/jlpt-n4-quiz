@@ -617,6 +617,14 @@ body.shell-on .tabnav, body.shell-on .subnav, body.shell-on .mobile-bottomnav{di
 .ov-kpi.click::after{content:"›";position:absolute;top:8px;right:11px;font-size:20px;line-height:1;font-weight:700;color:var(--nv-blue);}
 .ov-kpi.click:active{background:#F2F6FF;}
 .ov-tap-hint{display:none;}
+/* 押せる行・カードの目印「›」(2026/10/29)。JSで、押すと動く行・カードに tap-mark を付ける */
+.tap-mark{position:relative;}
+.tap-mark:not(tr){padding-right:26px;}
+.tap-mark:not(tr)::after{content:"›";position:absolute;top:50%;right:9px;transform:translateY(-50%);font-size:20px;line-height:1;font-weight:700;color:var(--nv-blue,#2F6FEB);pointer-events:none;}
+tr.tap-mark > td:last-child{position:relative;padding-right:26px;}
+tr.tap-mark > td:last-child::after{content:"›";position:absolute;top:50%;right:8px;transform:translateY(-50%);font-size:20px;line-height:1;font-weight:700;color:var(--nv-blue,#2F6FEB);pointer-events:none;}
+.tap-mark:active{background:#F2F6FF;}
+
 .ov-kpi-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .ov-kpi-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 34px;}
 .ov-kpi-ico svg{width:19px;height:19px;}
@@ -7288,6 +7296,43 @@ function escapeHtml(s){
 
 checkMaintenanceBanner();
 render();
+})();
+
+// ============================================================
+// 押せる行・カードに「›」を付ける(2026/10/29)
+// 押すと別の画面が開く行・カード(実習生の行、ランキングの行、指標のカードなど)は、見た目では押せるか分からなかった。
+// 描画のたびに、onclick が付いている「ボタンではない要素」を探して、tap-mark(›)を付ける。
+// 付けない物: ボタン・リンク・入力欄(元から押せると分かる)、メニュー/ヘッダー/ドロワー、並べ替えの見出し(th)、
+//            すでに ▼▶▸› などの矢印がある行(開閉の見出しなど)、すでに目印がある物
+// ============================================================
+(function(){
+  const SKIP_TAGS = { BUTTON:1, A:1, INPUT:1, SELECT:1, TEXTAREA:1, LABEL:1, SUMMARY:1, TH:1, OPTION:1 };
+  const SKIP_IN = ".sb, .m-top, .m-bottom, .m-drawer, .m-drawer-bg, .huiAvatar, #orgLogo, #header, header";
+  const ARROWS = /[▼▶▾▸›»]/;
+  let queued = false;
+  function mark(){
+    queued = false;
+    const app = document.getElementById("app");
+    if(!app) return;
+    app.querySelectorAll("*").forEach(n=>{
+      if(n.classList.contains("tap-mark") || n.classList.contains("click")) return;
+      if(typeof n.onclick !== "function") return;
+      if(SKIP_TAGS[n.tagName]) return;
+      if(n.closest(SKIP_IN)) return;
+      if(n.querySelector("button, input, select, textarea, a[href]")) { if(n.tagName !== "TR") return; }
+      if(ARROWS.test(n.textContent || "")) return;
+      if(n.tagName !== "TR" && getComputedStyle(n).position === "static") n.style.position = "relative";
+      n.classList.add("tap-mark");
+    });
+  }
+  function queue(){ if(queued) return; queued = true; (window.requestAnimationFrame || setTimeout)(mark); }
+  function start(){
+    const app = document.getElementById("app");
+    if(!app || typeof MutationObserver === "undefined") return;
+    new MutationObserver(queue).observe(app, { childList:true, subtree:true });   // 属性の変更は見ない(自分のclass追加で無限に呼ばれないように)
+    queue();
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
 </script>
 </body>
