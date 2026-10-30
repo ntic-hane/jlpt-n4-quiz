@@ -6757,14 +6757,17 @@ function buildLearnerRow(l, scopeForTable){
   const tr = document.createElement("tr");
   // N4を解いていない(N3・N2だけ学習している)人は、一番多く解いているレベルの正答率を、レベル名つきで出す
   const mainLvRow = l.lv && l.lv[l.mainLevel];
-  const useMainRate = !!(l.n === 0 && mainLvRow && mainLvRow.n > 0 && l.mainLevel !== "n4");
+  // メインの級がN4以外なら、正答率・科目別・模試は、その級の数字を出す(級名を正答率の横に付ける)
+  const useMainLv = !!(mainLvRow && l.mainLevel !== "n4");
+  const useMainRate = !!(useMainLv && mainLvRow.n > 0);
   const rate = useMainRate ? Math.round(mainLvRow.c / mainLvRow.n * 100) : (l.n > 0 ? Math.round(l.c / l.n * 100) : 0);
   const rateSuffix = useMainRate ? " <span style='font-size:10px;font-weight:700;'>"+l.mainLevel.toUpperCase()+"</span>" : "";
   const badgeClass = rate >= 70 ? "high" : rate >= 40 ? "mid" : "low";
   let examCell = "-";
-  if(l.lastExam){
-    const eg = l.lastExam.exam_group === "moji" ? "文字語彙" : l.lastExam.exam_group === "choukai" ? "聴解" : "文法・読解";
-    examCell = eg + " " + l.lastExam.correct + "/" + l.lastExam.total + " (" + l.lastExam.pct + "%)";
+  const shownExam = useMainLv ? mainLvRow.exam : l.lastExam;
+  if(shownExam){
+    const eg = shownExam.exam_group === "moji" ? "文字語彙" : shownExam.exam_group === "choukai" ? "聴解" : "文法・読解";
+    examCell = eg + " " + shownExam.correct + "/" + shownExam.total + " (" + shownExam.pct + "%)";
   }
   let lastSeenCell = "-";
   let staleClass = "";
@@ -6797,7 +6800,7 @@ function buildLearnerRow(l, scopeForTable){
   }
 
   const subjCell = (subj)=>{
-    const st = l.subjStats && l.subjStats[subj];
+    const st = (useMainLv ? mainLvRow.subj : l.subjStats) && (useMainLv ? mainLvRow.subj : l.subjStats)[subj];
     if(!st || st.n === 0) return "-";
     const r = Math.round(st.c/st.n*100);
     const cls = r >= 70 ? "high" : r >= 40 ? "mid" : "low";
