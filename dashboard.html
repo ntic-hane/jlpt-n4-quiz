@@ -2352,6 +2352,15 @@ function buildLearnerSummary(){
       map[key].catStats[ct].n += v.n; map[key].catStats[ct].c += v.c;
     });
   });
+  // N3・N2の集計(学習者ごと)。N4の数字には混ぜず、「どのレベルをどれだけやっているか」を一覧で見せるためだけに使う。
+  const lvAgg = { n3:{}, n2:{} };
+  [["n3", dashState.progressAggN3], ["n2", dashState.progressAggN2]].forEach(([lv, arr])=>{
+    (arr || []).forEach(r=>{
+      const key = r.company_id + "::" + r.learner_id;
+      if(!map[key]) map[key] = { company_id:r.company_id, learner_id:r.learner_id, n:0, c:0, tn:0, tc:0, questionsStudied:0, subjStats:{}, catStats:{} };
+      lvAgg[lv][key] = r;
+    });
+  });
   dashState.exams.forEach(e=>{
     // 模試もメインの一覧ではN4のみ(N3の模試結果は個人カルテのN3タブで見る)
     if((e.level || "n4") !== "n4") return;
@@ -2432,21 +2441,48 @@ function buildLearnerSummary(){
 
     // 要フォロー判定: 3日以上未学習 / 進捗20%未満 / 正答率40%未満 / 正答率は高いが翻訳依存度も高い、のいずれか
     const rate = l.n > 0 ? Math.round(l.c/l.n*100) : 0;
-    const totalQ = Object.keys(QID_CATEGORY_MAP).length || 191;
-    const progressPct = Math.round((l.questionsStudied / totalQ) * 100);
+
+    // ---- レベル別(N4/N3/N2)の学習状況 ----
+    // 一覧・ランキングの数字(n,c,progressPct,rate)は今まで通りN4。ここでは「どのレベルをどれだけやっているか」を別に持つ。
+    // 状態(未着手/要フォロー)は、N4だけでなく全レベルで見る(N3だけやっている人を「未着手」にしないため)。
+    const LV_ORDER = ["n4", "n3", "n2"];
+    const lvRaw = {
+      n4: { q:l.questionsStudied, n:l.n, c:l.c, tn:l.tn||0, tc:l.tc||0 },
+      n3: lvAgg.n3[key] || {}, n2: lvAgg.n2[key] || {}
+    };
+    l.lv = {};
+    let anyStudied = 0, mainLevel = "n4";
+    LV_ORDER.forEach(lvName=>{
+      const r0 = lvRaw[lvName];
+      const q = Number(r0.q) || 0, n = Number(r0.n) || 0, c = Number(r0.c) || 0;
+      const tn = Number(r0.tn) || 0, tc = Number(r0.tc) || 0;
+      const tot = Object.keys(qidMapOfLevel(lvName)).length || (lvName === "n4" ? 191 : 0);
+      l.lv[lvName] = { q:q, n:n, c:c, tn:tn, tc:tc, tot:tot, pct: tot > 0 ? Math.min(100, Math.round(q / tot * 100)) : 0 };
+      anyStudied += q;
+      if(q > l.lv[mainLevel].q) mainLevel = lvName; // 一番多く解いているレベル(同数ならN4を優先)
+    });
+    l.anyStudied = anyStudied;
+    l.mainLevel = mainLevel;
+    const mainLv = l.lv[mainLevel];
+    l.mainPct = mainLv.pct;
+    const mainTag = mainLevel === "n4" ? "" : mainLevel.toUpperCase() + " ";
+    const mainRate = mainLv.n > 0 ? Math.round(mainLv.c/mainLv.n*100) : 0;
+    const mainTrans = mainLv.n > 0 ? Math.round(mainLv.tn/mainLv.n*100) : null;
+
+    const progressPct = l.lv.n4.pct;
     const daysSinceActive = l.lastSeen ? Math.floor((Date.now() - new Date(l.lastSeen).getTime())/86400000) : null;
     const translationUsageRate = l.n > 0 ? Math.round((l.tn||0)/l.n*100) : null;
     const jaOnlyN = l.n - (l.tn||0), jaOnlyC = l.c - (l.tc||0);
     const japaneseOnlyRate = jaOnlyN > 0 ? Math.round(jaOnlyC/jaOnlyN*100) : null;
     const reasons = [];
     if(daysSinceActive === null || daysSinceActive >= 3) reasons.push("学習停滞（"+(daysSinceActive===null?"未学習":daysSinceActive+"日未学習")+"）");
-    if(l.questionsStudied > 0 && progressPct < 20) reasons.push("進捗が低い（"+progressPct+"%）");
-    if(l.n > 0 && rate < 40) reasons.push("正答率が低い（"+rate+"%）");
+    if(anyStudied > 0 && mainLv.pct < 20) reasons.push("進捗が低い（"+mainTag+mainLv.pct+"%）");
+    if(mainLv.n > 0 && mainRate < 40) reasons.push("正答率が低い（"+mainTag+mainRate+"%）");
     // 正答率は良好(70%以上)でも、翻訳利用率が高い(50%以上)場合は「日本語だけでは理解できていない可能性」として要フォローに
-    if(l.n > 0 && rate >= 70 && translationUsageRate !== null && translationUsageRate >= 50){
-      reasons.push("正答率は高いが翻訳利用率も高い（翻訳利用率"+translationUsageRate+"%）");
+    if(mainLv.n > 0 && mainRate >= 70 && mainTrans !== null && mainTrans >= 50){
+      reasons.push("正答率は高いが翻訳利用率も高い（"+mainTag+"翻訳利用率"+mainTrans+"%）");
     }
-    l.needsFollowUp = reasons.length > 0 && !l.isFinished && l.questionsStudied > 0; // 何も学習していない人は「未着手」として別枠にする
+    l.needsFollowUp = reasons.length > 0 && !l.isFinished && anyStudied > 0; // 何も学習していない人は「未着手」として別枠にする
     l.followUpReasons = reasons;
     l.progressPct = progressPct;
     l.rate = rate;
@@ -2681,7 +2717,7 @@ async function fetchDashboardBundle(){
   let rawProgressP = null, rawDailyP = null;
   const getRawProgress = ()=> rawProgressP || (rawProgressP = fetchAllPaged("progress"));
   const getRawDaily = ()=> rawDailyP || (rawDailyP = fetchAllPaged("daily_summary", "select=*&order=summary_date.desc").catch(()=>[]));
-  const [progressAgg, questionStats, firstSeen, exams, activity, companies, roster, students, workplaces, studentWorkplaces, studentPeriods] = await Promise.all([
+  const [progressAgg, questionStats, firstSeen, exams, activity, companies, roster, students, workplaces, studentWorkplaces, studentPeriods, progressAggN3, progressAggN2] = await Promise.all([
     fetchRpcPaged("dash_learner_progress", { p_level: "n4" }, "company_id,learner_id").catch(async ()=> aggregateProgressClient(await getRawProgress())),
     fetchRpcPaged("dash_question_stats", {}, "level,question_id").catch(async ()=> aggregateQuestionStatsClient(await getRawProgress())),
     fetchRpcPaged("dash_first_seen", {}, "company_id,learner_id").catch(async ()=> aggregateFirstSeenClient(await getRawDaily())),
@@ -2692,12 +2728,17 @@ async function fetchDashboardBundle(){
     fetchAllPaged("students", "select=*&order=id").catch(()=>[]),
     fetchAllPaged("workplaces", "select=*&order=company_id").catch(()=>[]),
     fetchAllPaged("student_workplaces", "select=*&order=dekisugi_student_code").catch(()=>[]),
-    fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[])
+    fetchAllPaged("student_periods", "select=*&order=dekisugi_student_code").catch(()=>[]),
+    // N3・N2だけを学習している人が、N4の一覧で「0%・未着手」に見えないように、N3・N2の集計も読む(失敗しても一覧は出す)
+    fetchRpcPaged("dash_learner_progress", { p_level: "n3" }, "company_id,learner_id").catch(()=>[]),
+    fetchRpcPaged("dash_learner_progress", { p_level: "n2" }, "company_id,learner_id").catch(()=>[])
   ]);
-  return { progressAgg, questionStats, firstSeen, exams, activity, companies, roster, students, workplaces, studentWorkplaces, studentPeriods };
+  return { progressAgg, questionStats, firstSeen, exams, activity, companies, roster, students, workplaces, studentWorkplaces, studentPeriods, progressAggN3, progressAggN2 };
 }
 function applyDashboardBundle(b){
   dashState.progressAgg = b.progressAgg;
+  dashState.progressAggN3 = b.progressAggN3 || [];
+  dashState.progressAggN2 = b.progressAggN2 || [];
   dashState.questionStats = b.questionStats;
   dashState.firstSeen = b.firstSeen;
   dashState.exams = b.exams;
@@ -3566,10 +3607,10 @@ function buildSummaryContent(wrap, tab){
   const ntlpUnregistered = learners.filter(l=>!l.ntlpRegistered);
   const canIssue = learners.filter(l=>l.canIssueAccount);
   const companyMappingMissing = learners.filter(l=>!l.ntlpRegistered && l.companyMapped && !l.dekisugiCompanyId);
-  const studying = learners.filter(l=>l.questionsStudied > 0 && !l.isFinished);
+  const studying = learners.filter(l=>l.anyStudied > 0 && !l.isFinished);
   const thisWeek = learners.filter(l=>l.lastSeen && (Date.now()-new Date(l.lastSeen).getTime()) <= 7*86400000);
   const followUps = learners.filter(l=>l.needsFollowUp);
-  const notStudied = learners.filter(l=>l.questionsStudied === 0);
+  const notStudied = learners.filter(l=>l.anyStudied === 0);
   const withRate = learners.filter(l=>l.n > 0);
   const avgRate = withRate.length ? Math.round(withRate.reduce((s,l)=>s+l.rate,0)/withRate.length) : 0;
   const avgProgress = learners.length ? Math.round(learners.reduce((s,l)=>s+l.progressPct,0)/learners.length) : 0;
@@ -4164,7 +4205,7 @@ function buildSummaryContent(wrap, tab){
         || (dashState.companies.find(c=>c.company_id === companyId)||{}).company_name
         || companyId;
       const cRegistered = companyLearners.filter(l=>l.ntlpRegistered).length;
-      const cStudying = companyLearners.filter(l=>l.questionsStudied > 0).length;
+      const cStudying = companyLearners.filter(l=>l.anyStudied > 0).length;
       const cFollowUps = companyLearners.filter(l=>l.needsFollowUp).length;
       const cWithRate = companyLearners.filter(l=>l.n > 0);
       const cAvgRate = cWithRate.length ? Math.round(cWithRate.reduce((s,l)=>s+l.rate,0)/cWithRate.length) : 0;
@@ -6650,6 +6691,24 @@ function buildBarChart(items, opts){
   return wrap;
 }
 
+// レベル別の学習状況を、小さなバッジで一目で見せる。N4が0%でも、N3をやっていればN3のバッジが出る。
+// 何も学習していない人は「-」。1つ以上のレベルを学習していれば、そのレベルだけを出す(0%のN4は出さない)。
+const LV_CHIP_COLORS = { n4:["#e8f1fb","#1c4e80"], n3:["#e6f6ee","#1b7a4a"], n2:["#f1ebfb","#6b3fb0"] };
+function levelChips(l){
+  if(!l.lv || !(l.anyStudied > 0)) return "-";
+  return ["n4","n3","n2"].filter(k=>l.lv[k].q > 0).map(k=>{
+    const c = LV_CHIP_COLORS[k];
+    return "<span title='"+k.toUpperCase()+": "+l.lv[k].q+"/"+l.lv[k].tot+"問'"
+      + " style='display:inline-block;padding:1px 8px;border-radius:999px;background:"+c[0]+";color:"+c[1]+";font-size:11.5px;font-weight:700;margin-right:4px;white-space:nowrap;'>"
+      + k.toUpperCase()+" "+l.lv[k].pct+"%</span>";
+  }).join("");
+}
+// 「解いた数」の下に出す内訳(N4以外も学習している人だけ)
+function levelQuestionsNote(l){
+  if(!l.lv || !(l.lv.n3.q > 0 || l.lv.n2.q > 0)) return "";
+  const parts = ["n4","n3","n2"].filter(k=>l.lv[k].q > 0).map(k=>k.toUpperCase()+" "+l.lv[k].q);
+  return "<div style='font-size:10.5px;color:var(--text-sub);font-weight:400;white-space:nowrap;'>"+parts.join(" / ")+"</div>";
+}
 function flagBadge(nationality){
   const svg = NATIONALITY_FLAG_SVG[nationality];
   if(!svg) return "";
@@ -6668,7 +6727,11 @@ function programBadge(program){
 
 function buildLearnerRow(l, scopeForTable){
   const tr = document.createElement("tr");
-  const rate = l.n > 0 ? Math.round(l.c / l.n * 100) : 0;
+  // N4を解いていない(N3・N2だけ学習している)人は、一番多く解いているレベルの正答率を、レベル名つきで出す
+  const mainLvRow = l.lv && l.lv[l.mainLevel];
+  const useMainRate = !!(l.n === 0 && mainLvRow && mainLvRow.n > 0 && l.mainLevel !== "n4");
+  const rate = useMainRate ? Math.round(mainLvRow.c / mainLvRow.n * 100) : (l.n > 0 ? Math.round(l.c / l.n * 100) : 0);
+  const rateSuffix = useMainRate ? " <span style='font-size:10px;font-weight:700;'>"+l.mainLevel.toUpperCase()+"</span>" : "";
   const badgeClass = rate >= 70 ? "high" : rate >= 40 ? "mid" : "low";
   let examCell = "-";
   if(l.lastExam){
@@ -6715,7 +6778,7 @@ function buildLearnerRow(l, scopeForTable){
 
   let statusCell;
   if(l.isFinished) statusCell = "<span class='badge mid'>終了済み</span>";
-  else if(l.questionsStudied === 0) statusCell = "<span class='badge mid'>未着手</span>";
+  else if(l.anyStudied === 0) statusCell = "<span class='badge mid'>未着手</span>";
   else if(l.needsFollowUp) statusCell = "<span class='badge low' title='"+escapeHtml(l.followUpReasons.join(' / '))+"'>要フォロー</span>";
   else if(rate >= 70) statusCell = "<span class='badge high'>順調</span>";
   else statusCell = "<span class='badge mid'>要確認</span>";
@@ -6772,8 +6835,8 @@ function buildLearnerRow(l, scopeForTable){
     "<td>"+learnerCell+"</td>"+
     "<td></td>"+ // NTLP状態セルは後でDOM要素として挿入(ボタンのため)
     "<td>"+periodCell+"</td>"+
-    "<td>"+l.questionsStudied+"</td>"+
-    "<td><span class='badge "+badgeClass+"'>"+rate+"%</span></td>"+
+    "<td>"+l.anyStudied+levelQuestionsNote(l)+"</td>"+
+    "<td><span class='badge "+badgeClass+"'>"+rate+"%"+rateSuffix+"</span></td>"+
     "<td class='col-hide-mobile'>"+subjCell("moji")+"</td>"+
     "<td class='col-hide-mobile'>"+subjCell("bunpo")+"</td>"+
     "<td class='col-hide-mobile'>"+subjCell("dokkai")+"</td>"+
@@ -6811,7 +6874,7 @@ const SORT_GETTERS = {
   period: l => kiseiSortKey(l)*10 + goSortKey(l),
   nationality: l => (l.nationality || "ﾟ") + "|" + (l.program === "tokutei" ? "2" : "1") + "|" + String(kiseiSortKey(l)).padStart(4,"0") + "|" + (l.learnerName||""),
   program: l => (l.program === "tokutei" ? "2" : "1") + "|" + (l.nationality || "ﾟ") + "|" + String(kiseiSortKey(l)).padStart(4,"0") + "|" + (l.learnerName||""),
-  questions: l => l.questionsStudied || 0,
+  questions: l => l.anyStudied || 0,
   rate: l => l.n > 0 ? l.c / l.n : -1,
   lastSeen: l => l.lastSeen ? new Date(l.lastSeen).getTime() : -1,
 };
@@ -6983,11 +7046,11 @@ function renderLearningLearnersOnly(){
   let learners = buildLearnerSummary().filter(l=>!l.isFinished);
 
   const filterId = dashState.learningLearnerFilter;
-  if(filterId === "notstudied") learners = learners.filter(l=>l.questionsStudied===0);
-  else if(filterId === "studying") learners = learners.filter(l=>l.questionsStudied>0);
+  if(filterId === "notstudied") learners = learners.filter(l=>l.anyStudied===0);
+  else if(filterId === "studying") learners = learners.filter(l=>l.anyStudied>0);
   else if(filterId === "thisweek") learners = learners.filter(l=>l.lastSeen && (Date.now()-new Date(l.lastSeen).getTime()) <= 7*86400000);
   else if(filterId === "stale") learners = learners.filter(l=>!l.lastSeen || (Date.now()-new Date(l.lastSeen).getTime())/86400000 >= 7);
-  else if(filterId === "lowprogress") learners = learners.filter(l=>l.questionsStudied>0 && l.progressPct < 20);
+  else if(filterId === "lowprogress") learners = learners.filter(l=>l.anyStudied>0 && l.mainPct < 20);
   else if(filterId === "lowrate") learners = learners.filter(l=>l.n>0 && l.rate < 40);
   else if(filterId === "followup") learners = learners.filter(l=>l.needsFollowUp);
 
@@ -7065,8 +7128,8 @@ function renderLearningLearnersOnly(){
   const listEl = el('<div class="learner-mgmt-list"></div>');
   pageLearners.forEach(l=>{
     const row = el('<div class="learner-mgmt-row"></div>');
-    const statusTone = l.needsFollowUp ? "red" : l.questionsStudied===0 ? "gray" : "green";
-    const statusLabel = l.needsFollowUp ? "要フォロー" : l.questionsStudied===0 ? "未学習" : "良好";
+    const statusTone = l.needsFollowUp ? "red" : l.anyStudied===0 ? "gray" : "green";
+    const statusLabel = l.needsFollowUp ? "要フォロー" : l.anyStudied===0 ? "未学習" : "良好";
     row.innerHTML =
       "<div class='learner-mgmt-main'>"+
         "<div class='learner-mgmt-name'>"+programBadge(l.program)+flagBadge(l.nationality)+escapeHtml(l.learnerName||l.learner_id)+
@@ -7075,8 +7138,8 @@ function renderLearningLearnersOnly(){
           (l.workplaces&&l.workplaces.length? "　／　"+escapeHtml(l.workplaces.map(w=>w.workplace_name).join("・")) : "")+"</div>"+
       "</div>"+
       "<div class='learner-mgmt-metrics'>"+
-        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>進捗</span><span class='learner-mgmt-metric-val'>"+l.progressPct+"%</span></div>"+
-        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>正答率</span><span class='learner-mgmt-metric-val'>"+(l.n>0?l.rate+"%":"-")+"</span></div>"+
+        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>進捗</span><span class='learner-mgmt-metric-val'>"+levelChips(l)+"</span></div>"+
+        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>正答率</span><span class='learner-mgmt-metric-val'>"+(l.n>0?l.rate+"%":((l.lv && l.lv[l.mainLevel].n>0)?Math.round(l.lv[l.mainLevel].c/l.lv[l.mainLevel].n*100)+"% <span style='font-size:10.5px;'>"+l.mainLevel.toUpperCase()+"</span>":"-"))+"</span></div>"+
         "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>最終学習</span><span class='learner-mgmt-metric-val'>"+(l.lastSeen?relTime(l.lastSeen):"-")+"</span></div>"+
       "</div>"+
       "<span class='badge-pill' style='background:"+STAT_COLORS[statusTone].bg+";color:"+STAT_COLORS[statusTone].icon+";'>"+statusLabel+"</span>";
