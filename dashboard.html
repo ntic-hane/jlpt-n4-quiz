@@ -423,6 +423,11 @@ button.danger:hover{background:#faf3f0;}
 .learner-mgmt-metric-val{display:block;font-size:var(--fs-card-title);font-weight:700;color:var(--text-main);
   font-variant-numeric:tabular-nums;margin-top:2px;}
 .badge-pill{font-size:var(--fs-caption);font-weight:700;padding:4px 10px;border-radius:999px;flex:0 0 auto;}
+/* 実習生別一覧: 選んだレベル(自動=一番多く解いている級)の数字を、2段のグリッドで一度に見せる */
+.learner-mgmt-metrics.lm-grid{display:grid;grid-template-columns:repeat(5,minmax(62px,1fr));gap:var(--sp-2) var(--sp-4);flex:0 1 560px;}
+.lm-grid .learner-mgmt-metric-val{font-size:14px;}
+.lm-grid .badge{font-size:12px;}
+.lm-level-note{font-size:var(--fs-caption);color:var(--text-sub);margin:0 0 var(--sp-3);}
 /* 学習タブ「実習生別」：スマホでは縦積みのカード形式にする。
    (このブロックをbase定義より後ろに置くことで確実に上書きする。CSSの@media自体は
    詳細度を上げないため、base定義より前に書くと後勝ちでbaseに負けてしまう) */
@@ -431,6 +436,7 @@ button.danger:hover{background:#faf3f0;}
   .learner-mgmt-main{flex:0 0 auto;width:100%;min-width:0;}
   .learner-mgmt-metrics{gap:var(--sp-4);width:100%;justify-content:flex-start;flex:0 0 auto;}
   .learner-mgmt-metric{text-align:left;}
+  .learner-mgmt-metrics.lm-grid{grid-template-columns:repeat(3,minmax(0,1fr));flex:0 0 auto;}
   /* 実習生タブの一覧表：スマホでは分野別内訳・最新模試の列を隠し、主要な列だけを見せる。
      (分野別の詳細は学習タブの「分野別」「実習生別」で別途確認できるため) */
   .table-scroll th.col-hide-mobile, .table-scroll td.col-hide-mobile{display:none;}
@@ -2262,6 +2268,7 @@ async function fetchAllPaged(table, params){
 
 let dashState = { loading: true, error: null, progress: [], exams: [], activity: [], companies: [], roster: [], students: [], dailySummary: [], workplaces: [], studentWorkplaces: [], studentPeriods: [], companyUserInfo: undefined, companyFilter: "", workplaceFilter: "", onlyUnregistered: false, selectedLearner: null, karteLevel: "n4", karteMissQShowCount: { moji:5, bunpo:5, dokkai:5, choukai:5 }, expandedCompanies: {}, expandedWorkplaces: {}, studentPageByWorkplace: {}, sortColumn: null, sortDirection: "asc", companyFlatMode: {}, companyPage: 0, activeTab: "overview",
   learningSubTab: "overview", // 学習タブのサブナビ: overview/learners/subjects/history
+  learningLearnerLevel: "auto", // 実習生別一覧に出すレベル: auto(その人が一番多く解いている級)/n4/n3/n2
   learningLearnerFilter: "all", // 実習生別一覧の絞り込みプリセット: all/notstudied/stale/lowprogress/lowrate/followup
   learningLearnerSearch: "", // 実習生別一覧の氏名検索
   learningLearnerPage: 0,
@@ -2361,6 +2368,14 @@ function buildLearnerSummary(){
       lvAgg[lv][key] = r;
     });
   });
+  // レベル別の最新の模試(学習者ごと)
+  const lvExam = { n4:{}, n3:{}, n2:{} };
+  dashState.exams.forEach(e=>{
+    const lvName = String(e.level || "n4").toLowerCase();
+    if(!lvExam[lvName]) return;
+    const key = e.company_id + "::" + e.learner_id;
+    if(!lvExam[lvName][key] || new Date(e.taken_at) > new Date(lvExam[lvName][key].taken_at)) lvExam[lvName][key] = e;
+  });
   dashState.exams.forEach(e=>{
     // 模試もメインの一覧ではN4のみ(N3の模試結果は個人カルテのN3タブで見る)
     if((e.level || "n4") !== "n4") return;
@@ -2457,7 +2472,8 @@ function buildLearnerSummary(){
       const q = Number(r0.q) || 0, n = Number(r0.n) || 0, c = Number(r0.c) || 0;
       const tn = Number(r0.tn) || 0, tc = Number(r0.tc) || 0;
       const tot = Object.keys(qidMapOfLevel(lvName)).length || (lvName === "n4" ? 191 : 0);
-      l.lv[lvName] = { q:q, n:n, c:c, tn:tn, tc:tc, tot:tot, pct: tot > 0 ? Math.min(100, Math.round(q / tot * 100)) : 0 };
+      l.lv[lvName] = { q:q, n:n, c:c, tn:tn, tc:tc, tot:tot, pct: tot > 0 ? Math.min(100, Math.round(q / tot * 100)) : 0,
+        subj: lvName === "n4" ? (l.subjStats || {}) : (r0.subj || {}), exam: lvExam[lvName][key] || null };
       anyStudied += q;
       if(q > l.lv[mainLevel].q) mainLevel = lvName; // 一番多く解いているレベル(同数ならN4を優先)
     });
@@ -4523,6 +4539,18 @@ function buildSummaryContent(wrap, tab){
       filterRow.appendChild(btn);
     });
     learningWrap.appendChild(filterRow);
+
+    // 表示するレベル(自動=その人が一番多く解いている級の数字を出す)
+    const lvRow = el('<div class="subnav" style="margin-bottom:var(--sp-2);"></div>');
+    [["auto","自動（メインの級）"],["n4","N4"],["n3","N3"],["n2","N2"]].forEach(([id, label])=>{
+      const btn = el('<button class="subnav-btn"></button>');
+      if((dashState.learningLearnerLevel || "auto") === id) btn.classList.add("active");
+      btn.textContent = label;
+      btn.onclick = ()=>{ dashState.learningLearnerLevel = id; dashState.learningLearnerPage = 0; render(); };
+      lvRow.appendChild(btn);
+    });
+    learningWrap.appendChild(lvRow);
+    learningWrap.appendChild(el('<div class="lm-level-note">自動：その人が一番多く解いている級の数字を出します。N4・N3・N2を選ぶと、全員をその級の数字で見られます。</div>'));
 
     const searchInput = document.createElement("input");
     searchInput.type = "text";
@@ -7045,13 +7073,18 @@ function renderLearningLearnersOnly(){
   const scope = sessionScope();
   let learners = buildLearnerSummary().filter(l=>!l.isFinished);
 
+  // 表示するレベル。自動なら、その人が一番多く解いている級。
+  const selLevel = dashState.learningLearnerLevel || "auto";
+  const lvOf = l => (selLevel === "auto" ? l.mainLevel : selLevel);
+  const lvData = l => (l.lv && l.lv[lvOf(l)]) || { q:0, n:0, c:0, tot:0, pct:0, subj:{}, exam:null };
+
   const filterId = dashState.learningLearnerFilter;
   if(filterId === "notstudied") learners = learners.filter(l=>l.anyStudied===0);
   else if(filterId === "studying") learners = learners.filter(l=>l.anyStudied>0);
   else if(filterId === "thisweek") learners = learners.filter(l=>l.lastSeen && (Date.now()-new Date(l.lastSeen).getTime()) <= 7*86400000);
   else if(filterId === "stale") learners = learners.filter(l=>!l.lastSeen || (Date.now()-new Date(l.lastSeen).getTime())/86400000 >= 7);
-  else if(filterId === "lowprogress") learners = learners.filter(l=>l.anyStudied>0 && l.mainPct < 20);
-  else if(filterId === "lowrate") learners = learners.filter(l=>l.n>0 && l.rate < 40);
+  else if(filterId === "lowprogress") learners = learners.filter(l=>l.anyStudied>0 && lvData(l).q > 0 && lvData(l).pct < 20);
+  else if(filterId === "lowrate") learners = learners.filter(l=>{ const d = lvData(l); return d.n>0 && Math.round(d.c/d.n*100) < 40; });
   else if(filterId === "followup") learners = learners.filter(l=>l.needsFollowUp);
 
   const search = (dashState.learningLearnerSearch||"").trim().toLowerCase();
@@ -7066,8 +7099,8 @@ function renderLearningLearnersOnly(){
   const sortGetters = {
     name: l => (l.learnerName || l.learner_id || ""),
     kana: l => (l.learnerNameKana || ""),
-    progress: l => l.progressPct || 0,
-    rate: l => l.n > 0 ? l.rate : -1,
+    progress: l => lvData(l).pct || 0,
+    rate: l => { const d = lvData(l); return d.n > 0 ? d.c / d.n * 100 : -1; },
     lastSeen: l => l.lastSeen ? new Date(l.lastSeen).getTime() : 0
   };
   const getter = sortGetters[sortCol] || sortGetters.lastSeen;
@@ -7130,17 +7163,36 @@ function renderLearningLearnersOnly(){
     const row = el('<div class="learner-mgmt-row"></div>');
     const statusTone = l.needsFollowUp ? "red" : l.anyStudied===0 ? "gray" : "green";
     const statusLabel = l.needsFollowUp ? "要フォロー" : l.anyStudied===0 ? "未学習" : "良好";
+    // 選んだレベル(自動なら一番多く解いている級)の数字を、まとめて見せる
+    const kLv = lvOf(l), d = lvData(l), has = d.q > 0;
+    const cls = (r)=> r >= 70 ? "high" : r >= 40 ? "mid" : "low";
+    const mt = (lbl, val)=> "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>"+lbl+"</span><span class='learner-mgmt-metric-val'>"+val+"</span></div>";
+    const subjB = (sj)=>{ const st = d.subj && d.subj[sj]; if(!st || !(st.n > 0)) return "-"; const r2 = Math.round(st.c/st.n*100); return "<span class='badge "+cls(r2)+"'>"+r2+"%</span>"; };
+    const rateAll = d.n > 0 ? Math.round(d.c/d.n*100) : null;
+    let examV = "-";
+    if(d.exam){
+      const eg = d.exam.exam_group === "moji" ? "文字語彙" : d.exam.exam_group === "choukai" ? "聴解" : "文法・読解";
+      examV = "<span class='badge "+cls(Number(d.exam.pct)||0)+"' title='"+escapeHtml(eg+" "+d.exam.correct+"/"+d.exam.total)+"'>"+d.exam.pct+"%</span>";
+    }
+    const chipC = LV_CHIP_COLORS[kLv] || LV_CHIP_COLORS.n4;
+    const levelV = l.anyStudied === 0 ? "-" : "<span style='display:inline-block;padding:1px 8px;border-radius:999px;background:"+chipC[0]+";color:"+chipC[1]+";font-size:12px;font-weight:700;'>"+kLv.toUpperCase()+"</span>";
+    const metricsHtml =
+      mt("級", levelV) +
+      mt("進捗", has ? d.pct+"%" : "-") +
+      mt("解いた数", has ? d.q : "-") +
+      mt("正答率", rateAll !== null ? "<span class='badge "+cls(rateAll)+"'>"+rateAll+"%</span>" : "-") +
+      mt("最終学習", l.lastSeen ? relTime(l.lastSeen) : "-") +
+      mt("文字語彙", subjB("moji")) + mt("文法", subjB("bunpo")) + mt("読解", subjB("dokkai")) + mt("聴解", subjB("choukai")) +
+      mt("模試", examV);
     row.innerHTML =
       "<div class='learner-mgmt-main'>"+
         "<div class='learner-mgmt-name'>"+programBadge(l.program)+flagBadge(l.nationality)+escapeHtml(l.learnerName||l.learner_id)+
           (l.learnerNameKana ? " <span style='font-weight:400;color:var(--text-sub);font-size:0.85em;'>"+escapeHtml(l.learnerNameKana)+"</span>" : "")+"</div>"+
         "<div class='learner-mgmt-company'>"+escapeHtml(l.companyName||l.company_id)+
           (l.workplaces&&l.workplaces.length? "　／　"+escapeHtml(l.workplaces.map(w=>w.workplace_name).join("・")) : "")+"</div>"+
+        "<div style='margin-top:4px;'>"+levelChips(l)+"</div>"+
       "</div>"+
-      "<div class='learner-mgmt-metrics'>"+
-        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>進捗</span><span class='learner-mgmt-metric-val'>"+levelChips(l)+"</span></div>"+
-        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>正答率</span><span class='learner-mgmt-metric-val'>"+(l.n>0?l.rate+"%":((l.lv && l.lv[l.mainLevel].n>0)?Math.round(l.lv[l.mainLevel].c/l.lv[l.mainLevel].n*100)+"% <span style='font-size:10.5px;'>"+l.mainLevel.toUpperCase()+"</span>":"-"))+"</span></div>"+
-        "<div class='learner-mgmt-metric'><span class='learner-mgmt-metric-lbl'>最終学習</span><span class='learner-mgmt-metric-val'>"+(l.lastSeen?relTime(l.lastSeen):"-")+"</span></div>"+
+      "<div class='learner-mgmt-metrics lm-grid'>"+metricsHtml+
       "</div>"+
       "<span class='badge-pill' style='background:"+STAT_COLORS[statusTone].bg+";color:"+STAT_COLORS[statusTone].icon+";'>"+statusLabel+"</span>";
     row.onclick = ()=> openKarte(l.company_id, l.learner_id);
