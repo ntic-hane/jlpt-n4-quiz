@@ -2416,6 +2416,7 @@ function buildLearnerSummary(){
   Object.keys(map).forEach(key=>{
     const l = map[key];
     l.companyName = companyNames[l.company_id] || null;
+    l.isInternal = (l.company_id === "cNTIC"); // 日本トータルの職員(統計の対象外)
     l.companyMapped = Object.prototype.hasOwnProperty.call(companyNames, l.company_id);
     const r = rosterMap[key];
     if(r){
@@ -2424,11 +2425,13 @@ function buildLearnerSummary(){
       l.learnerNameKana = r.learner_name_kana || null;
       l.inRoster = true;
       l.program = r.program || "gino"; // 'gino'=技能実習 / 'tokutei'=特定技能
+      l.staffCategory = r.staff_category || null; // 職員の区分(申請・企業支援・理事など)
     } else {
       l.trainingEndDate = null;
       l.learnerName = null;
       l.learnerNameKana = null;
       l.inRoster = false;
+      l.staffCategory = null;
       l.program = "gino";
     }
 
@@ -2775,9 +2778,11 @@ function applyDashboardBundle(b){
   dashState.progressAggN3 = b.progressAggN3 || [];
   dashState.progressAggN2 = b.progressAggN2 || [];
   dashState.questionStats = b.questionStats;
-  dashState.firstSeen = b.firstSeen;
-  dashState.exams = b.exams;
-  dashState.activity = b.activity;
+  // 日本トータルの職員(company_id=cNTIC)の学習記録は、統計に混ざらないよう元データの段階で外す
+  const notInternal = (x)=> !x || x.company_id !== "cNTIC";
+  dashState.firstSeen = (b.firstSeen || []).filter(notInternal);
+  dashState.exams = (b.exams || []).filter(notInternal);
+  dashState.activity = (b.activity || []).filter(notInternal);
   dashState.companies = b.companies;
   dashState.roster = b.roster;
   dashState.students = b.students;
@@ -3634,7 +3639,7 @@ function buildSummaryContent(wrap, tab){
   const scope = sessionScope();
   // 企業フィルタは表(テーブル)側だけの絞り込みなのでここでは適用しないが、
   // 実習終了済みの実習生は、この全体サマリーからも一律で除外する(現在学習中の実習生のみを扱う運用のため)。
-  let learners = buildLearnerSummary().filter(l=>!l.isFinished);
+  let learners = buildLearnerSummary().filter(l=>!l.isFinished && !l.isInternal); // 職員は統計の対象外
   // 企業担当者はRLSで自社データしか取得できていないので、そのまま全件が対象になる
 
   const totalLearners = learners.length;
@@ -3773,7 +3778,7 @@ function buildSummaryContent(wrap, tab){
       nameDiv.className = "followup-namewrap";
       const nameLine = document.createElement("div");
       nameLine.className = "followup-name";
-      nameLine.innerHTML = programBadge(l.program) + flagBadge(l.nationality) + escapeHtml((l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）");
+      nameLine.innerHTML = learnerBadge(l) + flagBadge(l.nationality) + escapeHtml((l.learnerName || l.learner_id) + "（" + (l.companyName || l.company_id) + "）");
       const reasonLine = document.createElement("div");
       reasonLine.className = "followup-reason";
       reasonLine.textContent = l.followUpReasons.join(" / ");
@@ -5497,7 +5502,7 @@ function renderDashboard(){
     const natSelect = document.createElement("select");
     natSelect.style.cssText = selStyle;
     const natCount = {};
-    buildLearnerSummary().filter(l=>!l.isFinished).forEach(l=>{ const k = l.nationality || "（不明）"; natCount[k] = (natCount[k]||0)+1; });
+    buildLearnerSummary().filter(l=>!l.isFinished && !l.isInternal).forEach(l=>{ const k = l.nationality || "（不明）"; natCount[k] = (natCount[k]||0)+1; });
     const natOpt0 = document.createElement("option"); natOpt0.value = ""; natOpt0.textContent = "すべての国籍"; natSelect.appendChild(natOpt0);
     Object.keys(natCount).sort((a,b)=>natCount[b]-natCount[a]).forEach(k=>{
       const o = document.createElement("option"); o.value = k; o.textContent = k + "（" + natCount[k] + "）";
@@ -5963,7 +5968,7 @@ function renderLearnerKarte(){
     "<div class='k-avatar'>"+escapeHtml(initial)+"</div>"+
     "<div class='k-head-body'>"+
       "<div class='k-name'>"+escapeHtml(dispName)+kanaHtml+"</div>"+
-      "<div class='k-badges'>"+programBadge(l.program)+flagBadge(l.nationality)+"</div>"+
+      "<div class='k-badges'>"+learnerBadge(l)+flagBadge(l.nationality)+"</div>"+
       "<div class='k-sub'>"+escapeHtml(subText)+"</div>"+
     "</div>";
   // ---- 所属事業所(NTIC管理者のみ変更可能)。店舗異動があったときに、Dekisugiの取込を待たずにここで直せるようにする。 ----
@@ -6774,6 +6779,13 @@ function flagBadge(nationality){
 // 技能実習／特定技能の区分バッジ。一覧・カルテの両方で使う共通部品。
 // 技能実習(gino)は既存の運用で圧倒的多数のため色を付けず控えめに、
 // 特定技能(tokutei)は紫系のバッジで目立たせて区別しやすくする。
+// 職員(日本トータル所属)は「技能実習」ではなく、区分(申請・企業支援・理事など)を出す。区分が未入力なら「職員」
+function learnerBadge(l){
+  if(l && l.isInternal){
+    return "<span class='badge-pill' style='background:"+STAT_COLORS.green.bg+";color:"+STAT_COLORS.green.icon+";margin-right:6px;'>"+escapeHtml(l.staffCategory || "職員")+"</span>";
+  }
+  return programBadge(l ? l.program : null);
+}
 function programBadge(program){
   if(program === "tokutei"){
     return "<span class='badge-pill' style='background:"+STAT_COLORS.purple.bg+";color:"+STAT_COLORS.purple.icon+";margin-right:6px;'>特定技能</span>";
@@ -6812,7 +6824,7 @@ function buildLearnerRow(l, scopeForTable){
   let learnerCell = escapeHtml(l.learner_id);
   const warnIcon = '<svg class="icon icon-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>';
   if(!l.inRoster) learnerCell += " <span title='ロースターとID不一致の可能性'>"+warnIcon+"</span>";
-  let nameCell = "<div style='margin-bottom:3px;'>"+programBadge(l.program)+"</div>" +
+  let nameCell = "<div style='margin-bottom:3px;'>"+learnerBadge(l)+"</div>" +
     flagBadge(l.nationality) + (l.learnerName ? escapeHtml(l.learnerName) : "-") +
     (l.learnerNameKana ? "<div style='font-size:10.5px;color:var(--text-sub);font-weight:400;margin-top:1px;'>"+escapeHtml(l.learnerNameKana)+"</div>" : "");
 
@@ -6939,7 +6951,7 @@ const SORT_GETTERS = {
 };
 const HEADER_DEFS = [
   { label: "氏名", key: "name" },
-  { label: "実習生ID", key: "learnerId" },
+  { label: "ID", key: "learnerId" },
   { label: "NTLP状態", key: null },
   { label: "期生・号", key: "period" },
   { label: "学習済み問題数", key: "questions" },
@@ -7102,7 +7114,7 @@ function renderLearningLearnersOnly(){
   const wrapEl = document.getElementById("learningLearnersWrap");
   if(!wrapEl) return;
   const scope = sessionScope();
-  let learners = buildLearnerSummary().filter(l=>!l.isFinished);
+  let learners = buildLearnerSummary().filter(l=>!l.isFinished && !l.isInternal); // 職員は統計の対象外
 
   // 表示するレベル。自動なら、その人が一番多く解いている級。
   const selLevel = dashState.learningLearnerLevel || "auto";
@@ -7217,7 +7229,7 @@ function renderLearningLearnersOnly(){
       mt("模試", examV);
     row.innerHTML =
       "<div class='learner-mgmt-main'>"+
-        "<div class='learner-mgmt-name'>"+programBadge(l.program)+flagBadge(l.nationality)+escapeHtml(l.learnerName||l.learner_id)+
+        "<div class='learner-mgmt-name'>"+learnerBadge(l)+flagBadge(l.nationality)+escapeHtml(l.learnerName||l.learner_id)+
           (l.learnerNameKana ? " <span style='font-weight:400;color:var(--text-sub);font-size:0.85em;'>"+escapeHtml(l.learnerNameKana)+"</span>" : "")+"</div>"+
         "<div class='learner-mgmt-company'>"+escapeHtml(l.companyName||l.company_id)+
           (l.workplaces&&l.workplaces.length? "　／　"+escapeHtml(l.workplaces.map(w=>w.workplace_name).join("・")) : "")+"</div>"+
