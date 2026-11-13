@@ -491,6 +491,16 @@ header h1{cursor:pointer;}
 .jnewsbar .nb-b{font-size:12.5px;color:var(--nv-sub);line-height:1.5;margin-top:3px;font-weight:600;}
 .jnewsbar .nb-x{flex:none;width:32px;height:32px;border-radius:99px;border:0;background:transparent;font-size:18px;line-height:1;color:var(--nv-sub);cursor:pointer;font-family:inherit;}
 .jnewsbar .nb-x:focus-visible,.jnewsbar .nb-main:focus-visible{outline:2px solid var(--nv-blue);outline-offset:2px;}
+.jnewsfull{position:fixed;inset:0;z-index:1000;background:rgba(15,27,51,.62);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;}
+.jnewsfull .nf-box{width:100%;max-width:520px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:20px;padding:18px 18px 0;box-sizing:border-box;box-shadow:0 12px 40px rgba(15,27,51,.35);}
+.jnewsfull .nf-lang{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;}
+.jnewsfull .nf-lb{border:1px solid var(--nv-line);background:#F3F5FA;color:var(--nv-text);border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;}
+.jnewsfull .nf-lb.active{background:var(--nv-blue);border-color:var(--nv-blue);color:#fff;}
+.jnewsfull .nf-h{display:inline-block;font-size:12px;font-weight:800;background:#E8A100;color:#fff;border-radius:99px;padding:2px 10px;}
+.jnewsfull .nf-t{font-size:18px;font-weight:800;line-height:1.45;margin:10px 0 8px;color:var(--nv-text);}
+.jnewsfull .nf-b{font-size:14.5px;line-height:1.75;color:var(--nv-text);font-weight:600;white-space:pre-wrap;}
+.jnewsfull .nf-okwrap{position:sticky;bottom:0;background:#fff;padding:12px 0 18px;margin-top:6px;box-shadow:0 -10px 12px -6px rgba(255,255,255,.95);}
+.jnewsfull .nf-ok{display:block;width:100%;margin:0;padding:14px;border:0;border-radius:14px;background:var(--nv-blue);color:#fff;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;}
 .jnewsitem{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--nv-line);background:none;padding:10px 0;font-family:inherit;color:var(--nv-text);cursor:pointer;}
 .jnewsitem:first-of-type{border-top:0;}
 .jnewsitem .ni-d{font-size:12px;color:var(--nv-sub);font-weight:700;}
@@ -7495,6 +7505,14 @@ function optShown(o){
 // 新しいお知らせは、配列の先頭に足す。idは重複しない文字列。viewは、押したときに開く画面(なければ空)。
 // 文面は [日本語, English, Indonesia, Tagalog, ไทย, မြန်မာ]。日本語・英語以外はAI訳で、ネイティブ確認はしていない。
 const NEWS_ITEMS = [
+  { id:"2026-11-device-notice", date:"2026-11-13", view:"", must:true,
+    title:["端末のロックが始まりました。メインの端末を決めてください","Device lock has started. Please decide your main device","Penguncian perangkat sudah dimulai. Tentukan perangkat utama Anda","Nagsimula na ang device lock. Pumili ng iyong pangunahing device","เริ่มล็อกอุปกรณ์แล้ว กรุณาเลือกอุปกรณ์หลักของคุณ","စက်လော့ခ် စတင်ပါပြီ။ သင့်အဓိကစက်ကို ရွေးချယ်ပါ"],
+    body:["11月13日から、1つのIDで使えるのは、スマホ1台です（パソコンは、許可された人だけ1台です）。最初にログインした端末が、あなたのメインの端末として登録されます。毎日の勉強は、その端末でログインしてください。ほかの端末では使えません。スマホを変えた人や、パソコンで使いたい人は、hane@ntic.jp に連絡してください。メールには、ログインIDと、画面に出る「端末コード」を書いてください。ブラウザのプライベートモードでは使わないでください。履歴やサイトデータを消すと、別の端末だと思われて使えなくなることがあります。同じスマホでも、ブラウザが違う（Chrome・Safariなど）と、別の端末だと思われて使えなくなります。毎回、同じスマホの同じブラウザで開いてください。QRコードやリンクから開くときも、いつものブラウザで開いてください。 IDとパスワードは、ほかの人に教えないでください。",
+      "From November 13, each ID can be used on one phone only (a computer can be used only by people who have been approved, one computer each). The first device you log in with is registered as your main device. Please log in with that device every day. The app will not work on other devices. If you changed your phone, or if you want to use a computer, please email hane@ntic.jp. In your email, write your login ID and the \"device code\" shown on the screen. Please do not use the app in Private mode of your browser. If you clear your browser history and website data, the app may think it is a new device and block you. Even on the same phone, a different browser (Chrome, Safari, etc.) is treated as a different device and will be blocked. Always open the app in the same browser on the same phone. When you open it from a QR code or a link, use that same browser. Please do not share your ID and password with anyone.",
+      "Mulai 13 November, satu ID hanya dapat digunakan di satu ponsel (komputer hanya untuk orang yang sudah disetujui, satu komputer per orang). Perangkat pertama yang Anda gunakan untuk login akan terdaftar sebagai perangkat utama Anda. Silakan login dengan perangkat itu setiap hari. Aplikasi tidak dapat digunakan di perangkat lain. Jika Anda mengganti ponsel atau ingin menggunakan komputer, silakan kirim email ke hane@ntic.jp. Di email, tuliskan ID login dan \"kode perangkat\" yang tampil di layar. Jangan gunakan aplikasi dalam mode Private di browser. Jika Anda menghapus riwayat dan data situs, aplikasi dapat menganggapnya sebagai perangkat baru dan memblokir Anda. Walaupun HP-nya sama, browser yang berbeda (Chrome, Safari, dll.) dianggap perangkat lain dan akan diblokir. Selalu buka aplikasi di browser yang sama pada HP yang sama. Saat membuka dari QR code atau link, gunakan browser yang sama. Jangan berikan ID dan kata sandi kepada orang lain.",
+      "Simula Nobyembre 13, isang phone lang ang magagamit sa bawat ID (ang computer ay para lang sa mga naaprubahan, isang computer bawat tao). Ang unang device na ginamit ninyo sa pag-login ay mare-register bilang pangunahin ninyong device. Mag-login sa device na iyon araw-araw. Hindi gagana ang app sa ibang device. Kung nagpalit kayo ng phone, o kung gusto ninyong gumamit ng computer, mag-email sa hane@ntic.jp. Sa email, isulat ang login ID at ang \"device code\" na lumalabas sa screen. Huwag gamitin ang app sa Private mode ng browser. Kung buburahin ninyo ang history at website data, maaaring ituring ng app na bagong device ito at i-block kayo. Kahit iisang phone, ituturing na ibang device ang ibang browser (Chrome, Safari, atbp.), at hindi kayo makakapag-login dito. Lagi ninyong buksan ang app sa parehong browser sa parehong phone. Kapag magbubukas mula sa QR code o link, gamitin ang parehong browser. Huwag ibigay ang inyong ID at password sa ibang tao.",
+      "ตั้งแต่วันที่ 13 พฤศจิกายน ไอดีหนึ่งใช้ได้กับมือถือเครื่องเดียว (คอมพิวเตอร์ใช้ได้เฉพาะผู้ที่ได้รับอนุมัติ คนละ 1 เครื่อง) อุปกรณ์เครื่องแรกที่คุณเข้าสู่ระบบจะถูกลงทะเบียนเป็นอุปกรณ์หลักของคุณ กรุณาเข้าสู่ระบบด้วยอุปกรณ์เครื่องนั้นทุกวัน แอปจะใช้บนอุปกรณ์อื่นไม่ได้ หากเปลี่ยนมือถือ หรือต้องการใช้คอมพิวเตอร์ กรุณาส่งอีเมลถึง hane@ntic.jp ในอีเมลให้เขียนไอดีเข้าสู่ระบบและ \"รหัสอุปกรณ์\" ที่แสดงบนหน้าจอ อย่าใช้แอปในโหมดส่วนตัวของเบราว์เซอร์ หากลบประวัติและข้อมูลเว็บไซต์ แอปอาจมองว่าเป็นอุปกรณ์ใหม่และบล็อกการใช้งาน แม้เป็นมือถือเครื่องเดียวกัน หากใช้เบราว์เซอร์ต่างกัน (Chrome, Safari ฯลฯ) จะถูกมองว่าเป็นอุปกรณ์อื่นและถูกบล็อก กรุณาเปิดแอปด้วยเบราว์เซอร์เดียวกันบนมือถือเครื่องเดียวกันทุกครั้ง แม้เปิดจาก QR โค้ดหรือลิงก์ก็ให้ใช้เบราว์เซอร์เดิม อย่าบอกไอดีและรหัสผ่านให้ผู้อื่น",
+      "နိုဝင်ဘာ ၁၃ ရက်မှစ၍ ID တစ်ခုလျှင် ဖုန်းတစ်လုံးတွင်သာ သုံးနိုင်ပါသည် (ကွန်ပျူတာကို ခွင့်ပြုထားသူများသာ တစ်လုံးစီ သုံးနိုင်ပါသည်)။ သင် ပထမဆုံး လော့ဂ်အင်ဝင်သည့်စက်ကို သင့်အဓိကစက်အဖြစ် မှတ်ပုံတင်ပါမည်။ နေ့စဉ် ထိုစက်ဖြင့် လော့ဂ်အင်ဝင်ပါ။ အခြားစက်များတွင် အက်ပ်ကို သုံး၍ မရပါ။ ဖုန်းလဲထားပါက သို့မဟုတ် ကွန်ပျူတာဖြင့် သုံးလိုပါက hane@ntic.jp သို့ အီးမေးလ်ပို့ပါ။ အီးမေးလ်တွင် Login ID နှင့် မျက်နှာပြင်ပေါ်ရှိ \"စက်ကုဒ်\" ကို ရေးပါ။ ဘရောက်ဇာ၏ Private mode တွင် အက်ပ်ကို မသုံးပါနှင့်။ ဘရောက်ဇာ မှတ်တမ်းနှင့် ဝက်ဘ်ဆိုက်ဒေတာကို ဖျက်ပါက အက်ပ်က စက်အသစ်ဟု ယူဆပြီး ပိတ်ဆို့နိုင်ပါသည်။ ဖုန်းတစ်လုံးတည်းဖြစ်သော်လည်း ဘရောက်ဇာ မတူပါက (Chrome၊ Safari စသည်) စက်တခြားဟု ယူဆ၍ ပိတ်ဆို့ခံရပါမည်။ အက်ပ်ကို ဖုန်းတစ်လုံးတည်းရှိ ဘရောက်ဇာတစ်ခုတည်းဖြင့် အမြဲဖွင့်ပါ။ QR ကုဒ် သို့မဟုတ် လင့်ခ်မှ ဖွင့်သည့်အခါလည်း ထိုဘရောက်ဇာကိုပဲ သုံးပါ။ ID နှင့် စကားဝှက်ကို အခြားသူအား မပေးပါနှင့်။"] },
   { id:"2026-11-device", date:"2026-11-02", view:"",
     title:["ログインできる端末が、1台になります（11月13日から）","From November 13, only one device can be used with each ID","Mulai 13 November, satu ID hanya dapat digunakan di satu perangkat","Simula Nobyembre 13, isang device lang ang magagamit sa bawat ID","ตั้งแต่วันที่ 13 พฤศจิกายน ไอดีหนึ่งจะใช้ได้กับอุปกรณ์เครื่องเดียว","နိုဝင်ဘာ ၁၃ ရက်မှစ၍ ID တစ်ခုလျှင် စက်တစ်လုံးသာ သုံးနိုင်ပါမည်"],
     body:["ほかの人に使い回されないように、1つのIDで使えるのは、スマホ1台だけにします。11月13日からは、登録したスマホ以外では使えなくなります。パソコンで使いたい人や、スマホを変えた人は、hane@ntic.jp に連絡してください。IDとパスワードは、ほかの人に教えないでください。",
@@ -7531,8 +7549,9 @@ const NEWS_L = {
 };
 const NEWS_SEEN_KEY_BASE = "ntic_jlpt_news_seen_v1";
 function newsSeenKey(){ return AUTH.student ? (NEWS_SEEN_KEY_BASE + "__" + AUTH.student.id) : NEWS_SEEN_KEY_BASE; }
-function newsLoadSeen(){ try{ const r = localStorage.getItem(newsSeenKey()); return r ? (JSON.parse(r) || {}) : {}; }catch(e){ return {}; } }
-function newsMarkSeen(id){ try{ const o = newsLoadSeen(); o[id] = 1; localStorage.setItem(newsSeenKey(), JSON.stringify(o)); }catch(e){ /* 保存できないときは、また出る */ } }
+const NEWS_MEM = {};
+function newsLoadSeen(){ let o = {}; try{ const r = localStorage.getItem(newsSeenKey()); o = r ? (JSON.parse(r) || {}) : {}; }catch(e){ o = {}; } return Object.assign({}, o, NEWS_MEM); }
+function newsMarkSeen(id){ NEWS_MEM[id] = 1; try{ const o = newsLoadSeen(); o[id] = 1; localStorage.setItem(newsSeenKey(), JSON.stringify(o)); }catch(e){ /* 保存できないときは、また出る */ } }
 // ホームの上に出す帯。まだ見ていない新しいお知らせのうち、いちばん新しい1件だけ。
 function buildNewsBar(){
   if(!AUTH.student) return null;
@@ -7553,6 +7572,38 @@ function buildNewsBar(){
   x.onclick = ()=>{ newsMarkSeen(item.id); render(); };
   bar.appendChild(main); bar.appendChild(x);
   return bar;
+}
+// 全画面のお知らせ。must:true のお知らせだけ。「わかりました」を押すまで、ログインのたびにホームの上に出る。
+const NEWS_MODAL_L = {
+  heading: ["大切なお知らせ","Important notice","Pemberitahuan penting","Mahalagang abiso","ประกาศสำคัญ","အရေးကြီးသော အသိပေးချက်"],
+  ok: ["わかりました","I understand","Saya mengerti","Naiintindihan ko","เข้าใจแล้ว","နားလည်ပါပြီ"]
+};
+function buildNewsModal(){
+  if(!AUTH.student) return null;
+  const seen = newsLoadSeen();
+  const item = NEWS_ITEMS.find(n => n.must && !seen[n.id]);
+  if(!item) return null;
+  const ov = el('<div class="jnewsfull" role="dialog" aria-modal="true"></div>');
+  ov.setAttribute("aria-label", tr(NEWS_MODAL_L.heading));
+  const box = el('<div class="nf-box"></div>');
+  const lg = el('<div class="nf-lang"></div>');
+  const NAMES = { ja:"日本語", en:"English", id:"Indonesia", tl:"Tagalog", th:"ไทย", my:"မြန်မာ" };
+  LANGS.forEach(l=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "nf-lb" + (ST.lang === l ? " active" : "");
+    b.textContent = NAMES[l] || l;
+    b.onclick = ()=>{ ST.lang = l; render(); };
+    lg.appendChild(b);
+  });
+  box.appendChild(lg);
+  const h = el('<div class="nf-h"></div>'); h.textContent = tr(NEWS_MODAL_L.heading); box.appendChild(h);
+  const t = el('<div class="nf-t"></div>'); t.textContent = tr(item.title); box.appendChild(t);
+  const b = el('<div class="nf-b"></div>'); b.textContent = tr(item.body); box.appendChild(b);
+  const ok = el('<button type="button" class="nf-ok"></button>'); ok.textContent = tr(NEWS_MODAL_L.ok);
+  ok.onclick = ()=>{ newsMarkSeen(item.id); render(); };
+  const okw = el('<div class="nf-okwrap"></div>'); okw.appendChild(ok); box.appendChild(okw);
+  ov.appendChild(box);
+  return ov;
 }
 // 設定の中の「お知らせ」(過去のものも、いつでも見返せる)
 function buildNewsCard(){
@@ -9034,6 +9085,7 @@ function render(){
   if(showTabs) app.appendChild(buildTabBar());
 
   if(ST.view === "home"){ const wb = buildDeviceWarnBar(); if(wb) app.appendChild(wb); const nb = buildNewsBar(); if(nb) app.appendChild(nb); }
+  if(ST.view === "home"){ const nm = buildNewsModal(); if(nm) app.appendChild(nm); }
   if(ST.view === "login") app.appendChild(renderLogin());
   else if(ST.view === "deviceBlocked") app.appendChild(renderDeviceBlocked());
   else if(ST.view === "passwordChange") app.appendChild(renderPasswordChange());
