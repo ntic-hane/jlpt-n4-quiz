@@ -1128,7 +1128,7 @@ function renderHeaderUserInfo(){
 
   const scope = sessionScope();
   let roleText = "";
-  if(scope.isAdmin) roleText = scope.isSuper ? "NTIC管理者・全社閲覧" : scope.isViewer ? "全社閲覧のみ（変更不可）" : (scope.canResetPw ? "企業支援担当・全社閲覧（パスワード再発行可。発行・無効化は管理者のみ）" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）");
+  if(scope.isAdmin) roleText = scope.isSuper ? "NTIC管理者・全社閲覧" : scope.isAgency ? "送り出し機関・自機関の実習生のみ閲覧（変更不可）" : scope.isViewer ? "全社閲覧のみ（変更不可）" : (scope.canResetPw ? "企業支援担当・全社閲覧（パスワード再発行可。発行・無効化は管理者のみ）" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）");
   else if(scope.role === "company_owner") roleText = "企業代表・自社全事業所閲覧";
   else if(scope.role === "workplace_manager") roleText = "事業所担当者・担当事業所のみ閲覧";
   else if(scope.role === "company_user_pending") roleText = "権限確認中...";
@@ -1385,6 +1385,10 @@ function sessionScope(){
   // 閲覧専用(全社を見られるが、店舗移動も含め一切変更できない。DB側でも禁止)
   if(jwtRole === "ntic_viewer"){
     return { isAdmin: true, isSuper: false, isViewer: true, role: "ntic_viewer", companyId: null };
+  }
+  // 送り出し機関(例: ラフテル)の先生: 自機関から送り出した実習生だけを閲覧できる。変更は一切不可(DB側でも禁止)
+  if(jwtRole === "agency_viewer"){
+    return { isAdmin: true, isSuper: false, isViewer: true, isAgency: true, role: "agency_viewer", companyId: null };
   }
   if(jwtRole === "company_user"){
     // JWTには"company_user"という粗い印だけを持たせている(認証=JWT、権限=DBの方針)。
@@ -2915,7 +2919,7 @@ function doLogout(){
 }
 
 function roleTextOf(scope){
-  if(scope.isAdmin) return scope.isSuper ? "NTIC管理者・全社閲覧" : scope.isViewer ? "全社閲覧のみ（変更不可）" : (scope.canResetPw ? "企業支援担当・全社閲覧（パスワード再発行可。発行・無効化は管理者のみ）" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）");
+  if(scope.isAdmin) return scope.isSuper ? "NTIC管理者・全社閲覧" : scope.isAgency ? "送り出し機関・自機関の実習生のみ閲覧（変更不可）" : scope.isViewer ? "全社閲覧のみ（変更不可）" : (scope.canResetPw ? "企業支援担当・全社閲覧（パスワード再発行可。発行・無効化は管理者のみ）" : "企業支援担当・全社閲覧（発行・再発行は管理者のみ）");
   if(scope.role === "company_owner") return "企業代表・自社全事業所閲覧";
   if(scope.role === "workplace_manager") return "事業所担当者・担当事業所のみ閲覧";
   if(scope.role === "company_user_pending") return "権限確認中...";
@@ -2935,7 +2939,7 @@ function shellNavItems(scope){
     { id:"learners", label:"実習生", icon:STAT_ICONS.users },
     { id:"learning", label:"学習", icon:STAT_ICONS.book, sub:learningSubTabDefs(scope) }
   ];
-  if(scope.isAdmin){
+  if(scope.isAdmin && !scope.isAgency){
     items.push({ id:"companies", label:"企業・事業所", short:"企業", icon:STAT_ICONS.building });
     items.push({ id:"reports", label:"レポート", icon:STAT_ICONS.fileText });
     items.push({ id:"devices", label:"端末", icon:STAT_ICONS.idCard });
@@ -3700,9 +3704,9 @@ function buildSummaryContent(wrap, tab){
   // ==== 「概要の顔」：ページ上部の導入エリア(overviewタブのみ。視線の起点を作る) ====
   if(tab === "overview"){
     const heroWrap = el('<div class="overview-hero"></div>');
-    const heroLabel = scope.isAdmin ? "全体状況" : "自社の状況";
+    const heroLabel = scope.isAgency ? "送り出した実習生の状況" : scope.isAdmin ? "全体状況" : "自社の状況";
     const heroDesc = scope.isAdmin
-      ? fmtNum(totalLearners)+"人の実習生を管理しています"
+      ? fmtNum(totalLearners)+"人の実習生"+(scope.isAgency ? "（自機関から送り出した方）を閲覧できます" : "を管理しています")
       : fmtNum(totalLearners)+"人の学習者を管理しています";
     const heroStatsParts = scope.isAdmin
       ? ["登録率 "+pct(ntlpRegistered.length, totalLearners), "学習中 "+fmtNum(studying.length)+"人", "要フォロー "+fmtNum(followUps.length)+"人"]
@@ -3916,9 +3920,9 @@ function buildSummaryContent(wrap, tab){
   // ==== ③' overviewタブ向けの企業・事業所ミニサマリー(数字だけ、詳細はcompaniesタブへ) ====
   // ==== ③' overviewタブ向けの「企業・事業所ミニサマリー」＋「企業マッピング状況」の2カラム
   //      (どちらも縦に長くないので、横並びにして画面の高さを節約する) ====
-  const overviewBottomRow = tab === "overview" && scope.isAdmin ? el('<div class="dash-2col dash-sec-company"></div>') : null;
+  const overviewBottomRow = tab === "overview" && scope.isAdmin && !scope.isAgency ? el('<div class="dash-2col dash-sec-company"></div>') : null;
 
-  if(tab === "overview" && scope.isAdmin){
+  if(tab === "overview" && scope.isAdmin && !scope.isAgency){
     const miniCard = el('<div class="card"></div>');
     const miniTitle = el('<div class="card-title"></div>'); miniTitle.textContent = "企業・事業所";
     miniCard.appendChild(miniTitle);
@@ -4079,7 +4083,7 @@ function buildSummaryContent(wrap, tab){
 
   // ==== ⑤ 企業マッピング状況(「◯%」を主役にした構成。完了なら緑、未完了ならオレンジ。
   //      overview(概要)・companies(企業・事業所)、両方のタブに出す ====
-  if((tab === "overview" || tab === "companies") && scope.isAdmin){
+  if((tab === "overview" || tab === "companies") && scope.isAdmin && !scope.isAgency){
     const mappedCompanies = dashState.companies.filter(c=>c.dekisugi_company_id).length;
     const totalCompanies = dashState.companies.length;
     const mappingPct = totalCompanies > 0 ? Math.round(mappedCompanies/totalCompanies*100) : 0;
@@ -4594,7 +4598,7 @@ function buildSummaryContent(wrap, tab){
   // ==== サブタブ: 個人ランキング(管理者・企業支援担当者のみ。企業のアカウントには出さない) ====
   // 「勉強しているかどうか」を見るための一覧。成績の優劣を競わせる目的ではなく、
   // 学習が止まっている人を見つけ、声をかける材料にする。デモ企業・社内学習(cNTIC)・実習終了済みの人は除く。
-  else if(dashState.learningSubTab === "ranking" && scope.isAdmin){
+  else if(dashState.learningSubTab === "ranking" && scope.isAdmin && !scope.isAgency){
     const prkDays = dashState.prkDays || 7;
     const prkSince = Date.now() - prkDays*86400000;
     const PRK_METRICS = {
@@ -4991,7 +4995,7 @@ const TAB_DEFS = [
   { id: "devices", label: "端末", icon: "idCard", adminOnly: true }
 ];
 function visibleTabs(scope){
-  return TAB_DEFS.filter(t => !t.adminOnly || scope.isAdmin);
+  return TAB_DEFS.filter(t => !t.adminOnly || (scope.isAdmin && !scope.isAgency));
 }
 function switchTab(tabId){
   dashState.activeTab = tabId;
@@ -5011,7 +5015,8 @@ const LEARNING_SUBTAB_DEFS = [
   { id: "ranking", label: "個人ランキング", adminOnly: true } // 企業には見せない(管理者・企業支援担当者のみ)
 ];
 function learningSubTabDefs(scope){
-  const isAdmin = !!(scope || sessionScope()).isAdmin;
+  const sc_ = (scope || sessionScope());
+  const isAdmin = !!sc_.isAdmin && !sc_.isAgency;
   return LEARNING_SUBTAB_DEFS.filter(t=> isAdmin || !t.adminOnly);
 }
 function switchLearningSubTab(id){
@@ -5371,10 +5376,10 @@ function renderDashboard(){
 
   // 企業担当者が管理者限定タブ(companies/reports)を直接踏んでいた場合は概要に戻す
   // (URLで直接指定されたわけではないが、念のための安全策)。
-  if(!scope.isAdmin && (dashState.activeTab === "companies" || dashState.activeTab === "reports" || dashState.activeTab === "devices")){
+  if((!scope.isAdmin || scope.isAgency) && (dashState.activeTab === "companies" || dashState.activeTab === "reports" || dashState.activeTab === "devices")){
     dashState.activeTab = "overview";
   }
-  if(!scope.isAdmin && dashState.learningSubTab === "ranking"){
+  if((!scope.isAdmin || scope.isAgency) && dashState.learningSubTab === "ranking"){
     dashState.learningSubTab = "overview";
   }
 
