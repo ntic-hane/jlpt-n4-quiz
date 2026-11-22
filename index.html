@@ -286,6 +286,8 @@ button.secondary{border-radius:12px;border-color:var(--nv-line);}
 
 input[type=text],input[type=password],input[type=email],input:not([type]),select{border-radius:12px !important;border:1px solid var(--nv-line) !important;background:#fff;}
 input[type=text]:focus,input[type=password]:focus{outline:2px solid var(--nv-blue-bg);border-color:var(--nv-blue) !important;}
+/* iPhone(Safari)は、文字が16px未満の入力欄を押すと、画面を勝手に拡大する。それを防ぐため、iPhoneだけ入力欄を16pxにする */
+@supports (-webkit-touch-callout:none){ input,select,textarea{font-size:16px !important;} }
 
 /* ====================== ホーム(新): あいさつ・今日のおすすめ・学習記録 ====================== */
 .jgreet{margin:4px 0 14px;}
@@ -8505,6 +8507,7 @@ if("speechSynthesis" in window){
 // ファイルが無い・読めないときは、従来の読み上げ(SpeechSynthesis)に自動で切り替える。
 // 音声の生成には外部のAPIを使うが、アプリは作成済みのファイルを再生するだけで、APIキーも通信も持たない。
 const AUDIO_BASE = "audio/";
+const AUDIO_OPTION_GAP_MS = 2000;   // 選択肢と選択肢のあいだの間(ミリ秒)。短い・長いと感じたら、この数字を変える
 let AUDIO_MANIFEST = null;   // 読み込めたら { items:{ID:{segs:[...]}} }
 let AUDIO_GREF = 1;          // 音量をそろえるときの基準(補正値の75%点)
 let curClipAudio = null;     // 今鳴らしているAudio
@@ -8552,7 +8555,7 @@ function buildClipSeq(q, audioOptions){
       const orig = origOptIdx(q, i);
       const sg = item.segs.find(x => x.kind === "opt" && x.optIdx === orig && x.pos === i);
       if(!sg) return null;
-      seq.push({ file: sg.file, g: sg.g, gap: 1100 });
+      seq.push({ file: sg.file, g: sg.g, gap: AUDIO_OPTION_GAP_MS });
     }
   }
   return seq.length ? seq : null;
@@ -8616,6 +8619,7 @@ function speakClips(seq, rate, onState, opts, fallback){
       clearInterval(tick);
       if(myToken !== speakSeqToken) return;
       // 自動再生がブロックされたとき → 従来どおり「音声を再生」ボタンを出す
+      window.__clipErr = (err && err.name ? err.name : "err") + "#" + idx;
       if(err && err.name === "NotAllowedError") notifyState("error");
       else if(!started) goFallback();
     });
@@ -9306,7 +9310,7 @@ function renderLogin(){
   card.appendChild(labelId);
   const inputId = document.createElement("input");
   inputId.type = "text"; inputId.id = "loginIdInput"; inputId.autocomplete = "username";
-  inputId.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;box-sizing:border-box;";
+  inputId.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px;box-sizing:border-box;";
   card.appendChild(inputId);
 
   const labelPw = document.createElement("div");
@@ -9315,7 +9319,7 @@ function renderLogin(){
   card.appendChild(labelPw);
   const inputPw = document.createElement("input");
   inputPw.type = "password"; inputPw.id = "loginPwInput"; inputPw.autocomplete = "current-password";
-  inputPw.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;box-sizing:border-box;";
+  inputPw.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px;box-sizing:border-box;";
   card.appendChild(inputPw);
 
   const errorMsg = document.createElement("div");
@@ -9399,7 +9403,7 @@ function renderPasswordChange(){
   card.appendChild(labelNew);
   const inputNew = document.createElement("input");
   inputNew.type = "password"; inputNew.autocomplete = "new-password";
-  inputNew.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;box-sizing:border-box;";
+  inputNew.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px;box-sizing:border-box;";
   card.appendChild(inputNew);
 
   const labelConfirm = document.createElement("div");
@@ -9408,7 +9412,7 @@ function renderPasswordChange(){
   card.appendChild(labelConfirm);
   const inputConfirm = document.createElement("input");
   inputConfirm.type = "password"; inputConfirm.autocomplete = "new-password";
-  inputConfirm.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;box-sizing:border-box;";
+  inputConfirm.style.cssText = "width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px;box-sizing:border-box;";
   card.appendChild(inputConfirm);
 
   const errorMsg = document.createElement("div");
@@ -10736,7 +10740,7 @@ function renderQuestion(){
     const statusEl = document.createElement("div");
     statusEl.id = "audioStatusText";
     statusEl.style.cssText = "font-size:11.5px;color:var(--sub);margin-bottom:6px;min-height:14px;";
-    statusEl.textContent = ST.audioState === "playing" ? tr(T.audioPlaying) : ST.audioState === "error" ? tr(T.audioBlocked) : "";
+    statusEl.textContent = ST.audioState === "playing" ? tr(T.audioPlaying) : ST.audioState === "error" ? tr(T.audioBlocked) + (window.__clipErr ? " [" + window.__clipErr + "]" : "") : "";
     audioWrap.appendChild(statusEl);
 
     const doPlay = ()=>{
@@ -10762,7 +10766,7 @@ function renderQuestion(){
         ST.audioState = state;
         const curStatusEl = document.getElementById("audioStatusText");
         const curFallbackBtn = document.getElementById("audioFallbackBtn");
-        if(curStatusEl) curStatusEl.textContent = state === "playing" ? tr(T.audioPlaying) : state === "error" ? tr(T.audioBlocked) : "";
+        if(curStatusEl) curStatusEl.textContent = state === "playing" ? tr(T.audioPlaying) : state === "error" ? tr(T.audioBlocked) + (window.__clipErr ? " [" + window.__clipErr + "]" : "") : "";
         if(curFallbackBtn) curFallbackBtn.style.display = state === "error" ? "inline-flex" : "none";
       }, {
         onProgress: (p)=>{
