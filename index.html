@@ -7505,6 +7505,14 @@ function optShown(o){
 // 新しいお知らせは、配列の先頭に足す。idは重複しない文字列。viewは、押したときに開く画面(なければ空)。
 // 文面は [日本語, English, Indonesia, Tagalog, ไทย, မြန်မာ]。日本語・英語以外はAI訳で、ネイティブ確認はしていない。
 const NEWS_ITEMS = [
+  { id:"2026-11-choukai-audio", date:"2026-11-22", view:"",
+    title:["聴解の音声が新しくなりました","The listening audio is new","Audio listening sudah diperbarui","Bago na ang audio ng listening","เสียงในข้อสอบฟังเปลี่ยนใหม่แล้ว","နားထောင်ခန်း အသံ အသစ်ဖြစ်ပါပြီ"],
+    body:["聴解の音声を、自然な声に変えました。どのスマホでも、同じ声で聞こえます。男の人と女の人の声も、はっきり分かれています。表示が変わらないときは、ページを更新してください。",
+      "We changed the listening audio to natural voices. You hear the same voices on any phone, and the male and female voices are easy to tell apart. If you don't see the change, please refresh the page.",
+      "Audio listening sekarang memakai suara yang lebih alami. Suaranya sama di ponsel mana pun, dan suara pria dan wanita mudah dibedakan. Jika belum berubah, silakan muat ulang halaman.",
+      "Mas natural na ang boses sa audio ng listening. Pareho ang boses sa kahit anong phone, at madaling makilala ang boses ng lalaki at babae. Kung wala pang pagbabago, paki-refresh ang page.",
+      "เราเปลี่ยนเสียงในข้อสอบฟังเป็นเสียงที่เป็นธรรมชาติมากขึ้น ได้ยินเป็นเสียงเดียวกันไม่ว่าจะใช้มือถือเครื่องไหน และแยกเสียงผู้ชายกับผู้หญิงได้ง่าย หากยังไม่เปลี่ยน กรุณารีเฟรชหน้าเว็บ",
+      "နားထောင်ခန်း အသံများကို သဘာဝကျသော အသံများသို့ ပြောင်းလဲလိုက်ပါပြီ။ မည်သည့်ဖုန်းတွင်မဆို အသံတူညီစွာ ကြားရပြီး အမျိုးသားနှင့် အမျိုးသမီးအသံများကို ခွဲခြားရလွယ်ကူပါသည်။ မပြောင်းလဲသေးပါက စာမျက်နှာကို ပြန်လည်ဆန်းသစ်ပါ။"] },
   { id:"2026-11-device-notice", date:"2026-11-13", view:"", must:true,
     title:["端末のロックが始まりました。メインの端末を決めてください","Device lock has started. Please decide your main device","Penguncian perangkat sudah dimulai. Tentukan perangkat utama Anda","Nagsimula na ang device lock. Pumili ng iyong pangunahing device","เริ่มล็อกอุปกรณ์แล้ว กรุณาเลือกอุปกรณ์หลักของคุณ","စက်လော့ခ် စတင်ပါပြီ။ သင့်အဓိကစက်ကို ရွေးချယ်ပါ"],
     body:["11月13日から、1つのIDで使えるのは、スマホ1台です（パソコンは、許可された人だけ1台です）。最初にログインした端末が、あなたのメインの端末として登録されます。毎日の勉強は、その端末でログインしてください。ほかの端末では使えません。スマホを変えた人や、パソコンで使いたい人は、hane@ntic.jp に連絡してください。メールには、ログインIDと、画面に出る「端末コード」を書いてください。ブラウザのプライベートモードでは使わないでください。履歴やサイトデータを消すと、別の端末だと思われて使えなくなることがあります。同じスマホでも、ブラウザが違う（Chrome・Safariなど）と、別の端末だと思われて使えなくなります。毎回、同じスマホの同じブラウザで開いてください。QRコードやリンクから開くときも、いつものブラウザで開いてください。 IDとパスワードは、ほかの人に教えないでください。",
