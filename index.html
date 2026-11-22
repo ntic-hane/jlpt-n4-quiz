@@ -8508,6 +8508,15 @@ const AUDIO_BASE = "audio/";
 let AUDIO_MANIFEST = null;   // 読み込めたら { items:{ID:{segs:[...]}} }
 let AUDIO_GREF = 1;          // 音量をそろえるときの基準(補正値の75%点)
 let curClipAudio = null;     // 今鳴らしているAudio
+let sharedClipAudio = null;  // 使い回すAudio(iPhoneは、再生ボタンで鳴らしたAudioしか、あとから自動で鳴らせないため)
+function getClipElement(){
+  if(!sharedClipAudio){
+    sharedClipAudio = new Audio();
+    try{ sharedClipAudio.setAttribute("playsinline", ""); }catch(e){ /* noop */ }
+  }
+  curClipAudio = sharedClipAudio;
+  return sharedClipAudio;
+}
 (function loadAudioManifest(){
   try{
     fetch(AUDIO_BASE + "manifest.json", { cache: "no-cache" })
@@ -8575,8 +8584,9 @@ function speakClips(seq, rate, onState, opts, fallback){
     if(myToken !== speakSeqToken) return;
     if(idx >= seq.length){ report(seq.length - 1, 1); notifyState("ended"); return; }
     const c = seq[idx];
-    const a = new Audio(AUDIO_BASE + c.file);
-    curClipAudio = a;
+    const a = getClipElement();
+    a.onended = null; a.onerror = null; a.onplaying = null;
+    a.src = AUDIO_BASE + c.file;
     a.preload = "auto";
     a.defaultPlaybackRate = r; a.playbackRate = r;
     if("preservesPitch" in a) a.preservesPitch = true; else if("webkitPreservesPitch" in a) a.webkitPreservesPitch = true;
