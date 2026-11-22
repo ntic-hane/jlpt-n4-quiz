@@ -8492,6 +8492,127 @@ if("speechSynthesis" in window){
   window.speechSynthesis.onvoiceschanged = refreshVoices;
 }
 
+// ================= 聴解：事前に作った音声ファイル(MP3)の再生 =================
+// audio/manifest.json と audio/ 配下のMP3を使って再生する。
+// ファイルが無い・読めないときは、従来の読み上げ(SpeechSynthesis)に自動で切り替える。
+// 音声の生成には外部のAPIを使うが、アプリは作成済みのファイルを再生するだけで、APIキーも通信も持たない。
+const AUDIO_BASE = "audio/";
+let AUDIO_MANIFEST = null;   // 読み込めたら { items:{ID:{segs:[...]}} }
+let AUDIO_GREF = 1;          // 音量をそろえるときの基準(補正値の75%点)
+let curClipAudio = null;     // 今鳴らしているAudio
+(function loadAudioManifest(){
+  try{
+    fetch(AUDIO_BASE + "manifest.json", { cache: "no-cache" })
+      .then(r => r.ok ? r.json() : null)
+      .then(j => {
+        if(!j || !j.items) return;
+        const gs = [];
+        Object.keys(j.items).forEach(k => (j.items[k].segs || []).forEach(sg => { if(typeof sg.g === "number" && sg.g > 0) gs.push(sg.g); }));
+        gs.sort((a,b)=> a - b);
+        if(gs.length) AUDIO_GREF = gs[Math.floor(gs.length * 0.75)] || 1;
+        AUDIO_MANIFEST = j;
+      })
+      .catch(()=>{ /* 無ければ従来の読み上げを使う */ });
+  }catch(e){ /* noop */ }
+})();
+// 鳴っている音声ファイルを止める(順番待ちの打ち切りは speakSeqToken 側で行う)
+function haltClipElement(){
+  try{ if(curClipAudio){ curClipAudio.onended = null; curClipAudio.onerror = null; curClipAudio.pause(); } }catch(e){ /* noop */ }
+  curClipAudio = null;
+}
+function stopClipAudio(){ speakSeqToken += 1; haltClipElement(); }
+// 問題から「再生する音声ファイルの並び」を作る。作れなければ null(従来の読み上げに切り替え)
+function buildClipSeq(q, audioOptions){
+  const m = AUDIO_MANIFEST;
+  if(!m || !m.items || !q) return null;
+  const item = m.items[q.id];
+  if(!item || !Array.isArray(item.segs)) return null;
+  const seq = [];
+  item.segs.filter(sg => sg.kind !== "opt").forEach(sg => seq.push({ file: sg.file, g: sg.g, gap: sg.kind === "line" ? 400 : 1100 }));
+  if(audioOptions){
+    // 選択肢は表示のたびに順番が入れ替わる。「画面上の位置 i」と「元の番号」の組み合わせのファイルを使う
+    for(let i = 0; i < q.o.length; i++){
+      const orig = origOptIdx(q, i);
+      const sg = item.segs.find(x => x.kind === "opt" && x.optIdx === orig && x.pos === i);
+      if(!sg) return null;
+      seq.push({ file: sg.file, g: sg.g, gap: 1100 });
+    }
+  }
+  return seq.length ? seq : null;
+}
+function clipVolume(g){
+  if(typeof g !== "number" || !(g > 0)) return 1;
+  return Math.max(0.15, Math.min(1, g / (AUDIO_GREF || 1)));
+}
+function speakClips(seq, rate, onState, opts, fallback){
+  const notifyState = (st)=>{ if(onState) onState(st); };
+  const o = opts || {};
+  haltClipElement();
+  speakSeqToken += 1;
+  const myToken = speakSeqToken;
+  const startIdx = Math.max(0, Math.min(seq.length - 1, (o.startIdx | 0)));
+  const lens = seq.map(()=> 1);
+  const report = (idx, frac)=>{ if(o.onProgress) o.onProgress({ idx: idx, frac: frac, lens: lens, total: seq.length }); };
+  const r = Math.max(0.25, Math.min(4, rate || 1));
+  let started = false, usedFallback = false;
+  const ctl = { count: seq.length, restart: (i, rr)=> speakClips(seq, rr, onState, { startIdx: i, onProgress: o.onProgress }, fallback) };
+  const goFallback = ()=>{
+    if(usedFallback) return;
+    usedFallback = true;
+    const impl = fallback ? fallback() : null;
+    ctl.count = impl ? impl.count : 0;
+    ctl.restart = impl ? impl.restart : ()=>{};
+  };
+  const playAt = (idx)=>{
+    if(myToken !== speakSeqToken) return;
+    if(idx >= seq.length){ report(seq.length - 1, 1); notifyState("ended"); return; }
+    const c = seq[idx];
+    const a = new Audio(AUDIO_BASE + c.file);
+    curClipAudio = a;
+    a.preload = "auto";
+    a.defaultPlaybackRate = r; a.playbackRate = r;
+    if("preservesPitch" in a) a.preservesPitch = true; else if("webkitPreservesPitch" in a) a.webkitPreservesPitch = true;
+    try{ a.volume = clipVolume(c.g); }catch(e){ /* 音量を変えられない端末(iPhoneなど)はそのまま */ }
+    // 次のファイルを先に読み込んでおく(つなぎ目の遅れを減らす)
+    if(seq[idx + 1]){ try{ const pre = new Audio(); pre.preload = "auto"; pre.src = AUDIO_BASE + seq[idx + 1].file; }catch(e){ /* noop */ } }
+    report(idx, 0);
+    const tick = setInterval(()=>{
+      if(myToken !== speakSeqToken){ clearInterval(tick); return; }
+      if(a.duration > 0) report(idx, Math.min(0.98, a.currentTime / a.duration));
+    }, 200);
+    a.onplaying = ()=>{ if(!started){ started = true; notifyState("playing"); } };
+    a.onended = ()=>{
+      clearInterval(tick);
+      if(myToken !== speakSeqToken) return;
+      report(idx, 1);
+      // 1倍より速く再生するときは、間も同じ割合で短くする(遅いときは今まで通り)
+      setTimeout(()=> playAt(idx + 1), c.gap / Math.max(1, rate || 1));
+    };
+    a.onerror = ()=>{
+      clearInterval(tick);
+      if(myToken !== speakSeqToken) return;
+      if(!started) goFallback(); else notifyState("ended");
+    };
+    const pr = a.play();
+    if(pr && pr.catch) pr.catch(err=>{
+      clearInterval(tick);
+      if(myToken !== speakSeqToken) return;
+      // 自動再生がブロックされたとき → 従来どおり「音声を再生」ボタンを出す
+      if(err && err.name === "NotAllowedError") notifyState("error");
+      else if(!started) goFallback();
+    });
+  };
+  playAt(startIdx);
+  return ctl;
+}
+// 聴解の再生入口。音声ファイルが使えればそれを、無ければ従来の読み上げを使う。
+function playQuestionAudio(q, audioOptions, body, extras, rate, onState, opts){
+  const viaSpeech = ()=> speak(body, rate, onState, extras, opts);
+  const seq = buildClipSeq(q, audioOptions);
+  if(!seq) return viaSpeech();
+  return speakClips(seq, rate, onState, opts, viaSpeech);
+}
+
 // extraNarrations: 本文のあとに、状況説明と同じ扱い(ナレーションの声・長めの間)で続けて読む文の配列。
 //                   概要理解・発話表現・即時応答で、質問や選択肢を音声で流すために使う。
 function speak(script, rate, onState, extraNarrations, opts){
@@ -8503,6 +8624,7 @@ function speak(script, rate, onState, extraNarrations, opts){
   }
   try{
     window.speechSynthesis.cancel();
+    haltClipElement();
     // キャッシュを使う。まだ空なら念のためこの場でも取り直す。
     refreshVoices();
     const voices = cachedVoices;
@@ -9064,6 +9186,7 @@ function render(){
   if("speechSynthesis" in window){
     try{ window.speechSynthesis.cancel(); }catch(e){ /* noop */ }
   }
+  try{ stopClipAudio(); }catch(e){ /* noop */ }
 
   // 未ログインガード: login/passwordChange以外の画面は、有効なセッションが無ければ強制的にログイン画面へ
   // (戻るボタンや直接のURL遷移で個人情報が一瞬でも表示されるのを防ぐ)
@@ -10617,13 +10740,13 @@ function renderQuestion(){
       }
       const qidAtStart = q.id;
       ST.audioProgFrac = 0; ST.audioPart = 0; ST.audioPartDone = false;
-      ST.playCtl = speak(body, ST.audioRate, (state)=>{
+      ST.playCtl = playQuestionAudio(q, audioOptions, body, extras, ST.audioRate, (state)=>{
         ST.audioState = state;
         const curStatusEl = document.getElementById("audioStatusText");
         const curFallbackBtn = document.getElementById("audioFallbackBtn");
         if(curStatusEl) curStatusEl.textContent = state === "playing" ? tr(T.audioPlaying) : state === "error" ? tr(T.audioBlocked) : "";
         if(curFallbackBtn) curFallbackBtn.style.display = state === "error" ? "inline-flex" : "none";
-      }, extras, {
+      }, {
         onProgress: (p)=>{
           if(ST.lastQid !== qidAtStart) return; // 別の問題に移ったあとの古い再生は無視する
           let before = 0;
