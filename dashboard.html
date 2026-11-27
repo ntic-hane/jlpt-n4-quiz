@@ -2942,6 +2942,7 @@ function shellNavItems(scope){
   if(scope.isAdmin && !scope.isAgency){
     items.push({ id:"companies", label:"企業・事業所", short:"企業", icon:STAT_ICONS.building });
     items.push({ id:"reports", label:"レポート", icon:STAT_ICONS.fileText });
+    items.push({ id:"exam", label:"受験結果", icon:STAT_ICONS.fileText });
     items.push({ id:"devices", label:"端末", icon:STAT_ICONS.idCard });
   }
   return items;
@@ -4992,6 +4993,7 @@ const TAB_DEFS = [
   { id: "learning", label: "学習", icon: "book" },
   { id: "companies", label: "企業・事業所", icon: "building", adminOnly: true },
   { id: "reports", label: "レポート", icon: "fileText", adminOnly: true },
+  { id: "exam", label: "受験結果", icon: "fileText", adminOnly: true },
   { id: "devices", label: "端末", icon: "idCard", adminOnly: true }
 ];
 function visibleTabs(scope){
@@ -5376,7 +5378,7 @@ function renderDashboard(){
 
   // 企業担当者が管理者限定タブ(companies/reports)を直接踏んでいた場合は概要に戻す
   // (URLで直接指定されたわけではないが、念のための安全策)。
-  if((!scope.isAdmin || scope.isAgency) && (dashState.activeTab === "companies" || dashState.activeTab === "reports" || dashState.activeTab === "devices")){
+  if((!scope.isAdmin || scope.isAgency) && (dashState.activeTab === "companies" || dashState.activeTab === "reports" || dashState.activeTab === "devices" || dashState.activeTab === "exam")){
     dashState.activeTab = "overview";
   }
   if((!scope.isAdmin || scope.isAgency) && dashState.learningSubTab === "ranking"){
@@ -5568,6 +5570,8 @@ function renderDashboard(){
     wrap.appendChild(card);
 
     setTimeout(()=>{ renderTableOnly(); renderBulkBar(); }, 0);
+  } else if(dashState.activeTab === "exam"){
+    wrap.appendChild(renderExamTab(scope));
   } else if(dashState.activeTab === "devices"){
     wrap.appendChild(renderDevicesTab(scope));
   } else if(dashState.activeTab === "reports"){
@@ -7456,6 +7460,157 @@ function devStudentLabel(st){
   if(!st) return "(不明)";
   return (st.name || "") + (st.dekisugi_student_code ? "（" + st.dekisugi_student_code + "）" : "");
 }
+// ================= JLPT 受験結果(スタッフ用) =================
+function exD(){ if(!dashState.exam) dashState.exam = { status:"idle", rows:[], err:"", sess:"", msg:"", onlyUnconfirmed:false }; return dashState.exam; }
+async function exLoadAll(force){
+  const X = exD();
+  if(X.status === "loading" || (X.status === "done" && !force)) return;
+  X.status = "loading"; X.err = "";
+  try{
+    X.rows = await fetchAllPaged("jlpt_exam_status", "select=*&order=updated_at.desc");
+    const ss = [...new Set(X.rows.map(r=>r.exam_session))].sort();
+    if(!X.sess || !ss.includes(X.sess)) X.sess = ss.length ? ss[ss.length-1] : "";
+    X.status = "done";
+  }catch(e){
+    X.status = "error";
+    X.err = "受験結果を読み込めませんでした。SQL(jlpt_exam_all.sql)を実行済みか確認してください。";
+  }
+  render();
+}
+function exLabelSession(k){ const p = String(k).split("-"); return p[0] + "年" + (+p[1]) + "月"; }
+function exResJa(v){ return v === "passed" ? "合格" : v === "failed" ? "不合格" : v === "absent" ? "欠席" : ""; }
+function exFinal(r){ return r.result_confirmed || r.result_self || null; }
+async function exSignedUrl(path){
+  const res = await fetch(SUPABASE_URL + "/storage/v1/object/sign/jlpt-proof/" + path, { method:"POST", headers: await getAuthHeaders(), body: JSON.stringify({ expiresIn: 300 }) });
+  const j = await res.json().catch(()=>null);
+  if(!res.ok || !j || !j.signedURL) throw new Error("sign_" + res.status);
+  return SUPABASE_URL + "/storage/v1" + j.signedURL;
+}
+async function exPatch(id, body){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/jlpt_exam_status?id=eq." + encodeURIComponent(id), { method:"PATCH", headers: Object.assign({}, await getAuthHeaders(), { "Prefer":"return=minimal" }), body: JSON.stringify(body) });
+  if(!res.ok) throw new Error("patch_" + res.status);
+}
+function exStats(rows){
+  const o = { will:0, took:0, passed:0, tookC:0, passedC:0, unconfirmed:0 };
+  rows.forEach(r=>{
+    if(r.plan === "will_take") o.will++;
+    const f = exFinal(r);
+    if(f === "passed" || f === "failed"){ o.took++; if(f === "passed") o.passed++; }
+    if(r.result_confirmed === "passed" || r.result_confirmed === "failed"){ o.tookC++; if(r.result_confirmed === "passed") o.passedC++; }
+    if(r.result_self && !r.result_confirmed) o.unconfirmed++;
+  });
+  return o;
+}
+function exPct(a, b){ return b ? Math.round(a / b * 100) + "%（" + a + "/" + b + "）" : "-"; }
+function renderExamTab(scope){
+  const X = exD();
+  const wrap = document.createElement("div");
+  if(X.status === "idle"){ setTimeout(()=>exLoadAll(false), 0); }
+  const head = el('<div class="card"></div>');
+  const ttl = el('<div class="card-title"></div>'); ttl.textContent = "JLPT 受験・合格状況"; head.appendChild(ttl);
+  if(X.status === "idle" || X.status === "loading"){ head.appendChild(el('<div class="loading">読み込み中...</div>')); wrap.appendChild(head); return wrap; }
+  if(X.status === "error"){
+    const e = el('<div style="color:#b91c1c;font-size:13.5px;margin-bottom:10px;"></div>'); e.textContent = X.err; head.appendChild(e);
+    const b = document.createElement("button"); b.className = "primary"; b.textContent = "再読み込み"; b.onclick = ()=>{ X.status = "idle"; render(); }; head.appendChild(b);
+    wrap.appendChild(head); return wrap;
+  }
+  const students = dashState.students || []; const byId = {}; students.forEach(s=>{ byId[s.id] = s; });
+  const cname = {}; (dashState.companies || []).forEach(c=>{ cname[c.company_id] = c.company_name; });
+  const sessions = [...new Set(X.rows.map(r=>r.exam_session))].sort();
+  if(!sessions.length){
+    const n = el('<div style="font-size:13.5px;color:var(--text-sub);line-height:1.7;"></div>'); n.textContent = "まだ入力がありません。実習生がアプリのホーム「JLPT 受験ステータス」から入力すると、ここに出ます。"; head.appendChild(n); wrap.appendChild(head); return wrap;
+  }
+  // 試験回の選択
+  const bar = el('<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;font-size:13.5px;"></div>');
+  bar.appendChild(el('<span>試験回:</span>'));
+  const sel = document.createElement("select"); sel.style.cssText = "padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-size:13.5px;";
+  sessions.forEach(k=>{ const o = document.createElement("option"); o.value = k; o.textContent = exLabelSession(k); if(k === X.sess) o.selected = true; sel.appendChild(o); });
+  sel.onchange = ()=>{ X.sess = sel.value; X.msg = ""; render(); };
+  bar.appendChild(sel);
+  const lab = el('<label style="display:flex;gap:6px;align-items:center;"></label>');
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = X.onlyUnconfirmed; cb.onchange = ()=>{ X.onlyUnconfirmed = cb.checked; render(); };
+  lab.appendChild(cb); lab.appendChild(document.createTextNode("自己申告で未確認のものだけ"));
+  bar.appendChild(lab);
+  const rf = document.createElement("button"); rf.textContent = "再読み込み"; rf.onclick = ()=>{ X.status = "idle"; render(); }; bar.appendChild(rf);
+  head.appendChild(bar);
+  if(X.msg){ const m = el('<div style="margin-bottom:10px;font-size:13px;color:#0f766e;font-weight:600;"></div>'); m.textContent = X.msg; head.appendChild(m); }
+
+  const rows = X.rows.filter(r=>r.exam_session === X.sess);
+  const tot = exStats(rows);
+  const sumTxt = el('<div style="font-size:14px;line-height:1.9;"></div>');
+  sumTxt.innerHTML = "<div>受験予定: <b>" + tot.will + "</b> 名　／　結果入力あり(受験した人): <b>" + tot.took + "</b> 名　／　合格: <b>" + tot.passed + "</b> 名（自己申告を含む）</div>" +
+    "<div>写真などでスタッフ確認済み: 受験 <b>" + tot.tookC + "</b> 名 ／ 合格 <b>" + tot.passedC + "</b> 名　　未確認(自己申告のみ): <b>" + tot.unconfirmed + "</b> 名</div>" +
+    "<div style='color:var(--text-sub);font-size:12.5px;'>合格率(確認済みのみ): " + exPct(tot.passedC, tot.tookC) + "　／　合格率(自己申告を含む): " + exPct(tot.passed, tot.took) + "</div>" +
+    "<div style='color:var(--text-sub);font-size:12.5px;'>※ 入力しなかった人は集計に入りません。人数が少ない間は率の解釈に注意してください。アプリの効果とは、これだけでは言えません。</div>";
+  head.appendChild(sumTxt);
+  wrap.appendChild(head);
+
+  // 級別・会社別
+  const mk = (title, keyFn, keyLabel)=>{
+    const card = el('<div class="card" style="margin-top:12px;"></div>');
+    const t = el('<div class="card-title"></div>'); t.textContent = title; card.appendChild(t);
+    const groups = {}; rows.forEach(r=>{ const k = keyFn(r); (groups[k] = groups[k] || []).push(r); });
+    const tw = el('<div class="table-scroll"></div>'); const tb = document.createElement("table");
+    tb.innerHTML = "<thead><tr><th>" + keyLabel + "</th><th>受験予定</th><th>受験</th><th>合格</th><th>確認済 受験</th><th>確認済 合格</th></tr></thead>";
+    const body = document.createElement("tbody");
+    Object.keys(groups).sort().forEach(k=>{
+      const s = exStats(groups[k]); const tr_ = document.createElement("tr");
+      tr_.innerHTML = "<td>" + escapeHtml(k) + "</td><td>" + s.will + "</td><td>" + s.took + "</td><td>" + s.passed + "</td><td>" + s.tookC + "</td><td>" + s.passedC + "</td>";
+      body.appendChild(tr_);
+    });
+    tb.appendChild(body); tw.appendChild(tb); card.appendChild(tw); return card;
+  };
+  wrap.appendChild(mk("級別", r=>r.level || "(級未入力)", "級"));
+  wrap.appendChild(mk("企業別", r=>{ const s = byId[r.student_id]; return (s && (cname[s.company_id] || s.company_id)) || "(不明)"; }, "企業"));
+
+  // 個人一覧(確認・入力)
+  const list = el('<div class="card" style="margin-top:12px;"></div>');
+  const lt = el('<div class="card-title"></div>'); lt.textContent = "個人別（写真を見て、結果を確認・入力）"; list.appendChild(lt);
+  const shown = rows.filter(r=>!X.onlyUnconfirmed || (r.result_self && !r.result_confirmed));
+  const tw = el('<div class="table-scroll"></div>'); const tb = document.createElement("table");
+  tb.innerHTML = "<thead><tr><th>氏名</th><th>企業</th><th>級</th><th>予定</th><th>自己申告</th><th>写真</th><th>スタッフ確認</th><th>点数</th><th></th></tr></thead>";
+  const body = document.createElement("tbody");
+  shown.forEach(r=>{
+    const s = byId[r.student_id]; const tr_ = document.createElement("tr");
+    const td = (txt)=>{ const c = document.createElement("td"); if(txt !== undefined) c.textContent = txt; tr_.appendChild(c); return c; };
+    td(s ? devStudentLabel(s) : "(不明)"); td(s ? (cname[s.company_id] || s.company_id || "") : ""); td(r.level || "");
+    td(r.plan === "will_take" ? "受験する" : r.plan === "not_taking" ? "受験しない" : "未定"); td(exResJa(r.result_self));
+    const tp = td();
+    if(r.proof_path){
+      const b = document.createElement("button"); b.textContent = "写真を見る";
+      b.onclick = async ()=>{ try{ const u = await exSignedUrl(r.proof_path); window.open(u, "_blank", "noopener"); }catch(e){ X.msg = "写真を開けませんでした: " + e.message; render(); } };
+      tp.appendChild(b);
+    } else tp.textContent = "なし";
+    const tc = td(); const rs = document.createElement("select"); rs.style.cssText = "padding:6px;border:1px solid #cbd5e1;border-radius:6px;";
+    [["", "未確認"], ["passed","合格"], ["failed","不合格"], ["absent","欠席"]].forEach(([v,l])=>{ const o = document.createElement("option"); o.value = v; o.textContent = l; if((r.result_confirmed||"") === v) o.selected = true; rs.appendChild(o); });
+    tc.appendChild(rs);
+    const ts = td(); const sc = document.createElement("input"); sc.type = "number"; sc.min = 0; sc.max = 180; sc.style.cssText = "width:70px;padding:6px;border:1px solid #cbd5e1;border-radius:6px;"; sc.value = r.score_total == null ? "" : r.score_total; ts.appendChild(sc);
+    const tx = td(); const sv = document.createElement("button"); sv.className = "primary"; sv.textContent = "保存";
+    sv.onclick = async ()=>{
+      try{ await exPatch(r.id, { result_confirmed: rs.value || null, score_total: sc.value === "" ? null : Number(sc.value) }); X.msg = "保存しました。"; X.status = "idle"; render(); }
+      catch(e){ X.msg = "保存できませんでした: " + e.message; render(); }
+    };
+    tx.appendChild(sv);
+    if(r.proof_path){
+      const del = document.createElement("button"); del.style.marginLeft = "6px"; del.textContent = "写真を削除";
+      del.onclick = async ()=>{
+        if(!confirm("この写真を削除します。確認済みの結果は残ります。よろしいですか？")) return;
+        try{
+          const res = await fetch(SUPABASE_URL + "/storage/v1/object/jlpt-proof/" + r.proof_path, { method:"DELETE", headers: await getAuthHeaders() });
+          if(!res.ok) throw new Error("delete_" + res.status);
+          await exPatch(r.id, { proof_path: null }); X.msg = "写真を削除しました。"; X.status = "idle"; render();
+        }catch(e){ X.msg = "削除できませんでした: " + e.message; render(); }
+      };
+      tx.appendChild(del);
+    }
+    body.appendChild(tr_);
+  });
+  tb.appendChild(body); tw.appendChild(tb); list.appendChild(tw);
+  if(!shown.length) list.appendChild(el('<div class="loading">該当する人はいません</div>'));
+  wrap.appendChild(list);
+  return wrap;
+}
+
 function renderDevicesTab(scope){
   const D = devD();
   const wrap = document.createElement("div");

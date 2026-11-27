@@ -922,6 +922,8 @@ header{padding:10px 16px 4px;padding-top:calc(10px + env(safe-area-inset-top));}
 .nt-select{display:block;width:100%;box-sizing:border-box;border:1.5px solid var(--nv-line);border-radius:12px;padding:12px 12px;font:inherit;font-size:15px;line-height:1.4;background:#fff;color:var(--nv-text);margin-bottom:10px;}
 .nt-select:focus{outline:none;border-color:var(--nv-blue);}
 .v-home > .jnote{grid-column:1 / -1;min-width:0;}
+.jexam{margin-bottom:12px;} .v-home > .jexam{grid-column:1 / -1;min-width:0;}
+.ex-seg{flex-wrap:wrap;} .ex-seg button{min-width:56px;}
 </style>
 </head>
 <body>
@@ -7748,6 +7750,7 @@ function renderSidebar(){
     practice: SVG('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>'),
     mock: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>'),
     record: SVG('<line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/>'),
+    exam: SVG('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="m9 13 2 2 4-4"/>'),
     note: SVG('<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M8 7h8"/><path d="M8 11h6"/>'),
     life: SVG('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/>'),
     weld: SVG('<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/>'),
@@ -7760,7 +7763,7 @@ function renderSidebar(){
   aside.appendChild(brand);
 
   const cur = ({ home:"home", practice:"practice", select:"practice", mock:"mock", result:"mock", record:"record", settings:"settings",
-                 lifeHome:"life", lifeLesson:"life", lifeQuiz:"life", lifeResult:"life", kisoHome:"weld", weldHome:"weld", plateHome:"weld", weldQuiz:"weld", weldResult:"weld", noteHome:"note", noteWizard:"note", noteDone:"note", noteReview:"note", noteReviewDone:"note" })[ST.view] || "home";
+                 lifeHome:"life", lifeLesson:"life", lifeQuiz:"life", lifeResult:"life", kisoHome:"weld", weldHome:"weld", plateHome:"weld", weldQuiz:"weld", weldResult:"weld", examHome:"exam", noteHome:"note", noteWizard:"note", noteDone:"note", noteReview:"note", noteReviewDone:"note" })[ST.view] || "home";
   const item = (key, label, onclick, extraCls)=>{
     const b = document.createElement("button");
     b.type = "button"; b.className = "psb-item" + (cur === key ? " active" : "") + (extraCls ? " " + extraCls : "");
@@ -7774,6 +7777,7 @@ function renderSidebar(){
   nav.appendChild(item("record", tr(T.tabRecord), ()=>{ ST.view = "record"; render(); }));
   nav.appendChild(el('<div class="psb-sep"></div>'));
   nav.appendChild(item("note", tr(NL.title), ()=>{ ST.view = "noteHome"; render(); }));
+  nav.appendChild(item("exam", tr(EX_L.title), ()=>{ ST.view = "examHome"; render(); }));
   nav.appendChild(item("life", tr(LIFE_L.title), ()=>{ ST.view = "lifeHome"; render(); }));
   nav.appendChild(item("weld", tr(KISO_L.title), ()=>{ ST.view = "kisoHome"; render(); }));
   aside.appendChild(nav);
@@ -9247,7 +9251,7 @@ function render(){
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  const showTabs = ["home","practice","mock","record","lifeHome","kisoHome","weldHome","plateHome","noteHome","kanjiHome"].includes(ST.view);
+  const showTabs = ["home","practice","mock","record","lifeHome","kisoHome","weldHome","plateHome","noteHome","kanjiHome","examHome"].includes(ST.view);
   if(showTabs) app.appendChild(buildTabBar());
 
   if(ST.view === "home"){ const wb = buildDeviceWarnBar(); if(wb) app.appendChild(wb); const nb = buildNewsBar(); if(nb) app.appendChild(nb); }
@@ -9266,6 +9270,7 @@ function render(){
   else if(ST.view === "lifeHome") app.appendChild(renderLifeHomeView());
   else if(ST.view === "kanjiHome") app.appendChild(renderKanjiHome());
   else if(ST.view === "noteHome") app.appendChild(renderNoteHome());
+  else if(ST.view === "examHome") app.appendChild(renderExamHome());
   else if(ST.view === "noteWizard") app.appendChild(renderNoteWizard());
   else if(ST.view === "noteDone") app.appendChild(renderNoteDone());
   else if(ST.view === "noteReview") app.appendChild(renderNoteReview());
@@ -9561,6 +9566,7 @@ function renderHomeView(){
   hero.querySelector(".jhero2-btn").onclick = ()=> startQuick(pickSubj, pickCats);
   wrap.appendChild(hero);
   wrap.appendChild(noteBuildHomeCard());
+  wrap.appendChild(exBuildHomeCard());
 
   // ---- 学習の進捗(4科目。押すと、その科目の10問がすぐ始まる) ----
   const prog = el('<div class="jsec jprogsec"></div>');
@@ -11664,6 +11670,202 @@ async function noteEnsurePeriod(){
 }
 
 // ---- ホームのカード(入口) ----
+// ================= JLPT 受験ステータス =================
+const EX_L = {
+  title: ["JLPT 受験ステータス","JLPT Exam Status","Status Ujian JLPT","JLPT Exam Status","สถานะสอบ JLPT",""],
+  subtitle: ["受験の予定と結果を記録します","Record your exam plan and result","Catat rencana dan hasil ujian","I-record ang plano at resulta ng exam","บันทึกแผนและผลสอบ",""],
+  session: ["試験の回","Exam session","Sesi ujian","Exam session","รอบสอบ",""],
+  level: ["受ける級","Level","Level","Level","ระดับ",""],
+  plan: ["受験の予定","Your plan","Rencana Anda","Plano mo","แผนของคุณ",""],
+  planWill: ["受験する","I will take it","Akan ikut","Kukuha ako","จะสอบ",""],
+  planNot: ["受験しない","Not taking","Tidak ikut","Hindi kukuha","ไม่สอบ",""],
+  planUnd: ["まだ決めていない","Not decided","Belum memutuskan","Hindi pa sigurado","ยังไม่ตัดสินใจ",""],
+  result: ["結果（結果が届いたら入力）","Result (enter after you receive it)","Hasil (isi setelah diterima)","Resulta (ilagay kapag natanggap na)","ผลสอบ (กรอกเมื่อได้รับผล)",""],
+  rPass: ["合格","Passed","Lulus","Pasado","สอบผ่าน",""],
+  rFail: ["不合格","Not passed","Tidak lulus","Hindi pasado","ไม่ผ่าน",""],
+  rAbs: ["欠席","Absent","Tidak hadir","Absent","ขาดสอบ",""],
+  rNone: ["まだ結果なし","No result yet","Belum ada hasil","Wala pang resulta","ยังไม่มีผล",""],
+  save: ["保存する","Save","Simpan","I-save","บันทึก",""],
+  saved: ["保存しました","Saved","Tersimpan","Na-save na","บันทึกแล้ว",""],
+  fail: ["保存できませんでした。通信を確認して、もう一度おしてください。","Could not save. Check your connection and try again.","Gagal menyimpan. Periksa koneksi lalu coba lagi.","Hindi na-save. Tingnan ang koneksyon at subukan ulit.","บันทึกไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง",""],
+  loading: ["読み込み中…","Loading…","Memuat…","Naglo-load…","กำลังโหลด…",""],
+  loadFail: ["読み込めませんでした。","Could not load.","Gagal memuat.","Hindi ma-load.","โหลดไม่ได้",""],
+  photoH: ["合否通知の写真","Photo of your result notice","Foto pemberitahuan hasil","Litrato ng result notice","รูปใบแจ้งผลสอบ",""],
+  photoNote: ["結果が届いたら、通知の写真をおくってください。NTICのスタッフだけが見ます。会社には見せません。","When you receive your result, please send a photo of the notice. Only NTIC staff can see it. Your company cannot.","Setelah hasil diterima, kirim foto pemberitahuannya. Hanya staf NTIC yang bisa melihat. Perusahaan tidak bisa.","Kapag natanggap mo na ang resulta, ipadala ang litrato ng notice. Staff ng NTIC lang ang makakakita. Hindi ito makikita ng kompanya.","เมื่อได้รับผลแล้ว กรุณาส่งรูปใบแจ้งผล เจ้าหน้าที่ NTIC เท่านั้นที่เห็น บริษัทไม่เห็น",""],
+  photoPick: ["写真をえらぶ／とる","Choose / take a photo","Pilih / ambil foto","Pumili / kumuha ng litrato","เลือก/ถ่ายรูป",""],
+  photoReplace: ["写真をとりなおす","Send a different photo","Kirim foto lain","Magpadala ng ibang litrato","ส่งรูปใหม่",""],
+  photoDone: ["✓ 写真をおくりました","✓ Photo sent","✓ Foto terkirim","✓ Naipadala na ang litrato","✓ ส่งรูปแล้ว",""],
+  photoBusy: ["おくっています…","Sending…","Mengirim…","Ipinapadala…","กำลังส่ง…",""],
+  photoFail: ["写真をおくれませんでした。もう一度ためしてください。","Could not send the photo. Please try again.","Gagal mengirim foto. Coba lagi.","Hindi naipadala ang litrato. Subukan ulit.","ส่งรูปไม่ได้ ลองอีกครั้ง",""],
+  confirmed: ["✓ スタッフが確認しました：","✓ Confirmed by staff: ","✓ Dikonfirmasi staf: ","✓ Kinumpirma ng staff: ","✓ เจ้าหน้าที่ยืนยันแล้ว: ",""],
+  none: ["未入力","Not entered","Belum diisi","Wala pang laman","ยังไม่กรอก",""]
+};
+function exSid(){ return AUTH.student && AUTH.student.id; }
+function exMonthLabel(sess){ const p = sess.split("-"); return ST.lang === "ja" ? (p[0]+"年"+(+p[1])+"月") : (p[0]+"-"+p[1]); }
+function exSessions(extra){
+  const now = new Date(); const y = now.getFullYear(); const set = {};
+  for(let yy=y-1; yy<=y+1; yy++){ ["07","12"].forEach(m=>{
+    const d = new Date(yy, +m-1, 1); const diff = (d.getFullYear()-now.getFullYear())*12 + d.getMonth()-now.getMonth();
+    if(diff >= -13 && diff <= 13) set[yy+"-"+m] = 1;
+  }); }
+  (extra||[]).forEach(k=>{ set[k] = 1; });
+  return Object.keys(set).sort();
+}
+function exDefaultSession(){
+  const now = new Date(); const list = exSessions();
+  const cur = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+  const up = list.filter(k=>k >= cur); return up.length ? up[0] : list[list.length-1];
+}
+function exState(){
+  if(!ST.exam || ST.exam.sid !== exSid()){
+    ST.exam = { sid: exSid(), status: "idle", rows: {}, sess: null, d: null, msg: "", busy: false, photoBusy: false, photoErr: false };
+  }
+  return ST.exam;
+}
+function exLoadDraft(E){
+  const r = E.rows[E.sess];
+  E.d = { level: r ? r.level : null, plan: r ? r.plan : "undecided", result: r ? r.result_self : null };
+}
+async function exLoad(force){
+  const E = exState();
+  if(E.status === "loading" || (E.status === "done" && !force)) return;
+  E.status = "loading";
+  try{
+    const rows = await noteGet("jlpt_exam_status?student_id=eq." + encodeURIComponent(exSid()) + "&select=*");
+    E.rows = {}; rows.forEach(r=>{ E.rows[r.exam_session] = r; });
+    if(!E.sess) E.sess = exDefaultSession();
+    exLoadDraft(E);
+    E.status = "done";
+  }catch(e){ console.warn("[exam] load failed", e); E.status = "error"; }
+  if(["examHome","home"].includes(ST.view)) render();
+}
+async function exSave(extra){
+  const E = exState();
+  const body = Object.assign({ student_id: exSid(), exam_session: E.sess, level: E.d.level, plan: E.d.plan, result_self: E.d.result }, extra || {});
+  const res = await notePost("jlpt_exam_status?on_conflict=student_id,exam_session", body, "resolution=merge-duplicates,return=representation");
+  if(res && res[0]) E.rows[E.sess] = res[0];
+}
+// 写真を JPEG に変換・縮小(iPhone の HEIC なども、ブラウザが読めれば JPEG になる)
+function exPrepImage(file){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = ()=>{
+      try{
+        const max = 1800; let w = img.naturalWidth, h = img.naturalHeight;
+        if(!w || !h){ throw new Error("size"); }
+        const k = Math.min(1, max / Math.max(w, h)); w = Math.round(w*k); h = Math.round(h*k);
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        cv.getContext("2d").drawImage(img, 0, 0, w, h);
+        let q = 0.85;
+        const tryOut = ()=> cv.toBlob(b=>{
+          if(!b){ reject(new Error("blob")); return; }
+          if(b.size > 4.5*1024*1024 && q > 0.4){ q -= 0.15; tryOut(); return; }
+          URL.revokeObjectURL(url); resolve(b);
+        }, "image/jpeg", q);
+        tryOut();
+      }catch(e){ URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error("decode")); };
+    img.src = url;
+  });
+}
+async function exUploadPhoto(file){
+  const E = exState();
+  E.photoBusy = true; E.photoErr = false; render();
+  try{
+    if(!E.rows[E.sess]) await exSave();
+    const blob = await exPrepImage(file);
+    const path = exSid() + "/" + E.sess + "_" + Date.now() + ".jpg";
+    const r = await fetch(SUPABASE_URL + "/storage/v1/object/jlpt-proof/" + path, { method:"POST",
+      headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + AUTH.session.access_token, "Content-Type": "image/jpeg", "x-upsert": "false" }, body: blob });
+    if(!r.ok) throw new Error("upload_" + r.status);
+    const old = E.rows[E.sess] && E.rows[E.sess].proof_path;
+    await exSave({ proof_path: path });
+    if(old){ try{ await fetch(SUPABASE_URL + "/storage/v1/object/jlpt-proof/" + old, { method:"DELETE", headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + AUTH.session.access_token } }); }catch(e){} }
+  }catch(e){ console.warn("[exam] photo failed", e); E.photoErr = true; }
+  E.photoBusy = false; render();
+}
+function exResultLabel(v){ return v === "passed" ? tr(EX_L.rPass) : v === "failed" ? tr(EX_L.rFail) : v === "absent" ? tr(EX_L.rAbs) : tr(EX_L.none); }
+function exBuildHomeCard(){
+  const E = exState(); if(E.status === "idle") exLoad();
+  const c = el('<button class="jrow jexam"></button>');
+  c.style.setProperty("--sc", "#5B6CF0"); c.style.setProperty("--sb", "#E8EBFF");
+  c.innerHTML = '<span class="jrow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="m9 13 2 2 4-4"/></svg></span><span class="jrow-body"><span class="jrow-t1"></span><span class="jrow-t2"></span></span><span class="jrow-chev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+  c.querySelector(".jrow-t1").textContent = tr(EX_L.title);
+  let sub = tr(EX_L.subtitle);
+  if(E.status === "done"){
+    const ks = Object.keys(E.rows).sort(); const k = ks.length ? ks[ks.length-1] : null;
+    if(k){ const r = E.rows[k]; const rs = r.result_confirmed || r.result_self;
+      sub = exMonthLabel(k) + (r.level ? " " + r.level : "") + " : " + (rs ? exResultLabel(rs) : (r.plan === "will_take" ? tr(EX_L.planWill) : r.plan === "not_taking" ? tr(EX_L.planNot) : tr(EX_L.planUnd))); }
+  }
+  c.querySelector(".jrow-t2").textContent = sub;
+  c.onclick = ()=>{ ST.view = "examHome"; render(); };
+  return c;
+}
+function renderExamHome(){
+  const E = exState();
+  const wrap = document.createElement("div"); wrap.className = "v-note";
+  const t = el('<div class="nt-title"></div>'); t.textContent = tr(EX_L.title); wrap.appendChild(t);
+  if(E.status === "idle"){ exLoad(); }
+  if(E.status === "idle" || E.status === "loading"){ const l = el('<div class="nt-msg"></div>'); l.textContent = tr(EX_L.loading); wrap.appendChild(l); return wrap; }
+  if(E.status === "error"){
+    const e = el('<div class="nt-msg"></div>'); e.textContent = tr(EX_L.loadFail); wrap.appendChild(e);
+    const b = el('<button class="nt-primary"></button>'); b.textContent = "↻"; b.onclick = ()=>{ E.status = "idle"; render(); }; wrap.appendChild(b); return wrap;
+  }
+  const seg = (opts, cur, pick)=>{
+    const d = el('<div class="nt-seg ex-seg"></div>');
+    opts.forEach(o=>{ const b = document.createElement("button"); b.type = "button"; b.textContent = o.l; if(cur === o.v) b.className = "on"; b.onclick = ()=>{ E.msg = ""; pick(o.v); render(); }; d.appendChild(b); });
+    return d;
+  };
+  const card = (head)=>{ const c = el('<div class="nt-card"></div>'); const h = el('<div class="nt-h"></div>'); h.textContent = head; c.appendChild(h); wrap.appendChild(c); return c; };
+
+  // 試験回
+  const c1 = card(tr(EX_L.session));
+  const sel = el('<select class="nt-select"></select>');
+  exSessions(Object.keys(E.rows)).forEach(k=>{ const o = document.createElement("option"); o.value = k; o.textContent = exMonthLabel(k); if(k === E.sess) o.selected = true; sel.appendChild(o); });
+  sel.onchange = ()=>{ E.sess = sel.value; E.msg = ""; E.photoErr = false; exLoadDraft(E); render(); };
+  c1.appendChild(sel);
+  const row = E.rows[E.sess];
+
+  // 級
+  const c2 = card(tr(EX_L.level));
+  c2.appendChild(seg(["N1","N2","N3","N4","N5"].map(v=>({v, l:v})), E.d.level, v=>{ E.d.level = v; }));
+  // 予定
+  const c3 = card(tr(EX_L.plan));
+  c3.appendChild(seg([{v:"will_take",l:tr(EX_L.planWill)},{v:"not_taking",l:tr(EX_L.planNot)},{v:"undecided",l:tr(EX_L.planUnd)}], E.d.plan, v=>{ E.d.plan = v; }));
+  // 結果
+  const c4 = card(tr(EX_L.result));
+  c4.appendChild(seg([{v:"passed",l:tr(EX_L.rPass)},{v:"failed",l:tr(EX_L.rFail)},{v:"absent",l:tr(EX_L.rAbs)},{v:null,l:tr(EX_L.rNone)}], E.d.result, v=>{ E.d.result = v; }));
+  if(row && row.result_confirmed){ const ok = el('<div class="nt-ok"></div>'); ok.textContent = tr(EX_L.confirmed) + exResultLabel(row.result_confirmed); c4.appendChild(ok); }
+
+  // 保存
+  const sv = el('<button class="nt-primary"></button>'); sv.textContent = E.busy ? "…" : tr(EX_L.save); sv.disabled = E.busy;
+  sv.onclick = async ()=>{
+    E.busy = true; E.msg = ""; render();
+    try{ await exSave(); E.msg = "ok"; }catch(e){ console.warn("[exam] save failed", e); E.msg = "ng"; }
+    E.busy = false; render();
+  };
+  wrap.appendChild(sv);
+  if(E.msg){ const m = el('<div class="nt-sub" style="text-align:center;margin-top:10px;"></div>'); m.textContent = E.msg === "ok" ? tr(EX_L.saved) : tr(EX_L.fail); if(E.msg==="ok") m.style.color = "#16875F"; wrap.appendChild(m); }
+
+  // 写真(結果が届いてから)
+  if(E.d.result === "passed" || E.d.result === "failed"){
+    const c5 = el('<div class="nt-card" style="margin-top:14px;"></div>');
+    const h = el('<div class="nt-h"></div>'); h.textContent = tr(EX_L.photoH); c5.appendChild(h);
+    const p = el('<div class="nt-sub" style="margin-bottom:10px;"></div>'); p.textContent = tr(EX_L.photoNote); c5.appendChild(p);
+    if(row && row.proof_path){ const d = el('<div class="nt-ok" style="margin:0 0 10px;"></div>'); d.textContent = tr(EX_L.photoDone); c5.appendChild(d); }
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.style.display = "none";
+    inp.onchange = ()=>{ const f = inp.files && inp.files[0]; if(f) exUploadPhoto(f); };
+    const pb = el('<button class="nt-secondary" style="width:100%;flex:none;"></button>');
+    pb.textContent = E.photoBusy ? tr(EX_L.photoBusy) : (row && row.proof_path ? tr(EX_L.photoReplace) : tr(EX_L.photoPick)); pb.disabled = E.photoBusy;
+    pb.onclick = ()=> inp.click();
+    c5.appendChild(inp); c5.appendChild(pb);
+    if(E.photoErr){ const er = el('<div class="nt-sub" style="color:#C0392B;margin-top:8px;"></div>'); er.textContent = tr(EX_L.photoFail); c5.appendChild(er); }
+    wrap.appendChild(c5);
+  }
+  return wrap;
+}
+
 function noteBuildHomeCard(){
   const c = el('<button class="jrow jnote"></button>');
   c.style.setProperty("--sc", "#0E9F8E"); c.style.setProperty("--sb", "#DDF6F1");
